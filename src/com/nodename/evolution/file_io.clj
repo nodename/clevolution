@@ -30,24 +30,22 @@
 
 
 (defn write-image-to-file
-	[image metadata file-path]
-	(let [iio-image (IIOImage. image nil nil)
+	[image metadata uri]
+	(let [iio-image (IIOImage. image nil metadata)
 	     imagewriter (get-png-imagewriter)
-	     output (FileImageOutputStream. (File. file-path))]
+	     output (FileImageOutputStream. (File. uri))]
 	(.setOutput imagewriter output)
-	(.setMetadata iio-image metadata)
 	(.write imagewriter nil iio-image nil)
 	(.flush output)
 	(.close output)
 	(.dispose imagewriter)))
 
-
 (defn save-image
 	"Generate and save an image from generator-string"
-	[generator-string file-path]
+	[generator-string uri]
 	(let [metadata (make-generator-metadata (str generator-string))
 	      image (eval generator-string)]
-	(write-image-to-file image metadata file-path)))
+	(write-image-to-file image metadata uri)))
 
 
 (defn get-imagereader
