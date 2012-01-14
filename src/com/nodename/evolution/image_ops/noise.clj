@@ -1,7 +1,7 @@
 (ns com.nodename.evolution.image_ops.noise
-	(:import (java.awt.image BufferedImage))
- (:use clojure.contrib.math
-       perlin.core))
+  (:import (java.awt.image BufferedImage))
+  (:use clojure.contrib.math
+        perlin.core))
 
 (defn next-random-number
   [random-number]
@@ -15,7 +15,7 @@
   (loop [result []]
     (let [i (count result)]
       (cond
-        (>= i length) result
+        (== i length) result
         :else (recur (conj result (expt p i))))))))
 
 (defn noise-pixel-octave-contrib-generator [x y z persistences freqs]
@@ -32,7 +32,7 @@
       (== octave octaves-count) sum
       :else (recur (inc octave) (+ sum (noise-pixel-octave-contrib octave)))))))
     
- (defn noise-pixel-setter [y z py octaves-count persistences total-persistence freqs]
+(defn noise-pixel-setter [y z py octaves-count persistences total-persistence freqs]
    (fn [x px bi]
    (let [ sum (noise-pixel-sum x y z octaves-count persistences freqs)
          grey-level (int (* 128 (+ 1 (/ sum total-persistence))))
@@ -50,10 +50,10 @@
            (== px width) image
            :else (recur (+ x base-factor) (inc px) (set-noise-pixel x px image)))))))
 
-(defn create-noise-image
-	"Create a Perlin-noise image. Arity: 0 Parameters: seed, octaves-count, falloff"
+(defn bw-noise
+	"Create a constant-z slice of 3D Perlin-noise texture. Parameters: seed; octaves-count; falloff; width, height of image; x, y, z: location of upper right corner of image in noise space"
 	([seed octaves-count falloff width height]
- (create-noise-image seed octaves-count falloff width height 0 0 0))
+ (bw-noise seed octaves-count falloff width height 0 0 0))
 	([seed octaves-count falloff width height origin-x origin-y origin-z]
 	(let [ bi (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
        scale 1

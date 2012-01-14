@@ -40,11 +40,12 @@
 	(.close output)
 	(.dispose imagewriter)))
 
+
 (defn save-image
-	"Generate and save an image from generator-string"
-	[generator-string uri]
-	(let [metadata (make-generator-metadata (str generator-string))
-	      image (eval generator-string)]
+	"Generate and save an image from generator"
+	[generator uri]
+	(let [metadata (make-generator-metadata (str generator))
+	      image (eval generator)]
 	(write-image-to-file image metadata uri)))
 
 
