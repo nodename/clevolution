@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>perlin</project>
+		<project>rinzelight</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
