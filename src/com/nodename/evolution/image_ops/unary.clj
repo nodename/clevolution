@@ -1,9 +1,15 @@
 (ns com.nodename.evolution.image_ops.unary
   (:import (clojure.contrib.math))
-  (:use rinzelight.constants
-        rinzelight.pixel
-        rinzelight.image
-        rinzelight.effects.basic-effects))
+  (:require [rinzelight.effects.blur
+             :only [blur]])
+  (:use [rinzelight.constants
+         :only [quantum-range]]
+        [rinzelight.pixel
+         :only [create-pixel]]
+        [rinzelight.image
+         :only [create-image]]
+        [rinzelight.effects.basic-effects
+         :only [map-image]]))
 
 (defn abs-channel-op
   [color]
@@ -64,3 +70,8 @@
 
 (def inverse
   (image-op-generator inverse-channel-op))
+
+
+(defn blur [radius sigma bi]
+    (:image (rinzelight.effects.blur/blur (create-image bi) radius sigma)))
+

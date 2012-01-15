@@ -1,17 +1,19 @@
 (ns clevolution
-	(:import (javax.imageio ImageIO))
-	(:import (java.io File))
-	(:use [com.nodename.evolution.file-io :only [save-image
+  (:import [javax.imageio ImageIO]
+          [java.io File])
+  (:use
+        [com.nodename.evolution.file-io :only [save-image
                                               get-imagereader
-                                              get-generator-string]] :reload-all)
-	(:use [com.nodename.evolution.image_ops.gradient :only [X
-                                                         Y]] :reload-all)
-	(:use [com.nodename.evolution.image_ops.noise :only [bw-noise]] :reload-all)
-	(:use [com.nodename.evolution.image_ops.unary :only [abs
+                                              get-generator-string]]
+        [com.nodename.evolution.image_ops.gradient :only [X
+                                                         Y]]
+        [com.nodename.evolution.image_ops.noise :only [bw-noise]]
+        [com.nodename.evolution.image_ops.unary :only [abs
                                                       sin
                                                       cos
                                                       log
-                                                      inverse]] :reload-all))
+                                                      inverse
+                                                      blur]] :reload-all))
 
 
 (def image-file-name "test.png")
@@ -19,6 +21,13 @@
 (def image-width 200)
 (def image-height 200)
 
+(defn int-range
+  [lo hi]
+  (+ lo (rand-int (- hi lo))))
+
+(defn float-range
+  [lo hi]
+  (+ lo (rand (- hi lo))))
 
 (defn make-x-gradient
 	[]
@@ -30,15 +39,21 @@
 
 (defn make-noise
   []
-  (let [seed (+ 50 (rand-int 950))
-        octaves (+ 1 (rand-int 9))
-        falloff (+ 0.1 (rand))]
+  (let [seed (int-range 50 1000)
+        octaves (int-range 1 10)
+        falloff (float-range 0.1 1.0)]
     (list 'bw-noise seed octaves falloff image-width image-height)))
+
+(defn make-blur
+  []
+  (let [radius (float-range 0.0 1.0)
+        sigma (float-range 0.5 2.0)]
+    (list 'blur radius sigma)))
 
 
 (def image-creation-ops [(make-x-gradient) (make-y-gradient) (make-noise)])
 
-(def unary-ops ['abs 'sin 'cos 'log 'inverse])
+(def unary-ops ['abs 'sin 'cos 'log 'inverse (make-blur)])
                 
 (defn select-random-op
   ([]
@@ -56,12 +71,14 @@
 
   
   
-(def image-creation-op (select-image-creation-op))
-(println image-creation-op)
+(defn compose-ops
+  [unary-op image-creation-op]
+  (if (list? unary-op)
+    (seq(conj (vec unary-op) image-creation-op)) ;; append image-creation-op as a list without deconstructing it
+    (list unary-op image-creation-op)))
 
-(def composite-op (list (select-unary-op) image-creation-op))
+(def composite-op (compose-ops (select-unary-op) (select-image-creation-op)))
 (println composite-op)
-
  
 (save-image composite-op image-file-name)
 
