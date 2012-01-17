@@ -41,6 +41,20 @@
 	(.dispose imagewriter)))
 
 
+(defn get-generator-string
+	"Get the generator string from a PNGMetadata"
+	[png-metadata]
+	(let [dataArrayList (.unknownChunkData png-metadata)
+	      typeArrayList (.unknownChunkType png-metadata)]
+	(loop [i 0]
+		(cond
+			(>= i (.size dataArrayList))
+				""
+			(= (.get typeArrayList i) generator-chunk-name)
+				(String. (.get dataArrayList i))
+			:else
+				(recur (inc i))))))
+
 (defn save-image
 	"Generate and save an image from generator"
 	[generator uri]
@@ -56,18 +70,4 @@
 		(throw (Exception. "No image reader found for stream")))
 	(.next iterator)))
 
-
-(defn get-generator-string
-	"Get the generator string from a PNGMetadata"
-	[png-metadata]
-	(let [dataArrayList (.unknownChunkData png-metadata)
-	      typeArrayList (.unknownChunkType png-metadata)]
-	(loop [i 0]
-		(cond
-			(>= i (.size dataArrayList))
-				""
-			(= (.get typeArrayList i) generator-chunk-name)
-				(String. (.get dataArrayList i))
-			:else
-				(recur (inc i))))))
 

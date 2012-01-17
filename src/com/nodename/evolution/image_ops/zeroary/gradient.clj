@@ -1,4 +1,4 @@
-(ns com.nodename.evolution.image_ops.gradient
+(ns com.nodename.evolution.image_ops.zeroary.gradient
 	(:import (java.awt.image BufferedImage)
           (java.awt Color GradientPaint))
  (:use clojure.contrib.math))
