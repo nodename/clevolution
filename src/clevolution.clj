@@ -1,6 +1,6 @@
 (ns clevolution
   (:import [javax.imageio ImageIO]
-          [java.io File])
+           [java.io File])
   (:refer-clojure :exclude [* + - and or min max mod])
   (:use [com.nodename.evolution.file-io :only [save-image
                                               get-imagereader
@@ -13,26 +13,17 @@
 
 (def image-file-name "test.png")
 
-(def generated-expression (generate-expression))
-(println generated-expression)
+;;(def expression (generate-expression))
+(def expression '(abs (abs (sin (bw-noise 342 1 0.49348922739109613 400 400)))))
 
-(save-image generated-expression image-file-name)
+(println expression)
+
+(save-image expression image-file-name)
 
 
 ;; now reopen the file and read the header
 
-(def input-stream (ImageIO/createImageInputStream (File. image-file-name)))
-
-(def imagereader (get-imagereader input-stream))
-(.setInput imagereader input-stream true)
-
-(def image-index 0)
-(def input-metadata (.getImageMetadata imagereader image-index))
-(.close input-stream)
-(.dispose imagereader)
-
-
-(def input-generator (get-generator-string input-metadata))
+(def input-generator (get-generator-string image-file-name))
 (println input-generator)
 
 

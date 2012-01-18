@@ -1,10 +1,11 @@
 (ns com.nodename.evolution.file-io
-	(:import (java.awt.image BufferedImage)
-		(java.awt Color GradientPaint)
-		(javax.imageio ImageIO IIOImage)
-		(javax.imageio.stream FileImageOutputStream)
-		(com.sun.imageio.plugins.png PNGMetadata PNGImageReader)
-		(java.io ByteArrayOutputStream File)))
+	(:import (java.lang String)
+          (java.awt.image BufferedImage)
+          (java.awt Color GradientPaint)
+          (javax.imageio ImageIO IIOImage)
+          (javax.imageio.stream FileImageOutputStream)
+          (com.sun.imageio.plugins.png PNGMetadata PNGImageReader)
+          (java.io ByteArrayOutputStream File)))
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
@@ -40,9 +41,9 @@
 	(.close output)
 	(.dispose imagewriter)))
 
+(defmulti get-generator-string class)
 
-(defn get-generator-string
-	"Get the generator string from a PNGMetadata"
+(defmethod get-generator-string PNGMetadata
 	[png-metadata]
 	(let [dataArrayList (.unknownChunkData png-metadata)
 	      typeArrayList (.unknownChunkType png-metadata)]
@@ -55,6 +56,18 @@
 			:else
 				(recur (inc i))))))
 
+(defmethod get-generator-string String
+  [file-name]
+  (let [input-stream (ImageIO/createImageInputStream (File. file-name))
+        imagereader (get-imagereader input-stream)
+        _ (.setInput imagereader input-stream true)
+        image-index 0
+        input-metadata (.getImageMetadata imagereader image-index)
+        _ (.close input-stream)
+        _ (.dispose imagereader)]
+    (get-generator-string input-metadata)))
+
+  
 (defn save-image
 	"Generate and save an image from generator"
 	[generator uri]
