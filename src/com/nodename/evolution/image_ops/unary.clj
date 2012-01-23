@@ -47,17 +47,29 @@
    [color]
    (round-to-quantum(clojure.core/* factor color))))
 
-(defn- pixel-op-generator [channel-op]
-  (fn ([p]
-      (create-pixel (channel-op (:red   p))
-                    (channel-op (:green p))
-                    (channel-op (:blue  p))
-                    (:alpha p)))
-  ([r g b a]
-     [(channel-op r)
-      (channel-op g)
-      (channel-op b)
-      a])))
+(defn- pixel-op-generator
+  ([channel-op]
+    (fn ([p]
+          (create-pixel (channel-op (:red   p))
+                        (channel-op (:green p))
+                        (channel-op (:blue  p))
+                        (:alpha p)))
+      ([r g b a]
+        [(channel-op r)
+         (channel-op g)
+         (channel-op b)
+         a])))
+  ([rgb-op alpha-op]
+    (fn ([p]
+          (create-pixel (rgb-op (:red   p))
+                        (rgb-op (:green p))
+                        (rgb-op (:blue  p))
+                        (alpha-op (:alpha p))))
+      ([r g b a]
+        [(rgb-op r)
+         (rgb-op g)
+         (rgb-op b)
+         (alpha-op a)]))))
 
 (defn- image-op-generator [channel-op]
   (fn

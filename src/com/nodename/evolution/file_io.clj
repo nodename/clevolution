@@ -41,6 +41,24 @@
 	(.close output)
 	(.dispose imagewriter)))
 
+(defn get-imagereader
+	[inputstream]
+	(let [iterator (ImageIO/getImageReaders inputstream)]
+	(if-not (.hasNext iterator) 
+		(throw (Exception. "No image reader found for stream")))
+	(.next iterator)))
+
+(defn read-image-from-file
+  [uri]
+  (let [input-stream (ImageIO/createImageInputStream (File. uri))
+        imagereader (get-imagereader input-stream)
+        _ (.setInput imagereader input-stream true)
+        image-index 0
+        bi (.read imagereader image-index)]
+    (.close input-stream)
+    (.dispose imagereader)
+    bi))
+
 (defmulti get-generator-string class)
 
 (defmethod get-generator-string PNGMetadata
@@ -57,8 +75,8 @@
 				(recur (inc i))))))
 
 (defmethod get-generator-string String
-  [file-name]
-  (let [input-stream (ImageIO/createImageInputStream (File. file-name))
+  [uri]
+  (let [input-stream (ImageIO/createImageInputStream (File. uri))
         imagereader (get-imagereader input-stream)
         _ (.setInput imagereader input-stream true)
         image-index 0
@@ -73,14 +91,6 @@
 	[generator uri]
 	(let [metadata (make-generator-metadata (str generator))
 	      image (eval generator)]
-	(write-image-to-file image metadata uri)))
-
-
-(defn get-imagereader
-	[inputstream]
-	(let [iterator (ImageIO/getImageReaders inputstream)]
-	(if-not (.hasNext iterator) 
-		(throw (Exception. "No image reader found for stream")))
-	(.next iterator)))
+   (write-image-to-file image metadata uri)))
 
 

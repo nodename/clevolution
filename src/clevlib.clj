@@ -1,37 +1,26 @@
 (ns clevlib
-  (:import [javax.imageio ImageIO]
-          [java.io File])
   (:refer-clojure :exclude [* + - and or min max mod])
-  (:use [com.nodename.evolution.image_ops.zeroary.gradient :only [X
-                                                                  Y]]
+  (:use [com.nodename.evolution.image_ops.zeroary.gradient :only [X Y]]
         [com.nodename.evolution.image_ops.zeroary.noise :only [bw-noise]]
-        [com.nodename.evolution.image_ops.unary :only [abs
-                                                      sin
-                                                      cos
-                                                      log
-                                                      inverse
-                                                      blur
-                                                      *]]
-        [com.nodename.evolution.image_ops.binary :only [+
-                                                        -
-                                                        and
-                                                        or
-                                                        xor
-                                                        min
-                                                        max
-                                                        mod]] :reload-all))
+        [com.nodename.evolution.file-io :only [read-image-from-file]]
+        [com.nodename.evolution.image_ops.unary :only [abs sin cos log inverse blur *]]
+        [com.nodename.evolution.image_ops.binary :only [+ - and or xor min max mod]] :reload-all))
 
 
-(def image-width 200)
-(def image-height 200)
+(defmacro dbg [& body]
+  `(let [x# ~@body]
+     (println (str "dbg: " (quote ~@body) "=" x#))
+     x#))
 
-(def max-depth 3)
 
-(defn int-range
+(def image-width 400)
+(def image-height 400)
+
+(defn- int-range
   [lo hi]
   (+ lo (rand-int (- hi lo))))
 
-(defn float-range
+(defn- float-range
   [lo hi]
   (+ lo (rand (- hi lo))))
 
@@ -49,6 +38,10 @@
         octaves (int-range 1 10)
         falloff (float-range 0.1 1.0)]
     (with-meta (list 'bw-noise seed octaves falloff image-width image-height) {:arity 0})))
+
+;; TODO cache images
+(defn- make-read [uri]
+  (with-meta (list 'read-image-from-file uri) {:arity 0}))
 
 (defn- make-abs
   []
@@ -115,32 +108,27 @@
 
 
 
-(defn- zeroary-ops
+(defn- zeroary-ops-makers
   []
   (vector (make-X) (make-Y) (make-bw-noise)))
 
-(defn- unary-ops
+(defn- unary-ops-makers
   []
   (vector (make-abs) (make-sin) (make-cos) (make-log) (make-inverse) (make-*) (make-blur)))
 
-(defn- binary-ops
+(defn- binary-ops-makers
   []
   (vector (make-+) (make--) (make-and) (make-or) (make-xor) (make-min) (make-max) (make-mod)))
 
                 
-(defn select-random-op
-  ([]
-    (select-random-op (vec (concat (zeroary-ops) (unary-ops) (binary-ops)))))
-  ([ops]
-    (ops (rand-int (count ops)))))
-
-(defn select-zeroary-op
-  []
-  (select-random-op (zeroary-ops)))
-
-(defn select-nonzeroary-op
-  []
-  (select-random-op (vec (concat (unary-ops) (binary-ops)))))
+(defn- select-random-op
+  "Select a random element from one or more vectors"
+  [ops & more]
+    (let [ops 
+          (if more
+            (vec (concat ops (reduce concat more)))
+            ops)]
+      (ops (rand-int (count ops)))))
 
 
 
@@ -158,17 +146,25 @@
       (conj unary-op op))))
 
 
-(defn generate-expression
-  ([]
-    (generate-expression 0))
-  ([depth]
-    (let [op (if (== depth max-depth)
-               (select-zeroary-op)
-               (select-nonzeroary-op))
+(defn- foo
+  [max-depth zeroary-ops]
+    (let [op (if (== max-depth 0)
+               (select-random-op zeroary-ops)
+               (select-random-op zeroary-ops (unary-ops-makers) (binary-ops-makers)))
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
         (cond
           (== i arity) expression
-          :else (recur (inc i) (compose-ops expression (generate-expression (inc depth)))))))))
+          :else (recur (inc i) (compose-ops expression (foo (dec max-depth) zeroary-ops)))))))
 
+
+;; TODO manage width and height of input images
+;; TODO can we make this work with delaying evaluation of the zeroary-ops-makers (bw-noise specifically) until each time they are used?
+;; because now the bw-noise parameters are fixed for all invocations anywhere in the expression tree
+(defn generate-expression
+  ([max-depth input-image-files]
+    (let [my-zeroary-ops (vec (concat (zeroary-ops-makers) (vec (map make-read input-image-files))))]
+      (foo max-depth my-zeroary-ops)))
+  ([max-depth]
+    (foo max-depth (zeroary-ops-makers))))
