@@ -4,9 +4,10 @@
         [com.nodename.evolution.image_ops.zeroary.noise :only [bw-noise]]
         [com.nodename.evolution.file-io :only [read-image-from-file]]
         [com.nodename.evolution.image_ops.unary :only [abs sin cos log inverse blur *]]
-        [com.nodename.evolution.image_ops.binary :only [+ - and or xor min max mod]] :reload-all))
+        [com.nodename.evolution.image_ops.binary :only [+ - and or xor min max mod]]
+        [com.nodename.evolution.file-io :only [save-image]] :reload-all))
 
-
+;; http://blog.jayway.com/2011/03/13/dbg-a-cool-little-clojure-macro/
 (defmacro dbg [& body]
   `(let [x# ~@body]
      (println (str "dbg: " (quote ~@body) "=" x#))
@@ -32,7 +33,7 @@
 	[]
 	(with-meta (list 'Y image-width image-height) {:arity 0}))
 
-(defn- make-bw-noise
+(defn make-bw-noise
   []
   (let [seed (int-range 50 1000)
         octaves (int-range 1 10)
@@ -164,7 +165,19 @@
 ;; because now the bw-noise parameters are fixed for all invocations anywhere in the expression tree
 (defn generate-expression
   ([max-depth input-image-files]
-    (let [my-zeroary-ops (vec (concat (zeroary-ops-makers) (vec (map make-read input-image-files))))]
+  ; (let [my-zeroary-ops (vec (concat (zeroary-ops-makers) (vec (map make-read input-image-files))))]
+    (let [my-zeroary-ops (vec (map make-read input-image-files))]
       (foo max-depth my-zeroary-ops)))
   ([max-depth]
     (foo max-depth (zeroary-ops-makers))))
+
+
+(defn generate-random-image-file
+  ([uri max-depth input-files]
+  (let [expression (generate-expression max-depth input-files)]
+    (println expression)
+    (save-image expression uri)))
+  ([uri max-depth]
+  (let [expression (generate-expression max-depth)]
+    (println expression)
+    (save-image expression uri))))

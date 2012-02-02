@@ -5,7 +5,7 @@
   (:use [com.nodename.evolution.file-io :only [save-image
                                               get-generator-string
                                               read-image-from-file]]
-        [clevlib :only [generate-expression]]
+        [clevlib :only [generate-random-image-file]]
         [com.nodename.evolution.image_ops.zeroary.gradient :only [X Y]]
         [com.nodename.evolution.image_ops.zeroary.noise :only [bw-noise]]
         [com.nodename.evolution.image_ops.unary :only [abs sin cos log inverse blur *]]
@@ -16,17 +16,7 @@
 
 (def max-depth 3)
 
-(defn generate-random-image-file
-  ([uri input-files]
-  (let [expression (generate-expression max-depth input-files)]
-    (println expression)
-    (save-image expression uri)))
-  ([uri]
-  (let [expression (generate-expression max-depth)]
-    (println expression)
-    (save-image expression uri))))
-
-;;(generate-random-image-file image-file-name input-files)
-(generate-random-image-file image-file-name)
+;;(generate-random-image-file image-file-name max-depth input-files)
+(generate-random-image-file image-file-name max-depth)
 
 ;; face: (or (sin (cos (bw-noise 735 9 0.37795912888484595 200 200))) (cos (sin (bw-noise 83 7 0.18731404903090182 200 200))))
