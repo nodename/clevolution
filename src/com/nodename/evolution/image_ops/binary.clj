@@ -6,7 +6,7 @@
           [rinzelight.image
            :only [create-image]]
           [rinzelight.effects.basic-effects
-           :only [map-image]]))
+           :only [map-image]] :reload-all))
 
 
 (defn- plus-channel-op
