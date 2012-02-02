@@ -24,13 +24,30 @@
         persistence (persistences octave)]
     (* persistence (noise (* frequency x) (* frequency y) (* frequency z))))))
        
-(defn- noise-pixel-sum [x y z octaves-count persistences freqs]
+(defn- noise-pixel-sum
+  ([x y z octaves-count persistences freqs]
   (let [noise-pixel-octave-contrib (noise-pixel-octave-contrib-generator x y z persistences freqs)]
   (loop [octave 0
          sum 0]
     (cond
       (== octave octaves-count) sum
       :else (recur (inc octave) (+ sum (noise-pixel-octave-contrib octave)))))))
+  
+  ([x y z octaves-count persistences freqs x-period y-period]
+    (let [noise-pixel-octave-contrib0 (noise-pixel-octave-contrib-generator x y z persistences freqs)
+          noise-pixel-octave-contrib1 (noise-pixel-octave-contrib-generator (+ x x-period) y z persistences freqs)
+          noise-pixel-octave-contrib2 (noise-pixel-octave-contrib-generator x (+ y y-period) z persistences freqs)
+          noise-pixel-octave-contrib3 (noise-pixel-octave-contrib-generator (+ x x-period) (+ y y-period) z persistences freqs)
+          xmix (- 1.0 (/ x x-period))
+          ymix (- 1.0 (/ y y-period))]
+      (loop [octave 0
+             sum 0]
+        (cond
+          (== octave octaves-count) sum
+          :else
+          (let [x1 (lerp xmix (noise-pixel-octave-contrib0 octave) (noise-pixel-octave-contrib1 octave))
+                x2 (lerp xmix (noise-pixel-octave-contrib2 octave) (noise-pixel-octave-contrib3 octave))]
+            (recur (inc octave) (+ sum (lerp ymix x1 x2)))))))))
     
 (defn- noise-pixel-setter [y z py octaves-count persistences total-persistence freqs]
    (fn [x px bi]
