@@ -148,8 +148,8 @@
 
 
 (defn- foo
-  [max-depth zeroary-ops]
-    (let [op (if (== max-depth 0)
+  [depth zeroary-ops]
+    (let [op (if (== depth 0)
                (select-random-op zeroary-ops)
                (select-random-op zeroary-ops (unary-ops-makers) (binary-ops-makers)))
           arity ((meta op) :arity)]
@@ -157,7 +157,7 @@
             expression op]
         (cond
           (== i arity) expression
-          :else (recur (inc i) (compose-ops expression (foo (dec max-depth) zeroary-ops)))))))
+          :else (recur (inc i) (compose-ops expression (foo (dec depth) zeroary-ops)))))))
 
 
 ;; TODO manage width and height of input images
