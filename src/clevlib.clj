@@ -109,28 +109,28 @@
 
 
 
-(defn- zeroary-ops-makers
+(defn- zeroary-op-makers
   []
-  (vector (make-X) (make-Y) (make-bw-noise)))
+  (vector make-X make-Y make-bw-noise))
 
-(defn- unary-ops-makers
+(defn- unary-op-makers
   []
-  (vector (make-abs) (make-sin) (make-cos) (make-log) (make-inverse) (make-*) (make-blur)))
+  (vector make-abs make-sin make-cos make-log make-inverse make-* make-blur))
 
-(defn- binary-ops-makers
+(defn- binary-op-makers
   []
-  (vector (make-+) (make--) (make-and) (make-or) (make-xor) (make-min) (make-max) (make-mod)))
+  (vector make-+ make-- make-and make-or make-xor make-min make-max make-mod))
 
                 
-(defn- select-random-op
-  "Select a random element from one or more vectors"
-  [ops & more]
-    (let [ops 
+(defn- make-random-op
+  "Select and evaluate a random function from one or more vectors"
+  [op-makers & more]
+    (let [op-makers 
           (if more
-            (vec (concat ops (reduce concat more)))
-            ops)]
-      (ops (rand-int (count ops)))))
-
+            (vec (concat op-makers (reduce concat more)))
+            op-makers)]
+      ; note the extra parens used to evaluate the selected op-maker:
+      ((op-makers (rand-int (count op-makers))))))
 
 
 (defn- append-without-flattening
@@ -148,28 +148,26 @@
 
 
 (defn- foo
-  [max-depth zeroary-ops]
-    (let [op (if (== max-depth 0)
-               (select-random-op zeroary-ops)
-               (select-random-op zeroary-ops (unary-ops-makers) (binary-ops-makers)))
+  [depth zeroary-ops]
+    (let [op (if (== depth 0)
+               (make-random-op zeroary-ops)
+               (make-random-op zeroary-ops (unary-op-makers) (binary-op-makers)))
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
         (cond
           (== i arity) expression
-          :else (recur (inc i) (compose-ops expression (foo (dec max-depth) zeroary-ops)))))))
+          :else (recur (inc i) (compose-ops expression (foo (dec depth) zeroary-ops)))))))
 
 
 ;; TODO manage width and height of input images
-;; TODO can we make this work with delaying evaluation of the zeroary-ops-makers (bw-noise specifically) until each time they are used?
-;; because now the bw-noise parameters are fixed for all invocations anywhere in the expression tree
 (defn generate-expression
   ([max-depth input-image-files]
-  ; (let [my-zeroary-ops (vec (concat (zeroary-ops-makers) (vec (map make-read input-image-files))))]
+  ; (let [my-zeroary-ops (vec (concat (zeroary-op-makers) (vec (map make-read input-image-files))))]
     (let [my-zeroary-ops (vec (map make-read input-image-files))]
       (foo max-depth my-zeroary-ops)))
   ([max-depth]
-    (foo max-depth (zeroary-ops-makers))))
+    (foo max-depth (zeroary-op-makers))))
 
 
 (defn generate-random-image-file
