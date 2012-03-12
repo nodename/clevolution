@@ -14,6 +14,7 @@
 (def image-file-name "F:\\generated-images\\test.png")
 (def input-files (list "F:\\generated-images\\z-movie\\0000.png" "F:\\generated-images\\z-movie\\0453.png"))
 
+;(def max-depth 3)
 (def max-depth 3)
 
 ;;(generate-random-image-file image-file-name max-depth input-files)
