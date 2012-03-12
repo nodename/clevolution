@@ -41,8 +41,9 @@
     (with-meta (list 'bw-noise seed octaves falloff image-width image-height) {:arity 0})))
 
 ;; TODO cache images
-(defn- make-read [uri]
-  (with-meta (list 'read-image-from-file uri) {:arity 0}))
+(defn- make-make-read [uri]
+  (fn []
+    (with-meta (list 'read-image-from-file uri) {:arity 0})))
 
 (defn- make-abs
   []
@@ -109,17 +110,14 @@
 
 
 
-(defn- zeroary-op-makers
-  []
-  (vector make-X make-Y make-bw-noise))
+(def zeroary-op-makers
+  [make-X make-Y make-bw-noise])
 
-(defn- unary-op-makers
-  []
-  (vector make-abs make-sin make-cos make-log make-inverse make-* make-blur))
+(def unary-op-makers
+  [make-abs make-sin make-cos make-log make-inverse make-* make-blur])
 
-(defn- binary-op-makers
-  []
-  (vector make-+ make-- make-and make-or make-xor make-min make-max make-mod))
+(def binary-op-makers
+  [make-+ make-- make-and make-or make-xor make-min make-max make-mod])
 
                 
 (defn- make-random-op
@@ -151,7 +149,7 @@
   [depth zeroary-ops]
     (let [op (if (== depth 0)
                (make-random-op zeroary-ops)
-               (make-random-op zeroary-ops (unary-op-makers) (binary-op-makers)))
+               (make-random-op zeroary-ops unary-op-makers binary-op-makers))
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
@@ -163,11 +161,13 @@
 ;; TODO manage width and height of input images
 (defn generate-expression
   ([max-depth input-image-files]
-  ; (let [my-zeroary-ops (vec (concat (zeroary-op-makers) (vec (map make-read input-image-files))))]
-    (let [my-zeroary-ops (vec (map make-read input-image-files))]
+    (let [input-image-op-makers (vec (map make-make-read input-image-files))
+          my-zeroary-ops (vec (concat zeroary-op-makers input-image-op-makers))
+  ;       my-zeroary-ops input-image-op-makers
+          _ (println my-zeroary-ops)]
       (foo max-depth my-zeroary-ops)))
   ([max-depth]
-    (foo max-depth (zeroary-op-makers))))
+    (foo max-depth zeroary-op-makers)))
 
 
 (defn generate-random-image-file
