@@ -25,89 +25,53 @@
   [lo hi]
   (+ lo (rand (- hi lo))))
 
-(defn- make-X
-	[]
-	(with-meta (list 'X image-width image-height) {:arity 0}))
 
-(defn- make-Y
-	[]
-	(with-meta (list 'Y image-width image-height) {:arity 0}))
+(defn- make-with-arity [arity operator & params]
+  (fn []
+    (with-meta (conj params operator) {:arity arity})))
 
+
+(def make-X (make-with-arity 0 'X image-width image-height))
+(def make-Y (make-with-arity 0 'Y image-width image-height))
+
+(def make-abs (make-with-arity 1 'abs))
+(def make-sin (make-with-arity 1 'sin))
+(def make-cos (make-with-arity 1 'cos))
+(def make-log (make-with-arity 1 'log))
+(def make-inverse (make-with-arity 1 'inverse))
+
+(def make-+ (make-with-arity 2 '+))
+(def make-- (make-with-arity 2 '-))
+(def make-and (make-with-arity 2 'and))
+(def make-or (make-with-arity 2 'or))
+(def make-xor (make-with-arity 2 'xor))
+(def make-min (make-with-arity 2 'min))
+(def make-max (make-with-arity 2 'max))
+(def make-mod (make-with-arity 2 'mod))
+ 
 (defn make-bw-noise
   []
   (let [seed (int-range 50 1000)
         octaves (int-range 1 10)
         falloff (float-range 0.1 1.0)]
-    (with-meta (list 'bw-noise seed octaves falloff image-width image-height) {:arity 0})))
+    ((make-with-arity 0 'bw-noise seed octaves falloff image-width image-height))))
 
 ;; TODO cache images
 (defn- make-make-read [uri]
   (fn []
-    (with-meta (list 'read-image-from-file uri) {:arity 0})))
+    ((make-with-arity 0 'read-image-from-file uri))))
 
-(defn- make-abs
-  []
-  (with-meta (list 'abs) {:arity 1}))
-
-(defn- make-sin
-  []
-  (with-meta (list 'sin) {:arity 1}))
-
-(defn- make-cos
-  []
-  (with-meta (list 'cos) {:arity 1}))
-
-(defn- make-log
-  []
-  (with-meta (list 'log) {:arity 1}))
-
-(defn- make-inverse
-  []
-  (with-meta (list 'inverse) {:arity 1}))
 
 (defn- make-*
   []
   (let [factor (float-range 0.5 2.0)]
-    (with-meta (list '* factor) {:arity 1})))
+    ((make-with-arity 1 '* factor))))
 
 (defn- make-blur
   []
   (let [radius (float-range 0.0 1.0)
         sigma (float-range 0.5 2.0)]
-    (with-meta (list 'blur radius sigma) {:arity 1})))
-
-(defn- make-+
-  []
-  (with-meta (list '+) {:arity 2}))
-
-(defn- make--
-  []
-  (with-meta (list '-) {:arity 2}))
-
-(defn- make-and
-  []
-  (with-meta (list 'and) {:arity 2}))
-
-(defn- make-or
-  []
-  (with-meta (list 'or) {:arity 2}))
-
-(defn- make-xor
-  []
-  (with-meta (list 'xor) {:arity 2}))
-
-(defn- make-min
-  []
-  (with-meta (list 'min) {:arity 2}))
-
-(defn- make-max
-  []
-  (with-meta (list 'max) {:arity 2}))
-
-(defn- make-mod
-  []
-  (with-meta (list 'mod) {:arity 2}))
-
+    ((make-with-arity 1 'blur radius sigma))))
 
 
 (def zeroary-op-makers
@@ -164,7 +128,7 @@
     (let [input-image-op-makers (vec (map make-make-read input-image-files))
           my-zeroary-ops (vec (concat zeroary-op-makers input-image-op-makers))
   ;       my-zeroary-ops input-image-op-makers
-          _ (println my-zeroary-ops)]
+          ]
       (foo max-depth my-zeroary-ops)))
   ([max-depth]
     (foo max-depth zeroary-op-makers)))
