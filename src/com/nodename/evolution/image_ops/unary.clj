@@ -31,6 +31,12 @@
   (let [colorF (/ color (quantum-range))
         new-colorF (clojure.core/* 0.5 (+ 1.0 (Math/cos (clojure.core/* 2 Math/PI colorF))))]
     (int (clojure.core/* new-colorF (quantum-range)))))
+
+(defn- atan-channel-op
+  [color]
+  (let [colorF (/ color (quantum-range))
+        new-colorF (clojure.core/* (/ 2 Math/PI) (Math/atan (clojure.core/* 10 colorF)))]
+    (int (clojure.core/* new-colorF (quantum-range)))))
   
 (defn- log-channel-op
   [color]
@@ -84,6 +90,9 @@
 
 (def cos
   (image-op-generator cos-channel-op))
+
+(def atan
+  (image-op-generator atan-channel-op))
 
 (def log
   (image-op-generator log-channel-op))

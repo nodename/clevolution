@@ -3,7 +3,7 @@
   (:use [com.nodename.evolution.image_ops.zeroary.gradient :only [X Y]]
         [com.nodename.evolution.image_ops.zeroary.noise :only [bw-noise]]
         [com.nodename.evolution.file-io :only [read-image-from-file]]
-        [com.nodename.evolution.image_ops.unary :only [abs sin cos log inverse blur *]]
+        [com.nodename.evolution.image_ops.unary :only [abs sin cos atan log inverse blur *]]
         [com.nodename.evolution.image_ops.binary :only [+ - and or xor min max mod]]
         [com.nodename.evolution.file-io :only [save-image]] :reload-all))
 
@@ -37,6 +37,7 @@
 (def make-abs (make-with-arity 1 'abs))
 (def make-sin (make-with-arity 1 'sin))
 (def make-cos (make-with-arity 1 'cos))
+(def make-atan (make-with-arity 1 'atan))
 (def make-log (make-with-arity 1 'log))
 (def make-inverse (make-with-arity 1 'inverse))
 
@@ -78,7 +79,7 @@
   [make-X make-Y make-bw-noise])
 
 (def unary-op-makers
-  [make-abs make-sin make-cos make-log make-inverse make-* make-blur])
+  [make-abs make-sin make-cos make-atan make-log make-inverse make-* make-blur])
 
 (def binary-op-makers
   [make-+ make-- make-and make-or make-xor make-min make-max make-mod])
