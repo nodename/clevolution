@@ -1,4 +1,4 @@
-(ns com.nodename.evolution.image_ops.binary
+(ns clevolution.image_ops.binary
   (:import (java.awt.image BufferedImage))
   (:refer-clojure :exclude [+ - and or min max mod])
   (:use [rinzelight.pixel
@@ -91,8 +91,10 @@
 
 (extend BufferedImage Add {:+ (fn [this bi] (plus this bi))})
 (extend Double Add {:+ (fn [this color] (clojure.core/+ this color))})
+(extend Long Add {:+ (fn [this color] (clojure.core/+ this color))})
 (extend Integer Add {:+ (fn [this color] (clojure.core/+ this color))})
 
 (extend BufferedImage Subtract {:- (fn [this bi] (minus this bi))})
 (extend Double Subtract {:- (fn [this color] (clojure.core/- this color))})
+(extend Long Subtract {:- (fn [this color] (clojure.core/- this color))})
 (extend Integer Subtract {:- (fn [this color] (clojure.core/- this color))})

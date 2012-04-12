@@ -1,7 +1,6 @@
-(ns com.nodename.evolution.image_ops.zeroary.noise
-  (:import (java.awt.image BufferedImage))
-  (:use clojure.contrib.math
-        perlin.core))
+(ns clevolution.image_ops.nullary.noise
+  (:import (java.awt.image BufferedImage) (clevolution.perlin ImprovedNoise))
+  (:use clojure.contrib.math))
 
 (defmacro dbg [& body]
   `(let [x# ~@body]
@@ -28,7 +27,7 @@
   (fn [octave]
     (let [frequency (freqs octave)
           persistence (persistences octave)]
-      (* persistence (noise (* frequency x) (* frequency y) (* frequency z))))))
+      (* persistence (ImprovedNoise/noise (* frequency x) (* frequency y) (* frequency z))))))
        
 (defn- noise-pixel-sum-nontiled
   [x y {z :z
@@ -64,9 +63,9 @@
              sum 0]
         (cond
           (== octave octaves-count) sum
-          :else (let [contrib01 (lerp xmix (noise-pixel-octave-contrib0 octave) (noise-pixel-octave-contrib1 octave))
-                      contrib23 (lerp xmix (noise-pixel-octave-contrib2 octave) (noise-pixel-octave-contrib3 octave))]
-                  (recur (inc octave) (+ sum (lerp ymix contrib01 contrib23))))))))
+          :else (let [contrib01 ((.lerp ImprovedNoise) xmix (noise-pixel-octave-contrib0 octave) (noise-pixel-octave-contrib1 octave))
+                      contrib23 ((.lerp ImprovedNoise) xmix (noise-pixel-octave-contrib2 octave) (noise-pixel-octave-contrib3 octave))]
+                  (recur (inc octave) (+ sum ((.lerp ImprovedNoise) ymix contrib01 contrib23))))))))
     
 (defn- noise-pixel-setter [y py {total-persistence :total-persistence
                                  tileable :tileable

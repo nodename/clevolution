@@ -1,11 +1,11 @@
-(ns clevlib
+(ns clevolution.core
   (:refer-clojure :exclude [* + - and or min max mod])
-  (:use [com.nodename.evolution.image_ops.zeroary.gradient :only [X Y]]
-        [com.nodename.evolution.image_ops.zeroary.noise :only [bw-noise]]
-        [com.nodename.evolution.file-io :only [read-image-from-file]]
-        [com.nodename.evolution.image_ops.unary :only [abs sin cos atan log inverse blur *]]
-        [com.nodename.evolution.image_ops.binary :only [+ - and or xor min max mod]]
-        [com.nodename.evolution.file-io :only [save-image]] :reload-all))
+  (:use [clevolution.image_ops.nullary.gradient :only [X Y]]
+        [clevolution.image_ops.nullary.noise :only [bw-noise]]
+        [clevolution.file-io :only [read-image-from-file]]
+        [clevolution.image_ops.unary :only [abs sin cos atan log inverse blur *]]
+        [clevolution.image_ops.binary :only [+ - and or xor min max mod]]
+        [clevolution.file-io :only [save-image]] :reload-all))
 
 ;; http://blog.jayway.com/2011/03/13/dbg-a-cool-little-clojure-macro/
 (defmacro dbg [& body]
@@ -144,3 +144,4 @@
   (let [expression (generate-expression max-depth)]
     (println expression)
     (save-image expression uri))))
+

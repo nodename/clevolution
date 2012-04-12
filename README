@@ -1,5 +1,7 @@
-clevolution is organized as a Clojure project using the Counterclockwise Eclipse plugin.
-
-This project depends on indy/perlin and Serabe/rinzelight.
-
+# clevolution
+ 
 For more details please see the intro to the original haXe version of Evolution: http://nodename.github.com/
+
+Copyright (C) 2012 Alan Shaw
+
+Distributed under the Eclipse Public License, the same as Clojure.

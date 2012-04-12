@@ -1,4 +1,4 @@
-(ns com.nodename.evolution.image_ops.unary
+(ns clevolution.image_ops.unary
   (:import (java.awt.image BufferedImage))
   (:import (clojure.contrib.math))
   (:require [rinzelight.effects.blur
