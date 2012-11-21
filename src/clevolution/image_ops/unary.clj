@@ -41,7 +41,7 @@
 (defn- log-channel-op
   [color]
   (let [colorF (/ color (quantum-range))
-        new-colorF (Math/log (+ 1 colorF))]
+        new-colorF (Math/log (+ 1.0 colorF))]
     (int (clojure.core/* new-colorF (quantum-range)))))
   
 (defn- inverse-channel-op

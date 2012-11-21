@@ -76,7 +76,7 @@
                             noise-pixel-sum-tiled
                             noise-pixel-sum-nontiled)
           sum (noise-pixel-sum x y noise-params)
-          grey-level (int (* 128 (+ 1 (/ sum total-persistence))))
+          grey-level (int (* 128 (+ 1.0 (/ sum total-persistence))))
           argb-color (bit-or 0xff000000 (bit-or (bit-shift-left grey-level 16) (bit-or (bit-shift-left grey-level 8) grey-level)))
           _ (.setRGB bi px py argb-color)]
       bi)))

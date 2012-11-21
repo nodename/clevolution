@@ -16,9 +16,9 @@
 (defn X
 	"Create a horizontal gradient image. Arity: 0 Parameters: none"
 	[width height]
-	(create-gradient-image (GradientPaint. 0 0 Color/black (- width 1) 0 Color/white) width height))
+	(create-gradient-image (GradientPaint. 0 0 Color/black (dec width) 0 Color/white) width height))
 
 (defn Y
 	"Create a vertical gradient image. Arity: 0 Parameters: none"
 	[width height]
-	(create-gradient-image (GradientPaint. 0 0 Color/black 0 (- height 1) Color/white) width height))
+	(create-gradient-image (GradientPaint. 0 0 Color/black 0 (dec height) Color/white) width height))

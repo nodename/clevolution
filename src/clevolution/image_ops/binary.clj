@@ -39,7 +39,7 @@
 
 (defn- mod-channel-op
   [color0 color1]
-  (if (= color1 0)
+  (if (zero? color1)
     color0
     (clojure.core/mod color0 color1)))
 

@@ -112,7 +112,7 @@
 
 (defn- foo
   [depth zeroary-ops]
-    (let [op (if (== depth 0)
+    (let [op (if (zero? depth)
                (make-random-op zeroary-ops)
                (make-random-op zeroary-ops unary-op-makers binary-op-makers))
           arity ((meta op) :arity)]
