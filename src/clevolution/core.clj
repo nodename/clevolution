@@ -57,7 +57,7 @@
         falloff (float-range 0.1 1.0)]
     ((make-with-arity 0 'bw-noise seed octaves falloff image-width image-height))))
 
-;; TODO cache images
+;; TODO cache images?
 (defn- make-make-read [uri]
   (fn []
     ((make-with-arity 0 'read-image-from-file uri))))
@@ -99,7 +99,7 @@
 (defn- append-without-flattening
   "Add list-to-append as a single last element of orig-list"
   [orig-list list-to-append]
-      (seq (conj (vec orig-list) list-to-append)))
+      (concat orig-list (list list-to-append)))
 
 (defn- compose-ops
   ([binary-op op0 op1]
