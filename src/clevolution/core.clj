@@ -75,7 +75,7 @@
     ((make-with-arity 1 'blur radius sigma))))
 
 
-(def zeroary-op-makers
+(def nullary-op-makers
   [make-X make-Y make-bw-noise])
 
 (def unary-op-makers
@@ -111,28 +111,28 @@
 
 
 (defn- foo
-  [depth zeroary-ops]
+  [depth nullary-ops]
     (let [op (if (zero? depth)
-               (make-random-op zeroary-ops)
-               (make-random-op zeroary-ops unary-op-makers binary-op-makers))
+               (make-random-op nullary-ops)
+               (make-random-op nullary-ops unary-op-makers binary-op-makers))
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
         (cond
           (== i arity) expression
-          :else (recur (inc i) (compose-ops expression (foo (dec depth) zeroary-ops)))))))
+          :else (recur (inc i) (compose-ops expression (foo (dec depth) nullary-ops)))))))
 
 
 ;; TODO manage width and height of input images
 (defn generate-expression
   ([max-depth input-image-files]
     (let [input-image-op-makers (vec (map make-make-read input-image-files))
-          my-zeroary-ops (vec (concat zeroary-op-makers input-image-op-makers))
-  ;       my-zeroary-ops input-image-op-makers
+          my-nullary-ops (vec (concat nullary-op-makers input-image-op-makers))
+  ;       my-nullary-ops input-image-op-makers
           ]
-      (foo max-depth my-zeroary-ops)))
+      (foo max-depth my-nullary-ops)))
   ([max-depth]
-    (foo max-depth zeroary-op-makers)))
+    (foo max-depth nullary-op-makers)))
 
 
 (defn generate-random-image-file
