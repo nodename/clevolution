@@ -1,6 +1,6 @@
 (defproject org.clojars.nodename/clevolution "0.1.1"
   :description "Evolutionary art library in Clojure"
-  :source-path "src"
+  :source-paths ["src"]
   :java-source-paths ["src"]
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojars.nodename/rinzelight "0.0.3"]]
