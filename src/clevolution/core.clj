@@ -17,16 +17,16 @@
 (def image-width 400)
 (def image-height 400)
 
-(defn- int-range
+(defn int-range
   [lo hi]
   (+ lo (rand-int (- hi lo))))
 
-(defn- float-range
+(defn float-range
   [lo hi]
   (+ lo (rand (- hi lo))))
 
 
-(defn- make-with-arity [arity operator & params]
+(defn make-with-arity [arity operator & params]
   (fn []
     (with-meta (conj params operator) {:arity arity})))
 
@@ -58,17 +58,17 @@
     ((make-with-arity 0 'bw-noise seed octaves falloff image-width image-height))))
 
 ;; TODO cache images?
-(defn- make-make-read [uri]
+(defn make-make-read [uri]
   (fn []
     ((make-with-arity 0 'read-image-from-file uri))))
 
 
-(defn- make-*
+(defn make-*
   []
   (let [factor (float-range 0.5 2.0)]
     ((make-with-arity 1 '* factor))))
 
-(defn- make-blur
+(defn make-blur
   []
   (let [radius (float-range 0.0 1.0)
         sigma (float-range 0.5 2.0)]
@@ -85,7 +85,7 @@
   [make-+ make-- make-and make-or make-xor make-min make-max make-mod])
 
                 
-(defn- make-random-op
+(defn make-random-op
   "Select and evaluate a random function from one or more vectors"
   [op-makers & more]
     (let [op-makers 
@@ -96,43 +96,38 @@
       ((op-makers (rand-int (count op-makers))))))
 
 
-(defn- append-without-flattening
+(defn append-without-flattening
   "Add list-to-append as a single last element of orig-list"
   [orig-list list-to-append]
       (concat orig-list (list list-to-append)))
 
-(defn- compose-ops
-  ([binary-op op0 op1]
-    (compose-ops (compose-ops binary-op op0) op1))
-  ([unary-op op]
-    (if (seq? unary-op)
-      (append-without-flattening unary-op op)
-      (conj unary-op op))))
 
-
-(defn- foo
-  [depth nullary-ops]
+(defn tree
+  [depth my-nullary-op-makers]
     (let [op (if (zero? depth)
-               (make-random-op nullary-ops)
-               (make-random-op nullary-ops unary-op-makers binary-op-makers))
+               (make-random-op my-nullary-op-makers)
+               (make-random-op my-nullary-op-makers unary-op-makers binary-op-makers))
+          _ (dbg op)
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
-        (cond
-          (== i arity) expression
-          :else (recur (inc i) (compose-ops expression (foo (dec depth) nullary-ops)))))))
+       (cond
+        (== i arity) expression
+         :else
+         (let [subtree (tree (dec depth) my-nullary-op-makers)]
+           (recur (inc i) (append-without-flattening expression subtree)))))))
 
 
 ;; TODO manage width and height of input images
 (defn generate-expression
   ([max-depth input-image-files]
     (let [input-image-op-makers (vec (map make-make-read input-image-files))
-          my-nullary-ops (vec (concat nullary-op-makers input-image-op-makers))
-  ;       my-nullary-ops input-image-op-makers
+          my-nullary-op-makers (vec (concat nullary-op-makers input-image-op-makers))
+  ;       my-nullary-op-makers input-image-op-makers
           ]
-      (foo max-depth my-nullary-ops)))
+      (tree max-depth my-nullary-op-makers)))
   ([max-depth]
-    (foo max-depth nullary-op-makers)))
+    (tree max-depth nullary-op-makers)))
 
 
 (defn generate-random-image-file
