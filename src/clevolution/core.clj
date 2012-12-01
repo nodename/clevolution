@@ -58,7 +58,7 @@
     ((make-with-arity 1 'blur radius sigma))))
 
 
-(defn make-creation-op-makers
+(defn make-creationary-op-makers
   [w h]
   [(make-with-arity 0 'X w h)
    (make-with-arity 0 'Y w h)
@@ -116,25 +116,22 @@
          (let [subtree (tree (dec depth) nullary-op-makers non-nullary-op-makers)]
            (recur (inc i) (append-without-flattening expression subtree)))))))
 
-(def image-width 400)
-(def image-height 400)
-
+;; TODO handle input image files whose size doesn't match w and h
 (defn generate-expression
-  ([max-depth input-image-files]
+  ([max-depth w h input-image-files]
     (let [input-image-op-makers (map make-make-read input-image-files)
-          nullary-op-makers (concat (make-creation-op-makers image-width image-height) input-image-op-makers)]
+          nullary-op-makers (concat (make-creationary-op-makers w h) input-image-op-makers)]
       (tree max-depth nullary-op-makers (concat unary-op-makers binary-op-makers))))
-  ([max-depth]
-    (tree max-depth (make-creation-op-makers image-width image-height) (concat unary-op-makers binary-op-makers))))
-
+  ([max-depth w h]
+    (tree max-depth (make-creationary-op-makers w h) (concat unary-op-makers binary-op-makers))))
 
 (defn generate-random-image-file
-  ([uri max-depth input-files]
-  (let [expression (generate-expression max-depth input-files)]
+  ([uri max-depth w h input-files]
+  (let [expression (generate-expression max-depth w h input-files)]
     (println expression)
     (save-image expression uri)))
-  ([uri max-depth]
-  (let [expression (generate-expression max-depth)]
+  ([uri max-depth w h]
+  (let [expression (generate-expression max-depth w h)]
     (println expression)
     (save-image expression uri))))
 
