@@ -13,10 +13,6 @@
      (println (str "dbg: " (quote ~@body) "=" x#))
      x#))
 
-
-(def image-width 400)
-(def image-height 400)
-
 (defn int-range
   [lo hi]
   (+ lo (rand-int (- hi lo))))
@@ -30,32 +26,19 @@
   (fn []
     (with-meta (conj params operator) {:arity arity})))
 
-
-(def make-X (make-with-arity 0 'X image-width image-height))
-(def make-Y (make-with-arity 0 'Y image-width image-height))
-
-(def make-abs (make-with-arity 1 'abs))
-(def make-sin (make-with-arity 1 'sin))
-(def make-cos (make-with-arity 1 'cos))
-(def make-atan (make-with-arity 1 'atan))
-(def make-log (make-with-arity 1 'log))
-(def make-inverse (make-with-arity 1 'inverse))
-
-(def make-+ (make-with-arity 2 '+))
-(def make-- (make-with-arity 2 '-))
-(def make-and (make-with-arity 2 'and))
-(def make-or (make-with-arity 2 'or))
-(def make-xor (make-with-arity 2 'xor))
-(def make-min (make-with-arity 2 'min))
-(def make-max (make-with-arity 2 'max))
-(def make-mod (make-with-arity 2 'mod))
  
 (defn make-bw-noise
-  []
+  [w h]
   (let [seed (int-range 50 1000)
         octaves (int-range 1 10)
         falloff (float-range 0.1 1.0)]
-    ((make-with-arity 0 'bw-noise seed octaves falloff image-width image-height))))
+    ((make-with-arity 0 'bw-noise seed octaves falloff w h))))
+
+(defn make-make-bw-noise
+  [width height]
+  (fn []
+    (make-bw-noise width height)))
+    
 
 ;; TODO cache images?
 (defn make-make-read [uri]
@@ -75,24 +58,38 @@
     ((make-with-arity 1 'blur radius sigma))))
 
 
-(def nullary-op-makers
-  [make-X make-Y make-bw-noise])
+(defn make-creation-op-makers
+  [w h]
+  [(make-with-arity 0 'X w h)
+   (make-with-arity 0 'Y w h)
+   (make-make-bw-noise w h)])
 
 (def unary-op-makers
-  [make-abs make-sin make-cos make-atan make-log make-inverse make-* make-blur])
+  [(make-with-arity 1 'abs)
+   (make-with-arity 1 'sin)
+   (make-with-arity 1 'cos)
+   (make-with-arity 1 'atan)
+   (make-with-arity 1 'log)
+   (make-with-arity 1 'inverse)
+    make-*
+    make-blur])
 
 (def binary-op-makers
-  [make-+ make-- make-and make-or make-xor make-min make-max make-mod])
+  [(make-with-arity 2 '+)
+   (make-with-arity 2 '-)
+   (make-with-arity 2 'and)
+   (make-with-arity 2 'or)
+   (make-with-arity 2 'xor)
+   (make-with-arity 2 'min)
+   (make-with-arity 2 'max)
+   (make-with-arity 2 'mod)])
 
                 
 (defn make-random-op
-  "Select and evaluate a random function from one or more vectors"
-  [op-makers & more]
-    (let [op-makers 
-          (if more
-            (vec (concat op-makers (reduce concat more)))
-            op-makers)]
-      ; note the extra parens used to evaluate the selected op-maker:
+  "Select and execute a random function from a seq"
+  [op-makers]
+  (let [op-makers (vec op-makers)]
+      ; note the extra parens used to execute the selected op-maker:
       ((op-makers (rand-int (count op-makers))))))
 
 
@@ -103,31 +100,32 @@
 
 
 (defn tree
-  [depth my-nullary-op-makers]
-    (let [op (if (zero? depth)
-               (make-random-op my-nullary-op-makers)
-               (make-random-op my-nullary-op-makers unary-op-makers binary-op-makers))
+  [depth nullary-op-makers non-nullary-op-makers]
+    (let [all-op-makers (concat nullary-op-makers non-nullary-op-makers)
+          op (if (zero? depth)
+               (make-random-op nullary-op-makers)
+               (make-random-op all-op-makers))
+          _ (dbg depth)
           _ (dbg op)
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
        (cond
-        (== i arity) expression
+         (== i arity) expression
          :else
-         (let [subtree (tree (dec depth) my-nullary-op-makers)]
+         (let [subtree (tree (dec depth) nullary-op-makers non-nullary-op-makers)]
            (recur (inc i) (append-without-flattening expression subtree)))))))
 
+(def image-width 400)
+(def image-height 400)
 
-;; TODO manage width and height of input images
 (defn generate-expression
   ([max-depth input-image-files]
-    (let [input-image-op-makers (vec (map make-make-read input-image-files))
-          my-nullary-op-makers (vec (concat nullary-op-makers input-image-op-makers))
-  ;       my-nullary-op-makers input-image-op-makers
-          ]
-      (tree max-depth my-nullary-op-makers)))
+    (let [input-image-op-makers (map make-make-read input-image-files)
+          nullary-op-makers (concat (make-creation-op-makers image-width image-height) input-image-op-makers)]
+      (tree max-depth nullary-op-makers (concat unary-op-makers binary-op-makers))))
   ([max-depth]
-    (tree max-depth nullary-op-makers)))
+    (tree max-depth (make-creation-op-makers image-width image-height) (concat unary-op-makers binary-op-makers))))
 
 
 (defn generate-random-image-file
