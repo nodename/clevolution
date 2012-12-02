@@ -98,13 +98,16 @@
   [orig-list list-to-append]
       (concat orig-list (list list-to-append)))
 
-
-(defn tree
-  [depth nullary-op-makers non-nullary-op-makers]
+;; The full method always fills out the tree so all leaves are at the same depth;
+;; the grow method may choose a nullary op at less than the full depth, creating a leaf node there
+(defn generate-tree
+  [depth nullary-op-makers non-nullary-op-makers & {:keys [method]
+                                                    :or {method :grow}}]
     (let [all-op-makers (concat nullary-op-makers non-nullary-op-makers)
+          non-leaf-choices {:grow all-op-makers :full non-nullary-op-makers}
           op (if (zero? depth)
                (make-random-op nullary-op-makers)
-               (make-random-op all-op-makers))
+               (make-random-op (non-leaf-choices method)))
           _ (dbg depth)
           _ (dbg op)
           arity ((meta op) :arity)]
@@ -113,7 +116,7 @@
        (cond
          (== i arity) expression
          :else
-         (let [subtree (tree (dec depth) nullary-op-makers non-nullary-op-makers)]
+         (let [subtree (generate-tree (dec depth) nullary-op-makers non-nullary-op-makers)]
            (recur (inc i) (append-without-flattening expression subtree)))))))
 
 ;; TODO handle input image files whose size doesn't match w and h
@@ -121,9 +124,9 @@
   ([max-depth w h input-image-files]
     (let [input-image-op-makers (map make-make-read input-image-files)
           nullary-op-makers (concat (make-creationary-op-makers w h) input-image-op-makers)]
-      (tree max-depth nullary-op-makers (concat unary-op-makers binary-op-makers))))
+      (generate-tree max-depth nullary-op-makers (concat unary-op-makers binary-op-makers))))
   ([max-depth w h]
-    (tree max-depth (make-creationary-op-makers w h) (concat unary-op-makers binary-op-makers))))
+    (generate-tree max-depth (make-creationary-op-makers w h) (concat unary-op-makers binary-op-makers))))
 
 (defn generate-random-image-file
   ([uri max-depth w h input-files]
