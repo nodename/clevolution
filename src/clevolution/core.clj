@@ -5,7 +5,7 @@
         [clevolution.file-io :only [read-image-from-file]]
         [clevolution.image_ops.unary :only [abs sin cos atan log inverse blur *]]
         [clevolution.image_ops.binary :only [+ - and or xor min max mod]]
-        [clevolution.file-io :only [save-image]] :reload-all))
+        [clevolution.file-io] :reload-all))
 
 ;; http://blog.jayway.com/2011/03/13/dbg-a-cool-little-clojure-macro/
 (defmacro dbg [& body]
@@ -138,3 +138,34 @@
     (println expression)
     (save-image expression uri))))
 
+(comment
+  
+  (load-file "src/clevolution/core.clj")
+  (in-ns 'clevolution.core)
+  
+  (def output-image-file "images/test.png")
+  
+  (def input-files (list "images/Dawn_on_Callipygea.png"))
+  
+  (def max-depth 2)
+  
+  (def image-width 400)
+  (def image-height 400)
+  
+  ;; generate a random expression:
+  (generate-expression max-depth image-width image-height)
+  ;; OR:
+  (generate-expression max-depth image-width image-height input-files)
+
+  ;; generate a random expression and evaluate it, saving the resulting image to a file:
+  (generate-random-image-file output-image-file max-depth image-width image-height)
+  ;; OR:
+  (generate-random-image-file output-image-file max-depth image-width image-height input-files)
+  
+  ;; evaluate an explicit expression, saving the resulting image to a file
+  ;; (This one is a Galois field (http://nklein.com/2012/05/visualizing-galois-fields/):
+  (save-image '(xor (X 400 400) (Y 400 400)) output-image-file)
+  
+  ;; read back the expression that generated the image in a file:
+  (get-generator-string output-image-file)
+  )

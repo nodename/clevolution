@@ -1,5 +1,8 @@
 # clevolution
  
+Sample usage code is in https://github.com/nodename/clevolution/blob/master/src/clevolution/core.clj
+ 
+ 
 For more details please see the intro to the original haXe version of Evolution: http://nodename.github.com/
 
 Copyright (C) 2012 Alan Shaw
