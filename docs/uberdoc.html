@@ -3042,102 +3042,101 @@ net.brehaut.ClojureTools = (function (SH) {
   `(let [x# ~@body]
      (println (str &quot;dbg: &quot; (quote ~@body) &quot;=&quot; x#))
      x#))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def image-width 400)
-(def image-height 400)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- int-range
+</td><td class="codes"><pre class="brush: clojure">(defn int-range
   [lo hi]
   (+ lo (rand-int (- hi lo))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- float-range
+</td><td class="codes"><pre class="brush: clojure">(defn float-range
   [lo hi]
   (+ lo (rand (- hi lo))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- make-with-arity [arity operator &amp; params]
+</td><td class="codes"><pre class="brush: clojure">(defn make-with-arity [arity operator &amp; params]
   (fn []
     (with-meta (conj params operator) {:arity arity})))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def make-X (make-with-arity 0 'X image-width image-height))
-(def make-Y (make-with-arity 0 'Y image-width image-height))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def make-abs (make-with-arity 1 'abs))
-(def make-sin (make-with-arity 1 'sin))
-(def make-cos (make-with-arity 1 'cos))
-(def make-atan (make-with-arity 1 'atan))
-(def make-log (make-with-arity 1 'log))
-(def make-inverse (make-with-arity 1 'inverse))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def make-+ (make-with-arity 2 '+))
-(def make-- (make-with-arity 2 '-))
-(def make-and (make-with-arity 2 'and))
-(def make-or (make-with-arity 2 'or))
-(def make-xor (make-with-arity 2 'xor))
-(def make-min (make-with-arity 2 'min))
-(def make-max (make-with-arity 2 'max))
-(def make-mod (make-with-arity 2 'mod))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn make-bw-noise
-  []
+  [w h]
   (let [seed (int-range 50 1000)
         octaves (int-range 1 10)
         falloff (float-range 0.1 1.0)]
-    ((make-with-arity 0 'bw-noise seed octaves falloff image-width image-height))))</pre></td></tr><tr><td class="docs"><p>TODO cache images?</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- make-make-read [uri]
+    ((make-with-arity 0 'bw-noise seed octaves falloff w h))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn make-make-bw-noise
+  [width height]
+  (fn []
+    (make-bw-noise width height)))</pre></td></tr><tr><td class="docs"><p>TODO cache images?</p>
+</td><td class="codes"><pre class="brush: clojure">(defn make-make-read [uri]
   (fn []
     ((make-with-arity 0 'read-image-from-file uri))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- make-*
+</td><td class="codes"><pre class="brush: clojure">(defn make-*
   []
   (let [factor (float-range 0.5 2.0)]
     ((make-with-arity 1 '* factor))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- make-blur
+</td><td class="codes"><pre class="brush: clojure">(defn make-blur
   []
   (let [radius (float-range 0.0 1.0)
         sigma (float-range 0.5 2.0)]
     ((make-with-arity 1 'blur radius sigma))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def zeroary-op-makers
-  [make-X make-Y make-bw-noise])</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn make-creationary-op-makers
+  [w h]
+  [(make-with-arity 0 'X w h)
+   (make-with-arity 0 'Y w h)
+   (make-make-bw-noise w h)])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def unary-op-makers
-  [make-abs make-sin make-cos make-atan make-log make-inverse make-* make-blur])</pre></td></tr><tr><td class="docs">
+  [(make-with-arity 1 'abs)
+   (make-with-arity 1 'sin)
+   (make-with-arity 1 'cos)
+   (make-with-arity 1 'atan)
+   (make-with-arity 1 'log)
+   (make-with-arity 1 'inverse)
+    make-*
+    make-blur])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def binary-op-makers
-  [make-+ make-- make-and make-or make-xor make-min make-max make-mod])</pre></td></tr><tr><td class="docs"><p>Select and evaluate a random function from one or more vectors</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- make-random-op
-  [op-makers &amp; more]
-    (let [op-makers 
-          (if more
-            (vec (concat op-makers (reduce concat more)))
-            op-makers)]
-      ; note the extra parens used to evaluate the selected op-maker:
+  [(make-with-arity 2 '+)
+   (make-with-arity 2 '-)
+   (make-with-arity 2 'and)
+   (make-with-arity 2 'or)
+   (make-with-arity 2 'xor)
+   (make-with-arity 2 'min)
+   (make-with-arity 2 'max)
+   (make-with-arity 2 'mod)])</pre></td></tr><tr><td class="docs"><p>Select and execute a random function from a seq</p>
+</td><td class="codes"><pre class="brush: clojure">(defn make-random-op
+  [op-makers]
+  (let [op-makers (vec op-makers)]
+      ; note the extra parens used to execute the selected op-maker:
       ((op-makers (rand-int (count op-makers))))))</pre></td></tr><tr><td class="docs"><p>Add list-to-append as a single last element of orig-list</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- append-without-flattening
+</td><td class="codes"><pre class="brush: clojure">(defn append-without-flattening
   [orig-list list-to-append]
-      (concat orig-list (list list-to-append)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- compose-ops
-  ([binary-op op0 op1]
-    (compose-ops (compose-ops binary-op op0) op1))
-  ([unary-op op]
-    (if (seq? unary-op)
-      (append-without-flattening unary-op op)
-      (conj unary-op op))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- foo
-  [depth zeroary-ops]
-    (let [op (if (zero? depth)
-               (make-random-op zeroary-ops)
-               (make-random-op zeroary-ops unary-op-makers binary-op-makers))
+      (concat orig-list (list list-to-append)))</pre></td></tr><tr><td class="docs"><p>The full method always fills out the tree so all leaves are at the same depth;
+the grow method may choose a nullary op, creating a leaf node, before reaching the full depth</p>
+</td><td class="codes"><pre class="brush: clojure">(defn generate-tree
+  [depth nullary-op-makers non-nullary-op-makers &amp; {:keys [method]
+                                                    :or {method :grow}}]
+    (let [non-leaf-choices {:grow (concat nullary-op-makers non-nullary-op-makers)
+                            :full non-nullary-op-makers}
+          op (if (zero? depth)
+               (make-random-op nullary-op-makers)
+               (make-random-op (non-leaf-choices method)))
+          _ (dbg depth)
+          _ (dbg op)
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
-        (cond
-          (== i arity) expression
-          :else (recur (inc i) (compose-ops expression (foo (dec depth) zeroary-ops)))))))</pre></td></tr><tr><td class="docs"><p>TODO manage width and height of input images</p>
+       (cond
+         (== i arity) expression
+         :else
+         (let [subtree (generate-tree (dec depth) nullary-op-makers non-nullary-op-makers)]
+           (recur (inc i) (append-without-flattening expression subtree)))))))</pre></td></tr><tr><td class="docs"><p>TODO handle input image files whose size doesn't match w and h</p>
 </td><td class="codes"><pre class="brush: clojure">(defn generate-expression
-  ([max-depth input-image-files]
-    (let [input-image-op-makers (vec (map make-make-read input-image-files))
-          my-zeroary-ops (vec (concat zeroary-op-makers input-image-op-makers))
-  ;       my-zeroary-ops input-image-op-makers
-          ]
-      (foo max-depth my-zeroary-ops)))
-  ([max-depth]
-    (foo max-depth zeroary-op-makers)))</pre></td></tr><tr><td class="docs">
+  ([max-depth w h input-image-files]
+    (let [input-image-op-makers (map make-make-read input-image-files)
+          nullary-op-makers (concat (make-creationary-op-makers w h) input-image-op-makers)]
+      (generate-tree max-depth nullary-op-makers (concat unary-op-makers binary-op-makers))))
+  ([max-depth w h]
+    (generate-tree max-depth (make-creationary-op-makers w h) (concat unary-op-makers binary-op-makers))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn generate-random-image-file
-  ([uri max-depth input-files]
-  (let [expression (generate-expression max-depth input-files)]
+  ([uri max-depth w h input-files]
+  (let [expression (generate-expression max-depth w h input-files)]
     (println expression)
     (save-image expression uri)))
-  ([uri max-depth]
-  (let [expression (generate-expression max-depth)]
+  ([uri max-depth w h]
+  (let [expression (generate-expression max-depth w h)]
     (println expression)
     (save-image expression uri))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clevolution.file-io" name="clevolution.file-io"><h1 class="project-name">clevolution.file-io</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clevolution.file-io
