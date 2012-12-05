@@ -99,12 +99,12 @@
       (concat orig-list (list list-to-append)))
 
 ;; The full method always fills out the tree so all leaves are at the same depth;
-;; the grow method may choose a nullary op at less than the full depth, creating a leaf node there
+;; the grow method may choose a nullary op, creating a leaf node, before reaching the full depth
 (defn generate-tree
   [depth nullary-op-makers non-nullary-op-makers & {:keys [method]
                                                     :or {method :grow}}]
-    (let [all-op-makers (concat nullary-op-makers non-nullary-op-makers)
-          non-leaf-choices {:grow all-op-makers :full non-nullary-op-makers}
+    (let [non-leaf-choices {:grow (concat nullary-op-makers non-nullary-op-makers)
+                            :full non-nullary-op-makers}
           op (if (zero? depth)
                (make-random-op nullary-op-makers)
                (make-random-op (non-leaf-choices method)))
