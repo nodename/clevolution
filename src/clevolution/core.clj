@@ -31,8 +31,9 @@
   [w h]
   (let [seed (int-range 50 1000)
         octaves (int-range 1 10)
-        falloff (float-range 0.1 1.0)]
-    ((make-with-arity 0 'bw-noise seed octaves falloff w h))))
+        falloff (float-range 0.1 1.0)
+        the-function (make-with-arity 0 'bw-noise seed octaves falloff w h)]
+    (the-function)))
 
 (defn make-make-bw-noise
   [width height]
@@ -43,19 +44,22 @@
 ;; TODO cache images?
 (defn make-make-read [uri]
   (fn []
-    ((make-with-arity 0 'read-image-from-file uri))))
+    (let [the-function (make-with-arity 0 'read-image-from-file uri)]
+      (the-function))))
 
 
 (defn make-*
   []
-  (let [factor (float-range 0.5 2.0)]
-    ((make-with-arity 1 '* factor))))
+  (let [factor (float-range 0.5 2.0)
+        the-function (make-with-arity 1 '* factor)]
+    (the-function)))
 
 (defn make-blur
   []
   (let [radius (float-range 0.0 1.0)
-        sigma (float-range 0.5 2.0)]
-    ((make-with-arity 1 'blur radius sigma))))
+        sigma (float-range 0.5 2.0)
+        the-function (make-with-arity 1 'blur radius sigma)]
+    (the-function)))
 
 
 (defn make-creationary-op-makers
@@ -88,9 +92,9 @@
 (defn make-random-op
   "Select and execute a random function from a seq"
   [op-makers]
-  (let [op-makers (vec op-makers)]
-      ; note the extra parens used to execute the selected op-maker:
-      ((op-makers (rand-int (count op-makers))))))
+  (let [op-makers (vec op-makers)
+        the-function (op-makers (rand-int (count op-makers)))]
+      (the-function)))
 
 
 (defn append-without-flattening
