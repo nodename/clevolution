@@ -117,9 +117,8 @@
           arity ((meta op) :arity)]
       (loop [i 0
             expression op]
-       (cond
-         (== i arity) expression
-         :else
+       (if (== i arity)
+         expression
          (let [subtree (generate-tree (dec depth) nullary-op-makers non-nullary-op-makers)]
            (recur (inc i) (append-without-flattening expression subtree)))))))
 
