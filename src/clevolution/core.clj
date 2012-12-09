@@ -102,25 +102,39 @@
   [orig-list list-to-append]
       (concat orig-list (list list-to-append)))
 
+
+(defn gen-tree
+  [depth leaf-choices non-leaf-choices]
+  (let [op (if (zero? depth)
+             (make-random-op leaf-choices)
+             (make-random-op non-leaf-choices))
+        _ (dbg depth)
+        _ (dbg op)
+        arity ((meta op) :arity)]
+    (loop [i 0
+           expression op]
+      (if (== i arity)
+        expression
+        (let [subtree (gen-tree (dec depth) leaf-choices non-leaf-choices)]
+          (recur (inc i) (append-without-flattening expression subtree)))))))
+      
+;      (reduce (fn [expression _]
+;                (let [ subtree (gen-tree (dec depth) leaf-choices non-leaf-choices)]
+;                  (append-without-flattening expression subtree)))
+;                  op (range arity))))
+         
+
 ;; The full method always fills out the tree so all leaves are at the same depth;
 ;; the grow method may choose a nullary op, creating a leaf node, before reaching the full depth
 (defn generate-tree
   [depth nullary-op-makers non-nullary-op-makers & {:keys [method]
                                                     :or {method :grow}}]
-    (let [non-leaf-choices {:grow (concat nullary-op-makers non-nullary-op-makers)
-                            :full non-nullary-op-makers}
-          op (if (zero? depth)
-               (make-random-op nullary-op-makers)
-               (make-random-op (non-leaf-choices method)))
-          _ (dbg depth)
-          _ (dbg op)
-          arity ((meta op) :arity)]
-      (loop [i 0
-            expression op]
-       (if (== i arity)
-         expression
-         (let [subtree (generate-tree (dec depth) nullary-op-makers non-nullary-op-makers)]
-           (recur (inc i) (append-without-flattening expression subtree)))))))
+    (let [leaf-choices nullary-op-makers
+          non-leaf-choices-map {:grow (concat nullary-op-makers non-nullary-op-makers)
+                                :full non-nullary-op-makers}
+          non-leaf-choices (non-leaf-choices-map method)]
+      (gen-tree depth leaf-choices non-leaf-choices)))
+
 
 ;; TODO handle input image files whose size doesn't match w and h
 (defn generate-expression
