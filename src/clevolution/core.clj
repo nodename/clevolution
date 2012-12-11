@@ -92,7 +92,7 @@
 (defn append-without-flattening
   "Add list-to-append as a single last element of orig-list"
   [orig-list list-to-append]
-      (concat orig-list (list list-to-append)))
+      (concat orig-list [list-to-append]))
 
 
 (defn gen-tree
@@ -154,7 +154,7 @@
   
   (def output-image-file "images/test.png")
   
-  (def input-files (list "images/Dawn_on_Callipygea.png"))
+  (def input-files ["images/Dawn_on_Callipygea.png"])
   
   (def max-depth 2)
   
