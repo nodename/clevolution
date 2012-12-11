@@ -64,30 +64,21 @@
 
 (defn make-creationary-op-makers
   [w h]
-  [(make-with-arity 0 'X w h)
-   (make-with-arity 0 'Y w h)
-   (make-make-bw-noise w h)])
+  (list
+    (make-with-arity 0 'X w h)
+    (make-with-arity 0 'Y w h)
+    (make-make-bw-noise w h)))
 
 (def unary-op-makers
-  [(make-with-arity 1 'abs)
-   (make-with-arity 1 'sin)
-   (make-with-arity 1 'cos)
-   (make-with-arity 1 'atan)
-   (make-with-arity 1 'log)
-   (make-with-arity 1 'inverse)
+  (conj
+    (for [f ['abs 'sin 'cos 'atan 'log 'inverse]]
+      (make-with-arity 1 f))
     make-*
-    make-blur])
+    make-blur))
 
 (def binary-op-makers
-  [(make-with-arity 2 '+)
-   (make-with-arity 2 '-)
-   (make-with-arity 2 'and)
-   (make-with-arity 2 'or)
-   (make-with-arity 2 'xor)
-   (make-with-arity 2 'min)
-   (make-with-arity 2 'max)
-   (make-with-arity 2 'mod)])
-
+  (for [f ['+ '- 'and 'or 'xor 'min 'max 'mod]]
+        (make-with-arity 2 f)))
                 
 (defn make-random-op
   "Select and execute a random function from a seq"
@@ -97,6 +88,7 @@
       (the-function)))
 
 
+;; note : concat is O(n); try reverse and cons
 (defn append-without-flattening
   "Add list-to-append as a single last element of orig-list"
   [orig-list list-to-append]
