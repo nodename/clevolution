@@ -78,8 +78,8 @@
   "Select and execute a random function from a seq"
   [op-makers]
   (let [op-makers (vec op-makers)
-        the-function (op-makers (rand-int (count op-makers)))]
-      (the-function)))
+        op-maker (op-makers (rand-int (count op-makers)))]
+      (op-maker)))
 
 
 ;; note : concat is O(n); try reverse and cons
