@@ -1,9 +1,9 @@
 (ns clevolution.file-io
 	(:import (java.lang String)
+          (java.io File StringReader PushbackReader)
           (javax.imageio ImageIO IIOImage)
           (javax.imageio.stream FileImageOutputStream)
-          (com.sun.imageio.plugins.png PNGMetadata)
-          (java.io File)))
+          (com.sun.imageio.plugins.png PNGMetadata)))
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
@@ -18,19 +18,19 @@
 	[]
 	(let [iterator (ImageIO/getImageWritersBySuffix "png")]
 	(if-not (.hasNext iterator) 
-		(throw (Exception. "No image writer for PNG")))
+		(throw (Exception. "No image writer found for PNG")))
 	(.next iterator)))
 
 
 (defn make-generator-metadata
-	"Create a PNGMetadata containing generator-string and clevolution-version"
-	[generator-string]
-	(let [png-metadata (PNGMetadata.)]
-	(.add (.unknownChunkType png-metadata) generator-chunk-name)
-	(.add (.unknownChunkData png-metadata) (.getBytes generator-string))
-	(.add (.unknownChunkType png-metadata) clevolution-version-chunk-name)
-	(.add (.unknownChunkData png-metadata) (.getBytes clevolution-version))
-	png-metadata))
+  "Create a PNGMetadata containing generator-string and clevolution-version"
+  [generator-string]
+  (let [png-metadata (PNGMetadata.)]
+    (.add (.unknownChunkType png-metadata) generator-chunk-name)
+    (.add (.unknownChunkData png-metadata) (.getBytes generator-string))
+    (.add (.unknownChunkType png-metadata) clevolution-version-chunk-name)
+    (.add (.unknownChunkData png-metadata) (.getBytes clevolution-version))
+    png-metadata))
 
 
 (defn write-image-to-file
@@ -100,12 +100,22 @@
       first-named-version
       version)))
 
-  
+(defn read-form-from-string
+  [s]
+  (let [sr (StringReader. s)
+        pbr (PushbackReader. sr)
+        form (clojure.core/read pbr)
+        _ (.close pbr)]
+    form))
+
 (defn save-image
-	"Generate and save an image from generator"
+  "Generate and save an image from generator (generator may be a Clojure form or the string representation of a Clojure form)"
 	[generator uri]
 	(let [metadata (make-generator-metadata (str generator))
-	      image (eval generator)]
+       generator (if (= (class generator) String)
+                   (read-form-from-string generator)
+                   generator)
+       image (eval generator)]
    (write-image-to-file image metadata uri)))
 
 
