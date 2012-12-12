@@ -1,11 +1,9 @@
 (ns clevolution.file-io
 	(:import (java.lang String)
-          (java.awt.image BufferedImage)
-          (java.awt Color GradientPaint)
           (javax.imageio ImageIO IIOImage)
           (javax.imageio.stream FileImageOutputStream)
-          (com.sun.imageio.plugins.png PNGMetadata PNGImageReader)
-          (java.io ByteArrayOutputStream File)))
+          (com.sun.imageio.plugins.png PNGMetadata)
+          (java.io File)))
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
