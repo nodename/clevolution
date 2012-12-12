@@ -7,12 +7,6 @@
         [clevolution.image_ops.binary :only [+ - and or xor min max mod]]
         [clevolution.file-io] :reload-all))
 
-;; http://blog.jayway.com/2011/03/13/dbg-a-cool-little-clojure-macro/
-(defmacro dbg [& body]
-  `(let [x# ~@body]
-     (println (str "dbg: " (quote ~@body) "=" x#))
-     x#))
-
 (defn int-range
   [lo hi]
   (+ lo (rand-int (- hi lo))))
