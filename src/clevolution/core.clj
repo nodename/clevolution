@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [* + - and or min max mod])
   (:use [clevolution.image_ops.nullary.gradient :only [X Y]]
         [clevolution.image_ops.nullary.noise :only [bw-noise]]
-        [clevolution.file-io :only [read-image-from-file]]
         [clevolution.image_ops.unary :only [abs sin cos atan log inverse blur *]]
         [clevolution.image_ops.binary :only [+ - and or xor min max mod]]
         [clevolution.file-io] :reload-all))
@@ -82,7 +81,6 @@
       (op-maker)))
 
 
-;; note : concat is O(n); try reverse and cons
 (defn append-without-flattening
   "Add list-to-append as a single last element of orig-list"
   [orig-list list-to-append]
