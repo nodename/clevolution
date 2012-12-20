@@ -1,12 +1,12 @@
 (ns clevolution.image_ops.binary
   (:import (java.awt.image BufferedImage))
   (:refer-clojure :exclude [+ - and or min max mod])
-  (:use [rinzelight.pixel
-           :only [create-pixel round-to-quantum]]
+  (:require [rinzelight.pixel
+           :refer [create-pixel round-to-quantum]]
           [rinzelight.image
-           :only [create-image]]
+           :refer [create-image]]
           [rinzelight.effects.basic-effects
-           :only [map-image]] :reload-all))
+           :refer [map-image]] :reload-all))
 
 
 (defn- plus-channel-op
@@ -61,6 +61,8 @@
     [bi0 bi1]
     (:image (map-image (pixel-op-generator channel-op) (create-image bi0) (create-image bi1)))))
 
+
+;; make a macro defop to do all these defs
 (def plus
   (image-op-generator plus-channel-op))
 

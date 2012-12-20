@@ -1,17 +1,16 @@
 (ns clevolution.image_ops.unary
   (:import (java.awt.image BufferedImage))
   (:import (clojure.contrib.math))
-  (:require [rinzelight.effects.blur
-             :only [blur]])
+  (:require [rinzelight.effects.blur])
   (:refer-clojure :exclude [* and or])
-  (:use [rinzelight.constants
-         :only [quantum-range]]
+  (:require [rinzelight.constants
+         :refer [quantum-range]]
         [rinzelight.pixel
-         :only [create-pixel round-to-quantum]]
+         :refer [create-pixel round-to-quantum]]
         [rinzelight.image
-         :only [create-image]]
+         :refer [create-image]]
         [rinzelight.effects.basic-effects
-         :only [map-image]]))
+         :refer [map-image]]))
 
 
 (defn- abs-channel-op

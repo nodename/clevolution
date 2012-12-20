@@ -1,12 +1,7 @@
 (ns clevolution.image_ops.nullary.noise
-  (:import (java.awt.image BufferedImage) (clevolution.perlin ImprovedNoise))
-  (:use clojure.contrib.math))
-
-(defmacro dbg [& body]
-  `(let [x# ~@body]
-     (println (str "dbg: " (quote ~@body) "=" x#))
-     x#))
-
+  (:import (java.awt.image BufferedImage)
+           (clevolution.perlin ImprovedNoise))
+  (:require [clojure.contrib.math :refer [expt]]))
 
 (defn- next-random-number
   [random-number]

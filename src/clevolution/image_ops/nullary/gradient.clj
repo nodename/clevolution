@@ -1,10 +1,10 @@
 (ns clevolution.image_ops.nullary.gradient
 	(:import (java.awt.image BufferedImage)
           (java.awt Color GradientPaint))
- (:use clojure.contrib.math))
+ (:require clojure.contrib.math))
 
 
-(defn create-gradient-image
+(defn- create-gradient-image
 	"Create a gradient image. Arity: 0 Parameters: none"
 	[gradientPaint width height]
 	(let [ bi (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
