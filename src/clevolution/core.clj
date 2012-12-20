@@ -176,7 +176,7 @@
   
   ;; evaluate an explicit expression, saving the resulting image to a file
   ;; (This one is a Galois field (http://nklein.com/2012/05/visualizing-galois-fields/):
-  (save-image "(xor (X 400 400) (Y 400 400))" output-image-file)
+  (save-image "(xor (X 400 400) (Y 400 400))" first-named-version output-image-file)
   
   ;; read back the expression that generated the image in a file:
   (get-generator-string output-image-file)
