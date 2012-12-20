@@ -3,15 +3,18 @@
           (java.io File StringReader PushbackReader)
           (javax.imageio ImageIO IIOImage)
           (javax.imageio.stream FileImageOutputStream)
-          (com.sun.imageio.plugins.png PNGMetadata)))
+          (com.sun.imageio.plugins.png PNGMetadata))
+ (:require  [clevolution.util :refer :all]
+            [clevolution.image-ops.nullary.file-input :refer [get-imagereader]]
+            [clevolution.version.version0-1-1 :refer :all] :reload-all))
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
 ;; http://en.wikipedia.org/wiki/Portable_Network_Graphics#.22Chunks.22_within_the_file
 (def generator-chunk-name "gnTr")
 (def clevolution-version-chunk-name "clVn")
-(def clevolution-version "0.1.1")
-(def first-named-version "0.1.1")
+(def clevolution-version "0-1-1")
+(def first-named-version "0-1-1")
 
 (defn get-png-imagewriter
 	"Return an ImageWriter for PNG images"
@@ -24,12 +27,12 @@
 
 (defn make-generator-metadata
   "Create a PNGMetadata containing generator-string and clevolution-version"
-  [generator-string]
+  [^String generator ^String version]
   (let [png-metadata (PNGMetadata.)]
     (.add (.unknownChunkType png-metadata) generator-chunk-name)
-    (.add (.unknownChunkData png-metadata) (.getBytes generator-string))
+    (.add (.unknownChunkData png-metadata) (.getBytes generator))
     (.add (.unknownChunkType png-metadata) clevolution-version-chunk-name)
-    (.add (.unknownChunkData png-metadata) (.getBytes clevolution-version))
+    (.add (.unknownChunkData png-metadata) (.getBytes version))
     png-metadata))
 
 
@@ -82,22 +85,20 @@
       first-named-version
       version)))
 
-(defn read-form-from-string
-  [s]
-  (let [sr (StringReader. s)
-        pbr (PushbackReader. sr)
-        form (clojure.core/read pbr)
-        _ (.close pbr)]
-    form))
+(defn eval-in
+  [^String generator ^String ns]
+  (let [form (read-string generator)
+        orig-ns *ns*]
+    ;; TODO check that ns is :required!
+    (in-ns (symbol ns))
+    (let [ret (eval form)]
+      (in-ns (ns-name orig-ns))
+      ret)))
 
 (defn save-image
-  "Generate and save an image from generator (generator may be a Clojure form or the string representation of a Clojure form)"
-	[generator uri]
-	(let [metadata (make-generator-metadata (str generator))
-       generator (if (= (class generator) String)
-                   (read-form-from-string generator)
-                   generator)
-       image (eval generator)]
+  "Generate and save an image from generator"
+  [^String generator ^String version ^String uri]
+ (let [metadata (make-generator-metadata generator version)
+       ns-name (.concat "clevolution.version.version" version)
+       image (eval-in generator ns-name)]
    (write-image-to-file image metadata uri)))
-
-
