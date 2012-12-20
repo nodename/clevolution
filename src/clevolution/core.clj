@@ -14,26 +14,26 @@
   [tree]
   (with-out-str (print tree)))
 
-(def arities {"X" 0
-              "Y" 0
-              "bw-noise" 0
-              "read-image-from-file" 0
-              "*" 1
-              "blur" 1
-              "abs" 1
-              "sin" 1
-              "cos" 1
-              "atan" 1
-              "log" 1
-              "inverse" 1
-              "+" 2
-              "-" 2
-              "and" 2
-              "or" 2
-              "xor" 2
-              "min" 2
-              "max" 2
-              "mod" 2})
+(def version0_1_1 {"X" {:arity 0}
+                   "Y" {:arity 0}
+                   "bw-noise" {:arity 0}
+                   "read-image-from-file" {:arity 0}
+                   "*" {:arity 1}
+                   "blur" {:arity 1}
+                   "abs" {:arity 1}
+                   "sin" {:arity 1}
+                   "cos" {:arity 1}
+                   "atan" {:arity 1}
+                   "log" {:arity 1}
+                   "inverse" {:arity 1}
+                   "+" {:arity 2}
+                   "-" {:arity 2}
+                   "and" {:arity 2}
+                   "or" {:arity 2}
+                   "xor" {:arity 2}
+                   "min" {:arity 2}
+                   "max" {:arity 2}
+                   "mod" {:arity 2}})
 
 (defn make-bw-noise
   [w h]
@@ -106,7 +106,7 @@
         op (first expression)
         _ (dbg depth)
         _ (dbg op)
-        arity (arities op)]
+        arity ((version0_1_1 op) :arity)]
     (loop [i 0
            expression expression]
       (if (== i arity)
