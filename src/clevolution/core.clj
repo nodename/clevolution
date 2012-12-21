@@ -14,12 +14,19 @@
   [tree]
   (with-out-str (print tree)))
 
+;; :arity is the number of input images
+;; the keys in the :params vectors are just documentation
 (def version0_1_1 {"X" {:arity 0}
                    "Y" {:arity 0}
-                   "bw-noise" {:arity 0}
-                   "read-image-from-file" {:arity 0}
-                   "*" {:arity 1}
-                   "blur" {:arity 1}
+                   "bw-noise" {:arity 0
+                               :params [[:seed '(int-range 50 1000)]
+                                        [:octaves '(int-range 1 10)]
+                                        [:falloff '(float-range 0.1 1.0)]]}
+                   "*" {:arity 1
+                        :params [[:factor '(float-range 0.5 2.0)]]}
+                   "blur" {:arity 1
+                           :params [[:radius '(float-range 0.0 1.0)]
+                                    [:sigma '(float-range 0.5 2.0)]]}
                    "abs" {:arity 1}
                    "sin" {:arity 1}
                    "cos" {:arity 1}
@@ -35,61 +42,44 @@
                    "max" {:arity 2}
                    "mod" {:arity 2}})
 
-(defn make-bw-noise
-  [w h]
-  (let [seed (int-range 50 1000)
-        octaves (int-range 1 10)
-        falloff (float-range 0.1 1.0)]
-    (list "bw-noise" seed octaves falloff w h)))
 
-(defn make-make-bw-noise
-  [width height]
+(def image-width 400)
+(def image-height 400)
+
+(defn make-operations
+  [operation-map]
+  (for [[op-name op-properties] operation-map]
+    (let [params (op-properties :params)
+          size (if (zero? (op-properties :arity))
+                 [image-width image-height]
+                 nil)]
+      (fn []
+        (with-meta (concat [op-name]
+                           (for [[param-name param-expr] params]
+                             (eval param-expr))
+                           size) {:arity (op-properties :arity)})))))
+
+;; read-image-from-file exists outside of any operation-map.
+;; It is used whenever input image files are passed to generate-expression.
+(defn make-read [uri]
   (fn []
-    (make-bw-noise width height)))
+    (with-meta (list "read-image-from-file" (.concat (.concat "\"" uri) "\"")) {:arity 0})))
 
-;; TODO cache images?
-(defn make-make-read [uri]
-  (fn []
-    (list "read-image-from-file" (.concat (.concat "\"" uri) "\""))))
+(defn make-nullary-op-makers
+  [operation-map]
+  (let [filtered-map (apply dissoc operation-map (for [[key val] operation-map :when (not= (val :arity) 0)] key))]
+    (make-operations filtered-map)))
 
-
-(defn make-*
-  []
-  (let [factor (float-range 0.5 2.0)]
-    (list "*" factor)))
-
-(defn make-blur
-  []
-  (let [radius (float-range 0.0 1.0)
-        sigma (float-range 0.5 2.0)]
-    (list "blur" radius sigma)))
-
-
-(defn make-creationary-op-makers
-  [w h]
-  (list
-    (list "X" w h)
-    (list "Y" w h)
-    (make-make-bw-noise w h)))
-
-(def unary-op-makers
-  (conj
-    (for [f ["abs" "sin" "cos" "atan" "log" "inverse"]]
-      (list f))
-    make-*
-    make-blur))
-
-(def binary-op-makers
-  (for [f ["+" "-" "and" "or" "xor" "min" "max" "mod"]]
-        (list f)))
+(defn make-non-nullary-op-makers
+  [operation-map]
+  (let [filtered-map (apply dissoc operation-map (for [[key val] operation-map :when (= (val :arity) 0)] key))]
+    (make-operations filtered-map)))
                 
 (defn make-random-op
   [op-makers]
   (let [op-makers (vec op-makers)
         op-maker (op-makers (rand-int (count op-makers)))]
-      (if (ifn? op-maker)
-        (op-maker)
-        op-maker)))
+    (op-maker)))
 
 
 (defn append-without-flattening
@@ -97,16 +87,15 @@
   [orig-list list-to-append]
       (concat orig-list [list-to-append]))
 
-
 (defn gen-tree
   [depth leaf-choices non-leaf-choices]
   (let [expression (if (zero? depth)
-             (make-random-op leaf-choices)
-             (make-random-op non-leaf-choices))
-        op (first expression)
+                     (make-random-op leaf-choices)
+                     (make-random-op non-leaf-choices))
+        op-name (first expression)
         _ (dbg depth)
-        _ (dbg op)
-        arity ((version0_1_1 op) :arity)]
+        _ (dbg op-name)
+        arity ((meta expression) :arity)]
     (loop [i 0
            expression expression]
       (if (== i arity)
@@ -117,7 +106,7 @@
 ;      (reduce (fn [expression _]
 ;                (let [ subtree (gen-tree (dec depth) leaf-choices non-leaf-choices)]
 ;                  (append-without-flattening expression subtree)))
-;                  op (range arity))))
+;                  op-name (range arity))))
          
 
 ;; The full method always fills out the tree so all leaves are at the same depth;
@@ -131,22 +120,21 @@
           non-leaf-choices (non-leaf-choices-map method)]
       (gen-tree depth leaf-choices non-leaf-choices)))
 
-;; TODO handle input image files whose size doesn't match w and h
 (defn generate-expression
-  ([max-depth w h input-image-files]
-    (let [input-image-op-makers (map make-make-read input-image-files)
-          nullary-op-makers (concat (make-creationary-op-makers w h) input-image-op-makers)]
-      (generate-tree max-depth nullary-op-makers (concat unary-op-makers binary-op-makers))))
-  ([max-depth w h]
-    (generate-tree max-depth (make-creationary-op-makers w h) (concat unary-op-makers binary-op-makers))))
+  ([max-depth operation-map input-image-files]
+    (let [input-image-op-makers (map make-read input-image-files)
+          nullary-op-makers (concat (make-nullary-op-makers operation-map) input-image-op-makers)]
+      (generate-tree max-depth nullary-op-makers (make-non-nullary-op-makers operation-map))))
+  ([max-depth operation-map]
+    (generate-tree max-depth (make-nullary-op-makers operation-map) (make-non-nullary-op-makers operation-map))))
 
 (defn generate-random-image-file
-  ([uri version max-depth w h input-files]
-  (let [expression (tree-to-string (generate-expression max-depth w h input-files))]
+  ([uri version max-depth operation-map input-files]
+  (let [expression (tree-to-string (generate-expression max-depth operation-map input-files))]
     (println expression)
     (save-image expression version uri)))
-  ([uri version max-depth w h]
-  (let [expression (tree-to-string (generate-expression max-depth w h))]
+  ([uri version max-depth operation-map]
+  (let [expression (tree-to-string (generate-expression max-depth operation-map))]
     (println expression)
     (save-image expression version uri))))
 
@@ -165,14 +153,14 @@
   (def image-height 400)
   
   ;; generate a random expression:
-  (generate-expression max-depth image-width image-height)
+  (generate-expression max-depth version0_1_1)
   ;; OR:
-  (generate-expression max-depth image-width image-height input-files)
+  (generate-expression max-depth version0_1_1 input-files)
 
   ;; generate a random expression and evaluate it, saving the resulting image to a file:
-  (generate-random-image-file output-image-file clevolution-version max-depth image-width image-height)
+  (generate-random-image-file output-image-file clevolution-version max-depth version0_1_1)
   ;; OR:
-  (generate-random-image-file output-image-file clevolution-version max-depth image-width image-height input-files)
+  (generate-random-image-file output-image-file clevolution-version max-depth version0_1_1 input-files)
   
   ;; evaluate an explicit expression, saving the resulting image to a file
   ;; (This one is a Galois field (http://nklein.com/2012/05/visualizing-galois-fields/):
