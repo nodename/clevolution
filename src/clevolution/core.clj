@@ -8,21 +8,16 @@
   (with-out-str (print tree)))
 
 
-(def image-width 400)
-(def image-height 400)
-
 (defn make-operations
   [ops-map]
   (for [[op-name op-properties] ops-map]
-    (let [params (op-properties :params)
-          size (if (zero? (op-properties :arity))
-                 [image-width image-height]
-                 nil)]
+    (let [params (op-properties :params)]
       (fn []
-        (with-meta (concat [op-name]
-                           (for [[param-name param-expr] params]
-                             (eval param-expr))
-                           size) {:arity (op-properties :arity)})))))
+        (with-meta
+          (concat [op-name]
+                  (for [[param-name param-expr] params]
+                    (eval param-expr)))
+          {:arity (op-properties :arity)})))))
 
 ;; read-image-from-file exists outside of any ops-map.
 ;; We create a read-image-from-file op for each input image filename passed to generate-expression.
@@ -116,9 +111,6 @@
   
   (def max-depth 2)
   
-  (def image-width 400)
-  (def image-height 400)
-  
   ;; generate a random expression:
   (generate-expression max-depth ((contexts :version0-1-1) :ops))
   ;; OR:
@@ -131,7 +123,7 @@
   
   ;; evaluate an explicit expression, saving the resulting image to a file
   ;; (This one is a Galois field (http://nklein.com/2012/05/visualizing-galois-fields/):
-  (save-image "(xor (X 400 400) (Y 400 400))" "version0-1-1" output-image-file)
+  (save-image "(xor (X) (Y))" "version0-1-1" output-image-file)
   
   ;; read back the expression that generated the image in a file:
   (get-generator-string output-image-file)
