@@ -9,6 +9,7 @@
             [clisk.functions :refer :all]
             [clisk.patterns :refer :all]
             [clisk.colours :refer :all]
+            [clisk.textures :refer :all]
             [clevolution.util] :reload-all))
 
 (def image-width 400)
