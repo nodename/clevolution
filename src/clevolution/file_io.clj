@@ -7,7 +7,8 @@
  (:require  [clevolution.util :refer :all]
             [clevolution.context :refer :all]
             [clevolution.image-ops.nullary.file-input :refer [get-imagereader]]
-            [clevolution.version.version0-1-1 :refer :all] :reload-all))
+            [clevolution.version.version0-1-1 :refer :all]
+            [clevolution.cliskenv :refer :all] :reload-all))
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
@@ -47,12 +48,44 @@
 	(.close output)
 	(.dispose imagewriter)))
 
-(defmulti get-header-string (fn [source _] (class source)))
+(defn get-png-metadata
+  "Get the PNG metadata from a PNG file"
+  [uri]
+  (let [input-stream (ImageIO/createImageInputStream (File. uri))
+        imagereader (get-imagereader input-stream)
+        _ (.setInput imagereader input-stream true)
+        image-index 0
+        input-metadata (.getImageMetadata imagereader image-index)
+        _ (.close input-stream)
+        _ (.dispose imagereader)]
+    input-metadata))
 
-(defmethod get-header-string PNGMetadata
+(defmulti get-width class)
+(defmethod get-width PNGMetadata
+  [png-metadata]
+  (.IHDR_width png-metadata))
+(defmethod get-width String
+  [uri]
+  (let [png-metadata (get-png-metadata uri)]
+    (get-width png-metadata)))
+
+(defmulti get-height class)
+(defmethod get-height PNGMetadata
+  [png-metadata]
+  (.IHDR_width png-metadata))
+(defmethod get-height String
+  [uri]
+  (let [png-metadata (get-png-metadata uri)]
+    (get-height png-metadata)))
+            
+  
+
+(defmulti get-chunk-data (fn [source _] (class source)))
+
+(defmethod get-chunk-data PNGMetadata
 	[png-metadata chunk-name]
 	(let [dataArrayList (.unknownChunkData png-metadata)
-	      typeArrayList (.unknownChunkType png-metadata)]
+       typeArrayList (.unknownChunkType png-metadata)]
 	(loop [i 0]
 		(cond
 			(>= i (.size dataArrayList))
@@ -62,25 +95,14 @@
 			:else
 				(recur (inc i))))))
 
-(defmethod get-header-string String
+(defmethod get-chunk-data String
   [uri chunk-name]
-  (let [input-stream (ImageIO/createImageInputStream (File. uri))
-        imagereader (get-imagereader input-stream)
-        _ (.setInput imagereader input-stream true)
-        image-index 0
-        input-metadata (.getImageMetadata imagereader image-index)
-        _ (.close input-stream)
-        _ (.dispose imagereader)]
-    (get-header-string input-metadata chunk-name)))
-
-
-(defn get-generator-string
-  [source]
-  (get-header-string source generator-chunk-name))
+  (let [png-metadata (get-png-metadata uri)]
+    (get-chunk-data png-metadata chunk-name)))
 
 (defn get-context
   [source]
-  (let [context (get-header-string source context-chunk-name)]
+  (let [context (get-chunk-data source context-chunk-name)]
     (if (= "" context)
       default-context-name
       context)))

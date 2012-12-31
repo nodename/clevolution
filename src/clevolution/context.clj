@@ -37,6 +37,6 @@
                          "min" {:arity 2}
                          "max" {:arity 2}
                          "mod" {:arity 2}}})
-                 
+
 
 (def contexts {:version0-1-1 version0_1_1})
