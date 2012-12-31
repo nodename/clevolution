@@ -184,6 +184,8 @@
 
 
 
+;; LEGACY VERSION BEGIN
+
 (defn make-operations
   [ops-map]
   (for [[op-name op-properties] ops-map]
@@ -280,9 +282,10 @@
     (println expression)
     (save-image expression context-name uri))))
 
-
+;; LEGACY VERSION END
 
 (comment
+  ;; LEGACY VERSION code examples are commented out but still work for now:
   
   (load-file "src/clevolution/core.clj")
   (require ['clevolution.core :refer :all])
@@ -294,9 +297,9 @@
   ;;(def max-depth 2)
   
   ;; generate a random expression:
-  ;;(generate-expression max-depth ((contexts :version0-1-1) :ops))
+  ;; (generate-expression max-depth ((contexts :version0-1-1) :ops))
   ;; OR:
- ;; (generate-expression max-depth ((contexts :version0-1-1) :ops) input-files)
+  ;; (generate-expression max-depth ((contexts :version0-1-1) :ops) input-files)
 
   ;; generate a random expression and evaluate it, saving the resulting image to a file:
   ;; (generate-random-image-file output-image-file max-depth "version0-1-1")
