@@ -8,6 +8,8 @@ Sample usage code is in a comment in [core.clj](https://github.com/nodename/clev
  
 For more details please see the intro to the original haXe version of Evolution: http://nodename.github.com/
 
-Copyright (C) 2012 Alan Shaw
+![Alt text](clevolutionimages/bigtest.jpg "Optional title")
+
+Copyright (C) 2012-2013 Alan Shaw
 
 Distributed under the Eclipse Public License, the same as Clojure.
