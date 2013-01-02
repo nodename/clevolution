@@ -8,7 +8,7 @@ Sample usage code is in a comment in [core.clj](https://github.com/nodename/clev
  
 For more details please see the intro to the original haXe version of Evolution: http://nodename.github.com/
 
-![Alt text](clevolutionimages/bigtest.jpg "Optional title")
+![Alt text](clevolution/tree/master/images/bigtest.jpg "Optional title")
 
 Copyright (C) 2012-2013 Alan Shaw
 
