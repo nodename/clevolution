@@ -302,9 +302,9 @@
   ;; (generate-expression max-depth ((contexts :version0-1-1) :ops) input-files)
 
   ;; generate a random expression and evaluate it, saving the resulting image to a file:
-  ;; (generate-random-image-file output-image-file max-depth "version0-1-1")
+  ;; (generate-random-image-file output-file max-depth "version0-1-1")
   ;; OR:
-  ;; (generate-random-image-file output-image-file max-depth "version0-1-1" input-files)
+  ;; (generate-random-image-file output-file max-depth "version0-1-1" input-files)
   (save-clisk-image (random-clisk-string) output-file)
                     
   ;; evaluate an explicit expression, saving the resulting image to a file
