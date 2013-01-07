@@ -1,15 +1,13 @@
 (ns clevolution.cliskstring)
 
 (defn rand-member
-  "Choose a random element from one or more sequences"
-  [& seqs]
-  (let [v (vec (mapcat identity seqs))]
-    (v (rand-int (count v)))))
+  "Choose a random element from one or more collections"
+  [& colls]
+  (rand-nth (apply concat colls)))
 
 (defn random-named-color
   []
-  (let [names ["black" "blue" "cyan" "darkGray" "gray" "green" "lightGray" "magenta" "orange" "pink" "red" "white" "yellow" "purple" "brown"]
-        symbols (map symbol names)]
+  (let [symbols ['black 'blue 'cyan 'darkGray 'gray 'green 'lightGray 'magenta 'orange 'pink 'red 'white 'yellow 'purple 'brown]]
     (rand-member symbols)))
 
 ;; TODO perhaps different ranges for different functions
@@ -22,20 +20,18 @@
 ;; TODO make-multi-fractal has optional numeric key args
 (def unary-v-operators
   "Operators that take one argument, either scalar or vector"
-  (map symbol ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac" "square" "vsqrt" "sigmoid" "tile" "max-component" "min-component" "length" "make-multi-fractal"]))
+  ['vsin 'vcos 'vabs 'vround 'vfloor 'vfrac 'square 'vsqrt 'sigmoid 'tile 'max-component 'min-component 'length 'make-multi-fractal])
 
 (defn random-nullary-operator-scalar
   "() -> Scalar"
   []
-  (let [names ["x" "y" "perlin-noise" "perlin-snoise" "simplex-noise" "simplex-snoise" "max-component" "min-component" "length"]
-        symbols (map symbol names)]
+  (let [symbols ['x 'y 'perlin-noise 'perlin-snoise 'simplex-noise 'simplex-snoise 'max-component 'min-component 'length]]
     (rand-member symbols)))
 
 (defn random-nullary-operator-vector
   "() -> Vector"
   []
-  (let [names ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac" "square" "vsqrt" "sigmoid" "tile" "grain"]
-        symbols (map symbol names)]
+  (let [symbols ['vsin 'vcos 'vabs 'vround 'vfloor 'vfrac 'square 'vsqrt 'sigmoid 'tile 'grain]]
     (rand-member symbols)))
 
 (defn random-unary-v-operator
@@ -43,7 +39,7 @@
     (rand-member unary-v-operators))
 
 (def unary-operators-vector
-  (map symbol ["rgb-from-hsl"]))
+  ['rgb-from-hsl])
 
 (defn random-unary-operator-vector
   "_ -> Vector"
@@ -58,8 +54,7 @@
 ;; TODO cross3 requires two vectors; normalize requires one vector
 (defn random-binary-operator
   []
-  (let [names ["v+" "v*" "v-" "vdivide" "vpow" "vmod" "checker" "scale" "rotate" "offset" "dot" "warp"]
-        symbols (map symbol names)]
+  (let [symbols ['v+ 'v* 'v- 'vdivide 'vpow 'vmod 'checker 'scale 'rotate 'offset 'dot 'warp]]
     (rand-member symbols)))
 
 (declare random-scalar-color)
@@ -90,7 +85,7 @@
 (comment can't find mikera.util.Maths.java version that defines t(), needed for triangle-wave
 (defn random-vector-nullary-operation
   []
-  (symbol "triangle-wave"))
+  'triangle-wave)
 )
 
 (defn random-vector-unary-operation
