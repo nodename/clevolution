@@ -3,7 +3,7 @@
             [clevolution.context :refer :all]
             [clevolution.file-io :refer :all]
             [clevolution.cliskstring :refer [random-color]]
-            [clevolution.cliskenv :refer :all] :reload-all))
+            [clevolution.cliskenv :refer [make-clisk-image]] :reload-all))
 
 (defn random-clisk-string
   []
@@ -169,7 +169,7 @@
 ;; LEGACY VERSION END
 
 (comment
-  ;; LEGACY VERSION code examples are commented out but still work for now:
+  ;; LEGACY VERSION code examples are commented out but still work for now, but SLOWLY:
   
   (load-file "src/clevolution/core.clj")
   (require ['clevolution.core :refer :all])
