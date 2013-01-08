@@ -6,8 +6,8 @@
             [clevolution.cliskenv :refer [make-clisk-image]] :reload-all))
 
 (defn random-clisk-string
-  []
-  (str (random-color)))
+  [depth]
+  (with-out-str (print (random-color depth))))
 
 (defn clisk-eval
   ([^String generator]
@@ -178,18 +178,19 @@
   
   ;;(def input-files ["images/Dawn_on_Callipygea.png" "images/galois.png"])
   
-  ;;(def max-depth 2)
+  (def depth 2)
   
   ;; generate a random expression:
-  ;; (generate-expression max-depth ((contexts :version0-1-1) :ops))
+  ;; (generate-expression depth ((contexts :version0-1-1) :ops))
   ;; OR:
-  ;; (generate-expression max-depth ((contexts :version0-1-1) :ops) input-files)
+  ;; (generate-expression depth ((contexts :version0-1-1) :ops) input-files)
+  (random-clisk-string depth)
 
   ;; generate a random expression and evaluate it, saving the resulting image to a file:
-  ;; (generate-random-image-file output-file max-depth "version0-1-1")
+  ;; (generate-random-image-file output-file depth "version0-1-1")
   ;; OR:
-  ;; (generate-random-image-file output-file max-depth "version0-1-1" input-files)
-  (save-clisk-image (random-clisk-string) output-file)
+  ;; (generate-random-image-file output-file depth "version0-1-1" input-files)
+  (save-clisk-image (random-clisk-string depth) output-file)
                     
   ;; evaluate an explicit expression, saving the resulting image to a file
   ;; (This one is a Galois field (http://nklein.com/2012/05/visualizing-galois-fields/):
