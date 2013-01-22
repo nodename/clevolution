@@ -11,6 +11,10 @@
 (def random-vector-constant-colors
   [#(with-meta [(rand 1.0) (rand 1.0) (rand 1.0)] {:arity 0})])
 
+(def textures
+  (map #(constantly (with-meta % {:arity 0}))
+       ['agate 'clouds 'velvet 'flecks 'wood]))
+
 ; can't find mikera.util.Maths.java version that defines t(), needed for triangle-wave
 ;(defn random-vector-nullary-operation
 ;  []
@@ -47,7 +51,7 @@
 
 
 (def ops
-  (concat named-colors random-scalar-constant-colors random-vector-constant-colors unary-v-operators nullary-operators-scalar nullary-operators-vector unary-operators-vector binary-operators))
+  (concat named-colors random-scalar-constant-colors random-vector-constant-colors textures unary-v-operators nullary-operators-scalar nullary-operators-vector unary-operators-vector binary-operators))
 
 
 ;; default arity is zero
