@@ -46,7 +46,7 @@
     (make-random-clisk-file output-file-path index default-depth))
   ([output-file-path index depth]
     (let [output-uri (uri-for-index output-file-path index)]
-      (save-clisk-image (random-clisk-string) output-uri))))
+      (save-clisk-image (random-clisk-string depth) output-uri))))
 
 (defn get-generator-string
   [source]
