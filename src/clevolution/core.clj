@@ -5,9 +5,11 @@
             [clevolution.cliskstring :refer [random-color]]
             [clevolution.cliskenv :refer [make-clisk-image]] :reload-all))
 
+(def default-depth 2)
+
 (defn random-clisk-string
-  [depth]
-  (with-out-str (print (random-color depth))))
+  ([] (random-clisk-string default-depth))
+  ([depth] (with-out-str (print (random-color depth)))))
 
 (defn clisk-eval
   ([^String generator]
@@ -40,12 +42,11 @@
     (str file-path (format "%04d" index) ".png"))
 
 (defn make-random-clisk-file
-  [output-file-path index]
-  (let [output-uri (uri-for-index output-file-path index)]
-    (save-clisk-image (random-clisk-string) output-uri)))
-
-
-
+  ([output-file-path index]
+    (make-random-clisk-file output-file-path index default-depth))
+  ([output-file-path index depth]
+    (let [output-uri (uri-for-index output-file-path index)]
+      (save-clisk-image (random-clisk-string) output-uri))))
 
 (defn get-generator-string
   [source]
@@ -201,7 +202,10 @@
   (def output-file-path "F:\\clisk-images\\")
   (dotimes [n 1000]
     (make-random-clisk-file output-file-path n))
-  
+ 
+  ;; Or to be explicit about depth 
+  (dotimes [n 1000]
+    (make-random-clisk-file output-file-path n depth))
   
   ;; read back the expression that generated the image in a file:
   (get-generator-string output-file)
