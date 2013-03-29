@@ -1,6 +1,7 @@
 (ns clevolution.cliskenv
   (:import java.lang.Math)
   (:require [clevolution.util :refer :all]
+            [clevolution.image-ops.nullary.file-input :refer [read-image-from-file]]
             [clisk.core :refer :all]
             [clisk.node :refer :all]
             [clisk.functions :refer :all]
@@ -27,6 +28,10 @@
 
 (def vxor
   (vectorize-op 'bxor))
+
+(defn read-file
+  [uri]
+  (texture-map (read-image-from-file uri)))
 
 (defn make-clisk-image
   ([form]
