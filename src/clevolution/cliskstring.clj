@@ -20,6 +20,10 @@
   (map (partial make-with-arity 0)
        ['agate 'clouds 'velvet 'flecks 'wood]))
 
+(defn input-images [uris]
+  (let [input-image (fn [uri] {:function (constantly (list 'read-file (.concat (.concat "\"" uri) "\""))) :arity 0})]
+    (map input-image uris)))
+
 ; can't find mikera.util.Maths.java version that defines t(), needed for triangle-wave
 ;(defn random-vector-nullary-operation
 ;  []
@@ -56,31 +60,32 @@
 
 
 (def ops
-  (concat named-colors random-scalar-constant-colors random-vector-constant-colors textures unary-v-operators nullary-operators-scalar nullary-operators-vector unary-operators-vector binary-operators))
+  (concat named-colors random-scalar-constant-colors random-vector-constant-colors textures
+          unary-v-operators nullary-operators-scalar nullary-operators-vector unary-operators-vector binary-operators))
 
-(def terminals
+(defn terminals [ops]
   (filter #(zero? (:arity %)) ops))
 
-(def nonterminals
+(defn nonterminals [ops]
   (filter #(not (zero? (:arity %))) ops))
 
-(def non-leaf-choices
+(defn non-leaf-choices [ops]
   {:grow ops
-   :full nonterminals})
+   :full (nonterminals ops)})
 
 ;; The full method always fills out the tree so all leaves are at the same depth;
 ;; the grow method may choose a nullary op, creating a leaf node, before reaching the full depth
 
-(defn random-color
-  [depth & {:keys [method]
-            :or {method :full}}]
-  (let [fns (if (zero? depth) terminals (non-leaf-choices method))
+(defn random-clisk-expression
+  [depth method input-files]
+  (let [ops (concat ops (input-images input-files))
+        fns (if (zero? depth) (terminals ops) ((non-leaf-choices ops) method))
         f (rand-nth fns)
         operation ((:function f))
         arity (:arity f)]
     (if (zero? arity)
       operation
       (reduce (fn [expression _]
-                (concat expression [(random-color (dec depth))]))
+                (concat expression [(random-clisk-expression (dec depth) method input-files)]))
               (list operation) (range arity)))))
 
