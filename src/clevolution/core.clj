@@ -2,31 +2,35 @@
   (:require [clevolution.util :refer :all]
             [clevolution.context :refer :all]
             [clevolution.file-io :refer :all]
-            [clevolution.cliskstring :refer [random-color]]
+            [clevolution.cliskstring :refer [random-clisk-expression]]
             [clevolution.cliskenv :refer [make-clisk-image]] :reload-all))
 
 (def default-depth 2)
+(def default-method :full)
+(def default-input-files [])
 
+;; sample usage to override default: (random-clisk-string :depth 8)
 (defn random-clisk-string
-  ([] (random-clisk-string default-depth))
-  ([depth] (with-out-str (print (random-color depth)))))
+  [& {:keys [depth method input-files]
+      :or {depth default-depth method default-method input-files default-input-files}}]
+  (with-out-str (print (random-clisk-expression depth method input-files))))
 
 (defn clisk-eval
   ([^String generator]
     (clisk-eval generator 256 256))
   ([^String generator w h]
-  (let [form (read-string generator)
-        orig-ns *ns*]
-    (in-ns 'clevolution.cliskenv)
-    (try
-      (make-clisk-image form w h)
-      (catch Exception e
-        (println "Error:" (.getMessage e))
-        (make-clisk-image 0.0 w h))
-      (finally (in-ns (ns-name orig-ns)))))))
+    (let [form (read-string generator)
+          orig-ns *ns*]
+      (in-ns 'clevolution.cliskenv)
+      (try
+        (make-clisk-image form w h)
+        (catch Exception e
+          (println "Error:" (.getMessage e))
+          (make-clisk-image 0.0 w h))
+        (finally (in-ns (ns-name orig-ns)))))))
 
 (defn save-clisk-image
-  "Generate and save an image from generator"
+  "Generate and save an image from generator string"
   ([^String generator ^String uri]
     (save-clisk-image generator 256 256 uri))
   ([^String generator w h ^String uri]
@@ -42,11 +46,9 @@
     (str file-path (format "%04d" index) ".png"))
 
 (defn make-random-clisk-file
-  ([output-file-path index]
-    (make-random-clisk-file output-file-path index default-depth))
-  ([output-file-path index depth]
-    (let [output-uri (uri-for-index output-file-path index)]
-      (save-clisk-image (random-clisk-string depth) output-uri))))
+  [output-file-path index]
+  (let [output-uri (uri-for-index output-file-path index)]
+    (save-clisk-image (random-clisk-string) output-uri)))
 
 (defn get-generator-string
   [source]
@@ -179,19 +181,19 @@
   
   ;;(def input-files ["images/Dawn_on_Callipygea.png" "images/galois.png"])
   
-  (def depth 2)
+  (def default-depth 2)
   
   ;; generate a random expression:
   ;; (generate-expression depth ((contexts :version0-1-1) :ops))
   ;; OR:
   ;; (generate-expression depth ((contexts :version0-1-1) :ops) input-files)
-  (random-clisk-string depth)
+  (random-clisk-string)
 
   ;; generate a random expression and evaluate it, saving the resulting image to a file:
   ;; (generate-random-image-file output-file depth "version0-1-1")
   ;; OR:
   ;; (generate-random-image-file output-file depth "version0-1-1" input-files)
-  (save-clisk-image (random-clisk-string depth) output-file)
+  (save-clisk-image (random-clisk-string) output-file)
                     
   ;; evaluate an explicit expression, saving the resulting image to a file
   ;; (This one is a Galois field (http://nklein.com/2012/05/visualizing-galois-fields/):
@@ -203,10 +205,6 @@
   (dotimes [n 1000]
     (make-random-clisk-file output-file-path n))
  
-  ;; Or to be explicit about depth 
-  (dotimes [n 1000]
-    (make-random-clisk-file output-file-path n depth))
-  
   ;; read back the expression that generated the image in a file:
   (get-generator-string output-file)
   
