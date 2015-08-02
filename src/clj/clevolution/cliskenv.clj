@@ -10,6 +10,7 @@
             [clisk.textures :refer :all]
             [clisk.effects :refer :all] :reload-all))
 
+
 ;; a and b are between 0 and 1
 (defn bit-op
   [bit-fn a b]
@@ -34,7 +35,5 @@
   (texture-map (read-image-from-file uri)))
 
 (defn make-clisk-image
-  ([form]
-    (make-clisk-image form 256 256))
-  ([form w h]
-    (img (node (eval form)) w h)))
+  [form w h]
+  (img (node (eval form)) w h))

@@ -1,14 +1,14 @@
 (ns clevolution.file-io
-	(:import (java.lang String)
-          (java.io File StringReader PushbackReader)
-          (javax.imageio ImageIO IIOImage)
-          (javax.imageio.stream FileImageOutputStream)
-          (com.sun.imageio.plugins.png PNGMetadata))
- (:require  [clevolution.util :refer :all]
-            [clevolution.context :refer :all]
-            [clevolution.image-ops.nullary.file-input :refer [get-imagereader]]
-            [clevolution.version.version0-1-1 :refer :all]
-            [clevolution.cliskenv :refer :all] :reload-all))
+  (:import (java.lang String)
+           (java.io File StringReader PushbackReader)
+           (javax.imageio ImageIO IIOImage)
+           (javax.imageio.stream FileImageOutputStream)
+           (com.sun.imageio.plugins.png PNGMetadata))
+  (:require  [clevolution.util :refer :all]
+             [clevolution.context :refer :all]
+             [clevolution.image-ops.nullary.file-input :refer [get-imagereader]]
+             [clevolution.version.version0-1-1 :refer :all]
+             [clevolution.cliskenv :refer :all] :reload-all))
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
@@ -17,13 +17,14 @@
 (def context-chunk-name "ctXt")
 (def default-context-name "version0-1-1")
 
+
 (defn get-png-imagewriter
-	"Return an ImageWriter for PNG images"
-	[]
-	(let [iterator (ImageIO/getImageWritersBySuffix "png")]
-	(if-not (.hasNext iterator) 
-		(throw (Exception. "No image writer found for PNG")))
-	(.next iterator)))
+  "Return an ImageWriter for PNG images"
+  []
+  (let [iterator (ImageIO/getImageWritersBySuffix "png")]
+    (if-not (.hasNext iterator)
+      (throw (Exception. "No image writer found for PNG")))
+    (.next iterator)))
 
 
 (defn make-generator-metadata
@@ -38,15 +39,16 @@
 
 
 (defn write-image-to-file
-	[image metadata uri]
-	(let [iio-image (IIOImage. image nil metadata)
-	     imagewriter (get-png-imagewriter)
-	     output (FileImageOutputStream. (File. uri))]
-	(.setOutput imagewriter output)
-	(.write imagewriter nil iio-image nil)
-	(.flush output)
-	(.close output)
-	(.dispose imagewriter)))
+  [image metadata uri]
+  (let [iio-image (IIOImage. image nil metadata)
+        imagewriter (get-png-imagewriter)
+        output (FileImageOutputStream. (File. uri))]
+    (.setOutput imagewriter output)
+    (.write imagewriter metadata iio-image nil)
+    (.flush output)
+    (.close output)
+    (.dispose imagewriter)))
+
 
 (defn get-png-metadata
   "Get the PNG metadata from a PNG file"
@@ -59,6 +61,7 @@
         _ (.close input-stream)
         _ (.dispose imagereader)]
     input-metadata))
+
 
 (defmulti get-width class)
 (defmethod get-width PNGMetadata
@@ -77,28 +80,33 @@
   [uri]
   (let [png-metadata (get-png-metadata uri)]
     (get-height png-metadata)))
-            
-  
+
+
 
 (defmulti get-chunk-data (fn [source _] (class source)))
 
 (defmethod get-chunk-data PNGMetadata
-	[png-metadata chunk-name]
-	(let [dataArrayList (.unknownChunkData png-metadata)
-       typeArrayList (.unknownChunkType png-metadata)]
-	(loop [i 0]
-		(cond
-			(>= i (.size dataArrayList))
-				""
-			(= (.get typeArrayList i) chunk-name)
-				(String. (.get dataArrayList i))
-			:else
-				(recur (inc i))))))
+  [png-metadata chunk-name]
+  (let [dataArrayList (.unknownChunkData png-metadata)
+        typeArrayList (.unknownChunkType png-metadata)]
+    (loop [i 0]
+      (cond
+        (>= i (.size dataArrayList))
+        ""
+        (= (.get typeArrayList i) chunk-name)
+        (String. (.get dataArrayList i))
+        :else
+        (recur (inc i))))))
 
 (defmethod get-chunk-data String
   [uri chunk-name]
   (let [png-metadata (get-png-metadata uri)]
     (get-chunk-data png-metadata chunk-name)))
+
+
+(defn get-generator
+  [source]
+  (get-chunk-data source generator-chunk-name))
 
 (defn get-context
   [source]
@@ -120,8 +128,8 @@
 (defn save-image
   "Generate and save an image from generator"
   [^String generator ^String context-name ^String uri]
- (let [metadata (make-generator-metadata generator context-name)
-       context (contexts (keyword context-name))
-       ns-name (context :ns)
-       image (eval-in generator ns-name)]
-   (write-image-to-file image metadata uri)))
+  (let [metadata (make-generator-metadata generator context-name)
+        context (contexts (keyword context-name))
+        ns-name (context :ns)
+        image (eval-in generator ns-name)]
+    (write-image-to-file image metadata uri)))
