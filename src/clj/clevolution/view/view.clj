@@ -1,79 +1,129 @@
 (ns clevolution.view.view
   (:use [mikera.cljutils.error])
-  (:require #_[clojure.core.async :refer [<! go timeout]]
+  (:require
     [mikera.image.core :as img]
-    [mikera.image.colours :as col])
-  (:import [java.awt.image BufferedImage]
-           [mikera.gui Frames JIcon]
+    [mikera.image.colours :as col]
+    [clevolution.file-output :refer :all]
+    [clevolution.cliskeval :refer :all]
+    [clevolution.view.controlpanel :refer [control-panel]]
+    [seesaw.core :as seesaw])
+  (:import [java.awt FileDialog Dimension Color]
+           [java.awt.image BufferedImage]
+           [mikera.gui JIcon BufferedImageIcon]
            [java.awt.event WindowListener]
-           [javax.swing JComponent JLabel JPanel JFrame]
-           (clevolution FrameMaker)))
+           [javax.swing JFrame JMenu JMenuBar]))
 
 
 ;; Java interop code in this namespace proudly stolen from Mike Anderson:
 ;; https://github.com/mikera/singa-viz/blob/develop/src/main/clojure/mikera/singaviz/main.clj
 
 
-(defn double-color ^long
-[value]
-  (cond
-    (<= value 0.0) 0xFF000000
-    (<= value 100.0) (let [v (/ value 100.0)] (col/rgb v v v))
-    :else 0xFFFFFFFF))
-
-(defmulti color class)
-
-(defmethod color clojure.lang.Keyword
-  [state]
-  (condp = state
-    :alive 0xff228b22
-    :burning 0xffff4500
-    :dead 0xff5c4033))
+(def last-frame (atom nil))
 
 
-(defmethod color Long
-  [value]
-  (double-color value))
+(defn create-new-frame
+  [title]
+  (let [frame (doto (JFrame. title)
+                (.setVisible true)
+                (.pack)
+                (.setDefaultCloseOperation 2))]
+    (reset! last-frame frame)
+    frame))
 
 
-(defmethod color Double
-  [^double value]
-  (double-color value))
+(defn reuse-frame
+  [frame title]
+  (.setTitle frame title)
+  (.removeAll (.getContentPane frame))
+  (if (.isVisible frame)
+    (.validate frame)
+    (.setVisible frame true))
+  (.repaint frame)
+  frame)
 
 
-(defn cells->image ^BufferedImage
-[cells]
-  (let [w (count cells)
-        h w
-        ^BufferedImage bi (img/new-image w h)]
-    (dotimes [y h]
-      (dotimes [x w]
-        (.setRGB bi (int x) (int y) (unchecked-int (color (get-in cells [y x]))))))
-    bi))
+(defn create-frame
+  [title]
+  (if @last-frame
+    (reuse-frame @last-frame title)
+    (create-new-frame title)))
 
 
-#_
-(defn component
-  "Creates a component as appropriate to visualise an object x"
-  (^JComponent [x]
-   (cond
-     (instance? BufferedImage x) (JIcon. ^BufferedImage x)
-     :else (error "Don't know how to visualize: " x))))
+(defn make-component
+  [image]
+  (doto (JIcon. image)
+    (.setMinimumSize (Dimension. (.getWidth image nil)
+                                 (.getHeight image nil)))))
 
 
-(def last-window (atom nil))
+(defn create-image-frame
+  [image generator context title]
+  (let [frame (create-frame title)
+        image-component (make-component image)
+
+        menu-bar (JMenuBar.)
+        menu (JMenu. "File")
+        _ (.add menu-bar menu)
+
+        test-eval-action (fn [e]
+                           (clisk-eval "x" 512))
+
+        load-file-action (fn [e]
+                           (let [file-dialog (doto (FileDialog. frame
+                                                                "Load Image..."
+                                                                FileDialog/LOAD)
+                                               (.setFile "*.png")
+                                               (.setVisible true))]
+                             (when-let [file-name (.getFile file-dialog)]
+                               (let [file-path (str (.getDirectory file-dialog) file-name)
+                                     generator (get-generator file-path)
+                                     image (clisk-eval generator 512)]
+                                 (.setIcon image-component (BufferedImageIcon. image))))))
+
+        save-file-action (fn [e]
+                           (let [file-dialog (doto (FileDialog. frame
+                                                                "Save Image As..."
+                                                                FileDialog/SAVE)
+                                               (.setFile "*.png")
+                                               (.setVisible true))]
+                             (when-let [file-name (.getFile file-dialog)]
+                               (write-image-to-file image
+                                                    (make-generator-metadata generator context)
+                                                    (str (.getDirectory file-dialog) file-name)))))
+
+        test-menuitem (seesaw/menu-item :text "Test"
+                                        :listen [:action test-eval-action])
+        load-menuitem (seesaw/menu-item :text "Load..."
+                                        :listen [:action load-file-action])
+        save-menuitem (seesaw/menu-item :text "Save As..."
+                                        :listen [:action save-file-action])]
+
+    (.add menu test-menuitem)
+    (.add menu load-menuitem)
+    (.add menu save-menuitem)
+
+    (.setMinimumSize frame (Dimension. (+ 20 (.getWidth image nil)) (+ 100 (.getHeight image nil))))
+    (let [panel (seesaw/horizontal-panel
+                  :background (Color. 224 224 224)
+                  :items [image-component control-panel])]
+      (.add frame panel))
+    (.setJMenuBar frame menu-bar)
+    (.setDefaultCloseOperation frame JFrame/DISPOSE_ON_CLOSE)
+    (.pack frame)
+
+    frame))
 
 
 (defn show
   "Shows a component in a new frame"
-  ([com
+  ([component
     & {:keys [^String generator ^String title on-close]
        :as options
        :or {generator nil title nil}}]
-   (let [^JFrame fr (FrameMaker/createImageFrame com
-                                                 (str generator)
-                                                 "clisk"
-                                                 (str title))]
+   (let [^JFrame fr (create-image-frame component
+                                        (str generator)
+                                        "clisk"
+                                        (str title))]
      (when on-close
        (.addWindowListener fr (proxy [WindowListener] []
                                 (windowActivated [e])
@@ -95,26 +145,3 @@
     (img/zoom bi factor)))
 
 
-(def running (atom true))
-
-
-#_
-(defmacro show-simulation-frame
-  [simulation]
-  `(let [grid# ((<! ~simulation) :grid)
-         bi# (cells->image grid#)]
-     (show (frame bi#) :title "Relax" :on-close #(reset! running false))))
-
-
-#_
-(defn run
-  [simulate q m]
-  (reset! running true)
-  (let [{:keys [request response]} (buffered-chan (simulate q m) 30)]
-    
-    (go (while @running
-          (<! (timeout 750))
-          (>! request :ready)
-          (show-simulation-frame response))))
-  
-  nil)

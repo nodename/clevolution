@@ -1,21 +1,18 @@
-(ns clevolution.file-io
+(ns clevolution.file-output
   (:import (java.lang String)
-           (java.io File StringReader PushbackReader)
+           (java.io File)
            (javax.imageio ImageIO IIOImage)
            (javax.imageio.stream FileImageOutputStream)
            (com.sun.imageio.plugins.png PNGMetadata))
-  (:require  [clevolution.util :refer :all]
-             [clevolution.context :refer :all]
-             [clevolution.image-ops.nullary.file-input :refer [get-imagereader]]
-             [clevolution.version.version0-1-1 :refer :all]
-             [clevolution.cliskenv :refer :all] :reload-all))
+  (:require  [clevolution.cliskenv :refer :all]
+             [clevolution.file-input :refer [get-imagereader]]))
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
 ;; http://en.wikipedia.org/wiki/Portable_Network_Graphics#.22Chunks.22_within_the_file
 (def generator-chunk-name "gnTr")
 (def context-chunk-name "ctXt")
-(def default-context-name "version0-1-1")
+(def default-context-name "clisk")
 
 
 (defn get-png-imagewriter
@@ -115,6 +112,7 @@
       default-context-name
       context)))
 
+
 (defn eval-in
   [^String generator ^String ns]
   (let [form (read-string generator)
@@ -125,6 +123,7 @@
       (in-ns (ns-name orig-ns))
       ret)))
 
+#_
 (defn save-image
   "Generate and save an image from generator"
   [^String generator ^String context-name ^String uri]

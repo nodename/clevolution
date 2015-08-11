@@ -1,14 +1,15 @@
 (ns clevolution.cliskenv
-  (:import java.lang.Math)
-  (:require [clevolution.util :refer :all]
-            [clevolution.image-ops.nullary.file-input :refer [read-image-from-file]]
-            [clisk.core :refer :all]
-            [clisk.node :refer :all]
-            [clisk.functions :refer :all]
-            [clisk.patterns :refer :all]
-            [clisk.colours :refer :all]
-            [clisk.textures :refer :all]
-            [clisk.effects :refer :all] :reload-all))
+  (:require [mikera.cljutils.namespace :as n]
+            [clevolution.file-input :refer [read-image-from-file]]))
+
+
+(n/pull-all clisk.core)
+(n/pull-all clisk.node)
+(n/pull-all clisk.functions)
+(n/pull-all clisk.patterns)
+(n/pull-all clisk.colours)
+(n/pull-all clisk.textures)
+(n/pull-all clisk.effects)
 
 
 ;; a and b are between 0 and 1
@@ -30,10 +31,27 @@
 (def vxor
   (vectorize-op 'bxor))
 
+
+(defn ev-perlin-noise
+  [seed]
+  (seed-perlin-noise! seed)
+  '(clisk.noise.Perlin/noise x y z t))
+
+(defn ev-perlin-snoise
+  [seed]
+  (seed-perlin-noise! seed)
+  '(clisk.noise.Perlin/snoise x y z t))
+
+(defn ev-simplex-noise
+  [seed]
+  (seed-simplex-noise! seed)
+  '(clisk.noise.Simplex/noise x y z t))
+
+(defn ev-simplex-snoise
+  [seed]
+  (seed-simplex-noise! seed)
+  '(clisk.noise.Simplex/snoise x y z t))
+
 (defn read-file
   [uri]
   (texture-map (read-image-from-file uri)))
-
-(defn make-clisk-image
-  [form w h]
-  (img (node (eval form)) w h))

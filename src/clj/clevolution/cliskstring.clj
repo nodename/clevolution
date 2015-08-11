@@ -1,36 +1,4 @@
-(ns clevolution.cliskstring
-  (:require [clevolution.util :refer :all]))
-
-
-(def clisk-functions
-  {"black" {:arity 0}
-   "blue" {:arity 0}
-   "cyan" {:arity 0}
-   "darkGray" {:arity 0}
-   "gray" {:arity 0}
-   "green" {:arity 0}
-   "lightGray" {:arity 0}
-   "magenta" {:arity 0}
-   "orange" {:arity 0}
-   "pink" {:arity 0}
-   "red" {:arity 0}
-   "white" {:arity 0}
-   "yellow" {:arity 0}
-   "purple" {:arity 0}
-   "brown" {:arity 0}
-   "sunset-map" {}
-
-
-   "psychedelic" {:arity 1
-                  :params {:noise-scale #(rand 1.0)
-                           :noise-bands #(rand 10.0)}}})
-
-
-
-
-
-
-
+(ns clevolution.cliskstring)
 
 
 (defn make-with-arity
@@ -61,7 +29,8 @@
        ["agate" "clouds" "velvet" "flecks" "wood"]))
 
 (defn input-images [uris]
-  (let [input-image (fn [uri] {:function (constantly (list 'read-file (.concat (.concat "\"" uri) "\""))) :arity 0})]
+  (let [input-image (fn [uri] {:function (constantly (list 'read-file (.concat (.concat "\"" uri) "\"")))
+                               :arity 0})]
     (map input-image uris)))
 
 ; can't find mikera.util.Maths.java version that defines t(), needed for triangle-wave
@@ -87,17 +56,56 @@
        ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac" "square"
         "vsqrt" "sigmoid" "tile" "max-component" "min-component" "length"]))
 
+
+
+(def ev-perlin-noise
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-perlin-noise " seed ")")))
+   :arity 0})
+
+
+(def ev-perlin-snoise
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-perlin-snoise " seed ")")))
+   :arity 0})
+
+
+(def ev-simplex-noise
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-simplex-noise " seed ")")))
+   :arity 0})
+
+(def ev-simplex-snoise
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-simplex-snoise " seed ")")))
+   :arity 0})
+
+
+(def turbulate
+  {:function (fn []
+               (let [factor (rand 10.0)]
+                 (str "turbulate " factor)))
+   :arity 1})
+
+
+
 (def nullary-operators-scalar
   "() -> Scalar"
   (map (partial make-with-arity 0)
-       ["x" "y" "perlin-noise" "perlin-snoise" "simplex-noise" "simplex-snoise"
-        "max-component" "min-component" "length"]))
+       ["x" "y" "z"
+        "max-component" "min-component"]))
 
 (def nullary-operators-vector
   "() -> Vector"
   (map (partial make-with-arity 0)
        ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac"
-        "square" "vsqrt" "sigmoid" "tile" "grain"]))
+        "square" "vsqrt" "sigmoid" "tile" "grain"
+        "hash-cubes" "colour-cubes" "plasma" "splasma" "turbulence" "vturbulence"
+        "vplasma" "vsplasma" "globe"]))
 
 (def psychedelic
   {:function (fn []
@@ -108,7 +116,7 @@
 
 (def posterize
   {:function (fn []
-               (let [bands (rand-int 10)]
+               (let [bands (inc (rand-int 9))]
                  (str "posterize % :bands " bands)))
    :arity 1})
 
@@ -119,12 +127,12 @@
    :arity 1})
 
 (def shatter
-  {:function #(str "shatter % :points " (rand-int 100))
+  {:function #(str "shatter % :points " (+ 3 (rand-int 27)))
    :arity 1})
 
 (def radial
   {:function (fn []
-               (let [repeat (rand 10.0)]
+               (let [repeat (inc (rand-int 11))]
                  (str "radial % :repeat " repeat)))
    :arity 1})
 
@@ -158,22 +166,27 @@
   {:function #(str "rotate " (rand Math/PI))
    :arity 1})
 
+
 ;; TODO some of these can do multiple arities; check all
 ;; TODO cross3 requires two vectors; normalize requires one vector
 (def binary-operators
   (map (partial make-with-arity 2)
-       ["v+" "v*" "v-" "vdivide" "vpow" "vmod" #_"checker"
-        "scale" "rotate" "offset" "dot" "warp"]))
+       ["v+" "v*" "v-" "vdivide" "vpow" "vmod" #_"checker" ;; checker is boring
+        "scale" "rotate" "offset" "dot" "warp" "compose"]))
 
 ;; TODO provide scalar operands outside (0, 1.0) range
 
 
 (def ops
-  (concat #_named-colors random-scalar-color random-vector-color
+  (concat #_named-colors ;; boring
+          random-scalar-color random-vector-color
           textures unary-v-operators nullary-operators-scalar nullary-operators-vector
           unary-operators-vector binary-operators
-          [#_psychedelic posterize pixelize radial swirl make-multi-fractal
-           unary-scale unary-offset unary-rotate shatter]
+          [#_psychedelic ;; overdone
+           posterize pixelize radial swirl make-multi-fractal
+           unary-scale unary-offset unary-rotate shatter
+           ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
+           turbulate]
           ))
 
 (defn terminals [ops]
@@ -210,9 +223,9 @@
         arity (:arity f)]
     (if (zero? arity)
       operation
-      (let [build-subexpr (fn [expression arg-index]
+      (let [build-subexpr (fn [expression _]
                             (let [child-expr (random-clisk-expression (dec depth) method input-files)]
-                              ;; "%" represents the position in the expression
+                              ;; "%", if present, represents the position in the expression
                               ;; where the image argument should be inserted:
                               (if (= -1 (.indexOf (first expression) "%"))
                                 ;; default: image argument goes at the end:
@@ -222,4 +235,5 @@
                                                                (with-out-str (print child-expr)))]
                                   (concat (list new-first) (rest expression))))))]
         (reduce build-subexpr (list operation) (range arity))))))
+
 
