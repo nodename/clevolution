@@ -1,6 +1,7 @@
 (ns clevolution.view.view
   (:use [mikera.cljutils.error])
   (:require
+    [clisk core functions] ;; include for Test purposes
     [mikera.image.core :as img]
     [mikera.image.colours :as col]
     [clevolution.file-output :refer :all]

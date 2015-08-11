@@ -1,9 +1,10 @@
 (ns clevolution.test.core
   (:use [clevolution.core])
+  (:use [clisk.live])
   (:use [clojure.test]))
 
 (deftest test-one
-  (is (throws? java.lang.IllegalArgumentException
+  (is (thrown? java.lang.IllegalArgumentException
                (do
                  (in-ns 'clevolution.cliskenv)
                  (eval (read-string "(vmod (vcos blue) (offset vround vround))"))
@@ -30,7 +31,7 @@
 (shatter
   (tile (make-multi-fractal
           (rotate 0.9081414094051161 z)
-          :octaves 0
+          :octaves 1
           :lacunarity 1.0922954699658527
           :gain 0.6374550428738956
           :scale 0.7577837963811469))
