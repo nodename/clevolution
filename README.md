@@ -36,4 +36,4 @@ API
   (show-clisk-image generator-string)
   
   ;; show the image file in a JFrame:
-  (show-clisk-file uri & more)
+  (show-clisk-file uri & more) 
