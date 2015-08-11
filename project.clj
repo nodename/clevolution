@@ -7,7 +7,7 @@
                  [net.mikera/vectorz-clj "0.31.0"]
                  [net.mikera/imagez "0.6.0"]
                  [net.mikera/mikera-gui "0.3.1"]
-                 [seesaw "1.4.2" :exclusions [org.clojure/clojure]]
+                 [seesaw "1.4.5" :exclusions [org.clojure/clojure]]
                  #_[com.miglayout/miglayout "3.7.4"]
                  #_[com.jgoodies/forms "1.2.1"]
                  #_[org.swinglabs.swingx/swingx-core "1.6.3"]
