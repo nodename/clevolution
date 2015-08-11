@@ -2,9 +2,9 @@
   :description "Evolutionary art library in Clojure"
   :source-paths ["src/clj" #_"../clisk/src/main/clojure" #_"../seesaw/src"]
   :java-source-paths ["src/java" "../clisk/src/main/java"]
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0-alpha4"]
                  [net.mikera/clisk "0.10.0"]
-                 [net.mikera/vectorz-clj "0.30.1"]
+                 [net.mikera/vectorz-clj "0.31.0"]
                  [net.mikera/imagez "0.6.0"]
                  [net.mikera/mikera-gui "0.3.1"]
                  [seesaw "1.4.2" :exclusions [org.clojure/clojure]]
