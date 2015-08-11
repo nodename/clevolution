@@ -10,3 +10,4 @@
 /.lein-plugins/checksum
 .project
 .classpath
+bin
