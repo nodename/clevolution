@@ -39,9 +39,11 @@
         zoom-from-origin
         restore-center)))
 
+
 (defn seamless-tile
   [scale generator]
   (str "(seamless " scale " " generator ")"))
+
 
 
 (defn show-clisk-image
@@ -93,32 +95,3 @@
 (defn show-clisk-file
   [uri & more]
   (apply show-clisk-image (get-generator-string uri) :title uri more))
-
-
-(comment
-
-  (use 'clevolution.core)
-
-  (def output-file "images/test.png")
-
-  ;; generate a random expression:
-  (random-clisk-string)
-
-  ;; generate a random expression and evaluate it, saving the resulting image to a file:
-  (save-clisk-image (random-clisk-string) output-file)
-
-  ;; evaluate an explicit expression, saving the resulting image to a file
-  ;; (This one is a Galois field (http://nklein.com/2012/05/visualizing-galois-fields/):
-  (save-clisk-image "(vxor x y)" output-file)
-
-  ;; generate 1000 random expressions, saving each with its image to a file:
-  (def output-file-path "F:\\clisk-images\\")
-  (dotimes [n 1000]
-    (make-random-clisk-file output-file-path n))
-
-  ;; read back the expression that generated the image in a file:
-  (get-generator-string output-file)
-
-  ;; re-evaluate an image's generator expression at a given width and height, and save it to another file:
-  (resize-file output-file 800 800 big-output-file)
-  )
