@@ -1,5 +1,6 @@
 (ns clevolution.core
-  (:require [clevolution.file-output :refer :all]
+  (:require [clisk.core :refer [image]]
+            [clevolution.file-output :refer :all]
             [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.cliskstring :refer [random-clisk-expression]]
             [clevolution.view.view :refer [show frame]] :reload-all))
@@ -53,7 +54,8 @@
         generator (if seamless (seamless-tile seamless generator) generator)
         generator (if zoom (zoom-center zoom generator) generator)]
     (try
-      (let [eval-it (fn [generator] (clisk-eval generator 512))
+      (let [eval-it (fn [generator] (let [node (clisk-eval generator)]
+                                      (image node :size 512)))
             show-it (fn [frame] (show frame :generator generator :title (if title
                                                                           title
                                                                           "Clevolution")))]
@@ -72,7 +74,7 @@
   ([^String generator size ^String uri]
    (let [context-name "clisk"
          metadata (make-generator-metadata generator context-name)
-         image (clisk-eval generator size)]
+         image (image (clisk-eval generator) :size size)]
      (write-image-to-file image metadata uri))))
 
 

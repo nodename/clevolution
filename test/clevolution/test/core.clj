@@ -27,21 +27,6 @@
 
 
 
-
-(shatter
-  (tile (make-multi-fractal
-          (rotate 0.9081414094051161 z)
-          :octaves 1
-          :lacunarity 1.0922954699658527
-          :gain 0.6374550428738956
-          :scale 0.7577837963811469))
-  :points 20)
-;; clojure.lang.ArityException: Wrong number of args (0) passed to: core/max
-
-
-
-
-
 #_
 (mikera.util.Maths/mod 0.32139875719878824
                        (mikera.util.Maths/mod
