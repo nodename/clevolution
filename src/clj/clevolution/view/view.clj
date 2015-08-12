@@ -67,6 +67,7 @@
         _ (.add menu-bar menu)
 
         test-eval-action (fn [e]
+                           (println (str "Classloader is: " (deref clojure.lang.Compiler/LOADER)))
                            (clisk-eval "x" 512))
 
         load-file-action (fn [e]
