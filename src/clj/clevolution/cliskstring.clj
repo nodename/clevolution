@@ -41,7 +41,7 @@
 
 (def make-multi-fractal
   {:function (fn []
-               (let [octaves (rand-int 12)
+               (let [octaves (rand-int 9)
                      lacunarity (rand 10.0)
                      gain (rand 1.0)
                      scale (rand 1.0)]
@@ -54,7 +54,7 @@
   "Operators that take one argument, either scalar or vector"
   (map (partial make-with-arity 1)
        ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac" "square"
-        "vsqrt" "sigmoid" "tile" "max-component" "min-component" "length"]))
+        "vsqrt" "sigmoid" "tile" "max-component" "min-component" "length" "gradient"]))
 
 
 
@@ -147,7 +147,7 @@
 (def unary-operators-vector
   "_ -> Vector"
   (map (partial make-with-arity 1)
-       ["rgb-from-hsl" "monochrome"]))
+       ["rgb-from-hsl" "monochrome" "height-normal" "light-value"]))
 
 (def unary-scale
   ;; scale by a constant factor
@@ -184,7 +184,7 @@
           unary-operators-vector binary-operators
           [#_psychedelic ;; overdone
            posterize pixelize radial swirl make-multi-fractal
-           unary-scale unary-offset unary-rotate shatter
+           unary-scale unary-offset unary-rotate #_shatter
            ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
            turbulate]
           ))
