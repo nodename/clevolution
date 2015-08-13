@@ -1,7 +1,8 @@
 (ns clevolution.view.view
   (:use [mikera.cljutils.error])
   (:require
-    [clisk core functions] ;; include for Test purposes
+    [clisk.core :as clisk]
+    [clisk.functions] ;; include for Test purposes
     [mikera.image.core :as img]
     [mikera.image.colours :as col]
     [clevolution.file-output :refer :all]
@@ -67,7 +68,8 @@
         _ (.add menu-bar menu)
 
         test-eval-action (fn [e]
-                           (clisk-eval "x" 512))
+                           (let [node (clisk-eval "x")]
+                             (clisk/image node :size 512)))
 
         load-file-action (fn [e]
                            (let [file-dialog (doto (FileDialog. frame
@@ -78,7 +80,7 @@
                              (when-let [file-name (.getFile file-dialog)]
                                (let [file-path (str (.getDirectory file-dialog) file-name)
                                      generator (get-generator file-path)
-                                     image (clisk-eval generator 512)]
+                                     image (image (clisk-eval generator) :size 512)]
                                  (.setIcon image-component (BufferedImageIcon. image))))))
 
         save-file-action (fn [e]
