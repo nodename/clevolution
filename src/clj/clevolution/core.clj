@@ -72,10 +72,14 @@
   ([^String generator ^String uri]
    (save-clisk-image generator 512 uri))
   ([^String generator size ^String uri]
-   (let [context-name "clisk"
-         metadata (make-generator-metadata generator context-name)
-         image (image (clisk-eval generator) :size size)]
-     (write-image-to-file image metadata uri))))
+   (try
+     (let [context-name "clisk"
+           metadata (make-generator-metadata generator context-name)
+           node (clisk-eval generator)
+           image (image node :size size)]
+       (write-image-to-file image metadata uri))
+     (catch Exception e
+       (.printStackTrace e)))))
 
 
 (defn uri-for-index
