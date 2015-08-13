@@ -68,6 +68,7 @@
         _ (.add menu-bar menu)
 
         test-eval-action (fn [e]
+                           (println (str "Classloader is: " (deref clojure.lang.Compiler/LOADER)))
                            (let [node (clisk-eval "x")]
                              (clisk/image node :size 512)))
 

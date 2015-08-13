@@ -13,3 +13,4 @@
 bin
 /.lein-repl-history
 /.nrepl-port
+/.settings/
