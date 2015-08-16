@@ -147,7 +147,8 @@
 (def unary-operators-vector
   "_ -> Vector"
   (map (partial make-with-arity 1)
-       ["rgb-from-hsl" "monochrome" "height-normal" "light-value"]))
+       ["rgb-from-hsl" "monochrome" "height-normal" "normalize"
+        "theta" "radius" "polar"]))
 
 (def unary-scale
   ;; scale by a constant factor
@@ -166,38 +167,58 @@
   {:function #(str "rotate " (rand Math/PI))
    :arity 1})
 
+(def matrix-transform
+  {:function #(let [a (rand 100.0)
+                    b (rand 100.0)
+                    c (rand 100.0)
+                    d (rand 100.0)
+                    e (rand 100.0)
+                    f (rand 100.0)
+                    g (rand 100.0)
+                    h (rand 100.0)
+                    i (rand 100.0)]
+               (str "matrix-transform " [[a b c] [d e f] [g h i]]))
+   :arity 1})
+
+(def affine-transform
+  {:function #(let [a (rand 100.0)
+                    b (rand 100.0)
+                    c (rand 100.0)
+                    d (rand 100.0)
+                    e (rand 100.0)
+                    f (rand 100.0)
+                    g (rand 100.0)
+                    h (rand 100.0)
+                    i (rand 100.0)]
+               (str "affine-transform " [[a b c] [d e f] [g h i]]))
+   :arity 1})
+
+(def average
+  {:function #(str "average")
+   :arity #(+ 2 (rand-int 3))})
+
 
 ;; TODO some of these can do multiple arities; check all
 ;; TODO cross3 requires two vectors; normalize requires one vector
 (def binary-operators
   (map (partial make-with-arity 2)
        ["v+" "v*" "v-" "vdivide" "vpow" "vmod" #_"checker" ;; checker is boring
-        "scale" "rotate" "offset" "dot" "warp" "compose"]))
+        "scale" "rotate" "offset" "dot" "warp" "compose" "cross3" "light-value"]))
 
-;; TODO provide scalar operands outside (0, 1.0) range
 
 
 (def ops
   (concat #_named-colors ;; boring
-          random-scalar-color random-vector-color
-          textures unary-v-operators nullary-operators-scalar nullary-operators-vector
-          unary-operators-vector binary-operators
-          [#_psychedelic ;; overdone
-           posterize pixelize radial swirl make-multi-fractal
-           unary-scale unary-offset unary-rotate #_shatter
-           ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
-           turbulate]
-          ))
+    random-scalar-color random-vector-color
+    textures unary-v-operators nullary-operators-scalar nullary-operators-vector
+    unary-operators-vector binary-operators
+    [#_psychedelic ;; overdone
+     posterize pixelize radial swirl make-multi-fractal
+     unary-scale #_unary-offset unary-rotate #_shatter ;; not using shatter pending resolution of eval issue on :objects map
+     ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
+     turbulate matrix-transform affine-transform average]
+    ))
 
-(defn terminals [ops]
-  (filter #(zero? (:arity %)) ops))
-
-(defn nonterminals [ops]
-  (filter #(not (zero? (:arity %))) ops))
-
-(defn non-leaf-choices [ops]
-  {:grow ops
-   :full (nonterminals ops)})
 
 
 (defn operation
@@ -207,6 +228,26 @@
     (if (= (class op) String)
       op
       (op))))
+
+(defn arity
+  "(:arity op) must be a Long or a Number or a function that returns a Long or a Number"
+  [op]
+  (let [arity (:arity op)]
+    (if (or (= (class arity) java.lang.Long)
+            (= (class arity) java.lang.Number))
+      arity
+      (arity))))
+
+
+(defn terminals [ops]
+  (filter #(zero? (arity %)) ops))
+
+(defn nonterminals [ops]
+  (filter #(not (zero? (arity %))) ops))
+
+(defn non-leaf-choices [ops]
+  {:grow ops
+   :full (nonterminals ops)})
 
 
 ;; The :full method always fills out the tree so all leaves are at the same depth;
@@ -220,7 +261,7 @@
               ((non-leaf-choices ops) method))
         f (rand-nth fns)
         operation (operation f)
-        arity (:arity f)]
+        arity (arity f)]
     (if (zero? arity)
       operation
       (let [build-subexpr (fn [expression _]
