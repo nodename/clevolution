@@ -6,14 +6,10 @@
   [form]
   (binding [*ns* (the-ns 'clevolution.cliskenv)]
     (try
-      (let [node (eval form)]
-        (println "node:" node)
-        (println "node is a" (class node))
-        node)
+      (eval form)
       (catch Exception e
-        (println "clisk-eval-form: ERROR, returning 0.0")
-        #_(.printStackTrace e)
-        0.0))))
+        (println "clisk-eval-form: ERROR:" (str (.getMessage e) ",") "returning black")
+        [0.0 0.0 0.0]))))
 
 
 (defmulti clisk-eval class)
