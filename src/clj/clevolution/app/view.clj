@@ -9,6 +9,7 @@
     [clevolution.file-output :refer :all]
     [clevolution.cliskeval :refer :all]
     [clevolution.app.appstate :refer :all]
+    [clevolution.app.timetravel :refer [forget-everything!]]
     [clevolution.app.controlpanel :refer [control-panel]]
     [seesaw.core :as seesaw]
     [seesaw.widget-options :refer [widget-option-provider]])
@@ -62,8 +63,10 @@
 (defn make-component
   [image]
   (doto (JIcon. image)
-    (.setMinimumSize (Dimension. (.getWidth image nil)
-                                 (.getHeight image nil)))))
+    (.setMinimumSize (Dimension. 800 800))
+    (.setMaximumSize(Dimension. 800 800))
+      #_(Dimension. (.getWidth image nil)
+                                 (.getHeight image nil))))
 
 
 (defn clisk-image
@@ -77,25 +80,32 @@
       nil)))
 
 
-(defn clisk-image-from-node
+(defn load-image
+  [image]
+  (let [image-component (make-component (frame image))]
+    (seesaw/config! (:panel @app-state)
+                    :items [image-component control-panel])))
+
+
+(defn set-image-from-node
   [node]
   (let [image (clisk-image node)]
     (if image
-      (let [image-component (make-component image)]
-        (seesaw/config! (:panel @app-state)
-                        :items [image-component control-panel]))
-      (do
-        ;; TODO revert the generator
-        (println "clisk-image-from-node: image was nil")))
+      (load-image image)
+      (println "clisk-image-from-node: image was nil"))
     (set-image! image)))
 
 
-(defn apply-new-generator
-   [viewport generator]
-  (let [[a b] viewport
-        view-generator (str "viewport " a " " b " " generator)
+
+
+
+(defn redo-image
+  [viewport generator]
+  (let [view-generator (if (= viewport DEFAULT-VIEWPORT)
+                         generator
+                         (merge-viewport viewport generator))
         node (clisk-eval view-generator)]
-    (clisk-image-from-node node)))
+    (set-image-from-node node)))
 
 
 (defn load-file-dialog
@@ -126,10 +136,10 @@
 
 (defn create-image-frame
   [image generator context title]
-  (initialize-state! generator image context)
+  (forget-everything!)
   (let [frame (doto (create-frame title)
-                (.setMinimumSize (Dimension. (+ 20 (.getWidth image nil) #_(.getWidth control-panel nil))
-                                             (+ 100 (.getHeight image nil)))))
+                (.setMinimumSize (Dimension. (+ 20 800 #_(.getWidth control-panel nil))
+                                             (+ 100 800))))
 
         image-component (make-component image)
 
@@ -138,19 +148,26 @@
                 :items [image-component control-panel])]
 
     (.add frame panel)
-    (set-panel! panel)
+    (initialize-state! generator image context panel)
 
     (let [load-menuitem (seesaw/menu-item :text "Load..."
                                           :listen [:action (fn [_] (load-file-dialog frame))])
           save-menuitem (seesaw/menu-item :text "Save As..."
                                           :listen [:action (fn [_] (save-file-dialog frame))])
 
-          menu (doto (JMenu. "File")
-                 (.add load-menuitem)
-                 (.add save-menuitem))
+          file-menu (doto (JMenu. "File")
+                      (.add load-menuitem)
+                      (.add save-menuitem))
+
+          fullscreen-menuitem (seesaw/menu-item :text "Toggle Full Screen"
+                                                :listen [:action (fn [_] (seesaw/toggle-full-screen! frame))])
+
+          view-menu (doto (JMenu. "View")
+                      (.add fullscreen-menuitem))
 
           menu-bar (doto (JMenuBar.)
-                     (.add menu))]
+                     (.add file-menu)
+                     (.add view-menu))]
 
       (doto frame
         (.setJMenuBar menu-bar)
@@ -180,19 +197,10 @@
                                 (windowClosed [e])))))))
 
 
-(def FRAMESIZE 800)
-
-
-(defn frame
-  [^BufferedImage bi]
-  (let [factor (/ FRAMESIZE (.getWidth bi))]
-    (img/zoom bi factor)))
-
-
-
 
 (add-watch app-state :generator-watch (fn [k r old-state new-state]
-                                        (when (:image-dirty new-state)
-                                          (apply-new-generator (:generator new-state)))
-                                        #_(when (not= (:viewport old-state) (:viewport new-state))
-                                          (apply-new-viewport (:viewport new-state)))))
+                                        (if (:image-dirty new-state)
+                                          (do
+                                            (println "Redoing image")
+                                            (redo-image (:viewport new-state) (:generator new-state)))
+                                          (load-image (:image new-state)))))
