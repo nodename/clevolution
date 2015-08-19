@@ -4,7 +4,7 @@
             [clevolution.file-output :refer :all]
             [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.cliskstring :refer [random-clisk-expression]]
-            [clevolution.app.view :refer [show]] :reload-all)
+            [clevolution.app.view :refer [show frame]] :reload-all)
   (:import [java.awt.image BufferedImage]))
 
 
@@ -21,15 +21,6 @@
   (let [expr (random-clisk-expression depth method input-files)]
     (with-out-str (print expr))))
 
-
-
-(def FRAMESIZE 800)
-
-
-(defn frame
-  [^BufferedImage bi]
-  (let [factor (/ FRAMESIZE (.getWidth bi))]
-    (img/zoom bi factor)))
 
 
 

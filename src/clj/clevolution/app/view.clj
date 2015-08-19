@@ -28,6 +28,15 @@
 (widget-option-provider mikera.gui.JIcon seesaw/default-options)
 
 
+(def FRAMESIZE 800)
+
+
+(defn frame
+  [^BufferedImage bi]
+  (let [factor (/ FRAMESIZE (.getWidth bi))]
+    (img/zoom bi factor)))
+
+
 
 (def last-frame (atom nil))
 
