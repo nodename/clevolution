@@ -1,10 +1,11 @@
 (ns clevolution.app.controlpanel
   (:require [clevolution.app.appstate :refer :all]
-            [clevolution.app.timetravel :refer [do-undo do-redo]]
+            [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
             [seesaw.core :refer :all]
             [seesaw.mig :refer [mig-panel]]
             [seesaw.border :refer [custom-border compound-border line-border]]
-            [seesaw.bind :as b])
+            [seesaw.bind :as b]
+            [seesaw.core :as seesaw])
   (:import [java.awt Color]
            [javax.swing.border TitledBorder]))
 
@@ -26,32 +27,24 @@
                  TitledBorder/LEADING TitledBorder/TOP nil color))
 
 
-;; TILING
-
-(defn seamless-tile
-  [scale generator]
-  (str "(seamless " scale " " generator ")"))
 
 
-(def seamless-scale
-  (doto (slider :min 0
-                :max 100
-                :value 100)
-    (.setMajorTickSpacing 10)
-    (.setPaintTicks true)
-    (.setPaintLabels true)))
+
+;; IMAGE SIZE
+
+(def imagesize-field (text :columns 6))
+
+(def imagesize-panel
+  (horizontal-panel
+    :border (titled-border "Image Size")
+    :items [imagesize-field
+            (button :text "Apply"
+                    :listen [:action (fn [_] (set-imagesize! (value imagesize-field)))])]))
 
 
-(def tiling-panel
-  (vertical-panel
-    :border (titled-border "Seamless Tiling")
-    :items [(horizontal-panel
-              :items [seamless-scale
-                      (button :text "Apply"
-                              :listen [:action (fn [_]
-                                                 (set-generator! (seamless-tile
-                                                                   (/ (value seamless-scale) 100)
-                                                                   (:generator @app-state))))])])]))
+
+
+
 
 
 
@@ -104,19 +97,24 @@
 
 
 (def zoom-spinner
-  (spinner :model (spinner-model 1.0 :from 0.0 :by 1.0)))
+  (spinner :model (spinner-model 1.0 :from 1.0 :by 1.0)))
 
 (def zoom-panel
   (horizontal-panel
     :border (rounded-border)
     :items [(button :text "Zoom In"
-                    :listen [:action (fn [_] (set-viewport! (zoom-viewport (/ 1 (value zoom-spinner))
-                                                                           (:viewport @app-state))))])
+                    :listen [:action (fn [_] (let [factor (value zoom-spinner)]
+                                               (set-viewport! (zoom-viewport (/ 1 factor)
+                                                                             (:viewport @app-state))
+                                                              (str "Zoom In " factor))))])
             "Factor:"
             zoom-spinner
             (button :text "Zoom Out"
-                    :listen [:action (fn [_] (set-viewport! (zoom-viewport (value zoom-spinner)
-                                                                           (:viewport @app-state))))])]))
+                    :listen [:action (fn [_] (let [factor (value zoom-spinner)]
+                                               (set-viewport! (zoom-viewport factor
+                                                                             (:viewport @app-state))
+                                                              (str "Zoom Out " factor))))])]))
+
 
 
 
@@ -153,21 +151,25 @@
 
 (def vp-set-values
   (horizontal-panel
-    :border (rounded-border)
+    :border (titled-border "Current Viewport")
     :items [viewport-grid
             (button :text "Set values"
-                    :listen [:action (fn [_]
-                                       (let [{:keys [ax ay bx by]} (value viewport-grid)]
-                                         (set-viewport! [[ax ay] [bx by]])))])]))
+                    :listen [:action
+                             (fn [_]
+                               (let [{:keys [ax ay bx by]} (value viewport-grid)]
+                                 (set-viewport! [[ax ay] [bx by]]
+                                                (str "Set Viewport " ax " " ay " " bx " " by))))])]))
 
 
 (def viewport-buttons
   (horizontal-panel :items [(button :text "Default"
                                     :listen [:action (fn [_]
-                                                       (set-viewport! DEFAULT-VIEWPORT))])
+                                                       (set-viewport! DEFAULT-VIEWPORT
+                                                                      "Set Default Viewport"))])
                             (button :text "Center at Origin"
                                     :listen [:action (fn [_]
-                                                       (set-viewport! ORIGIN-VIEWPORT))])]))
+                                                       (set-viewport! ORIGIN-VIEWPORT
+                                                                      "Set Origin Viewport"))])]))
 
 
 (def viewport-panel
@@ -177,8 +179,42 @@
             zoom-panel
             vp-set-values
             (button :text "Apply viewport to image"
-                    :listen [:action (fn [_]
-                                       (merge-viewport!))])]))
+                    :listen [:action (fn [_] (merge-viewport!))])]))
+
+
+
+;; TILING
+
+(defn seamless-tile
+  [scale generator]
+  (str "(seamless " scale " " generator ")"))
+
+
+(def seamless-scale
+  (doto (slider :min 0
+                :max 100
+                :value 100)
+    (.setMajorTickSpacing 10)
+    (.setPaintTicks true)
+    (.setPaintLabels true)))
+
+
+(def seamless-button
+  (button :text "Apply"
+          :listen [:action (fn [_]
+                             (let [value (value seamless-scale)]
+                               (set-generator! (seamless-tile
+                                                 (/ value 100)
+                                                 (:generator @app-state))
+                                               (str "Seamless Tile " value "%"))))]))
+
+
+(def tiling-panel
+  (vertical-panel
+    :border (titled-border "Seamless Tiling")
+    :items [(horizontal-panel
+              :items [seamless-scale
+                      seamless-button])]))
 
 
 
@@ -201,7 +237,8 @@
     :background Color/BLACK
     :items [editor
             (button :text "Apply"
-                    :listen [:action (fn [_] (set-generator! (text editor)))])]))
+                    :listen [:action (fn [_] (set-generator! (text editor)
+                                                             "Edited Generator"))])]))
 
 
 
@@ -211,23 +248,42 @@
 (def nav-buttons
   (horizontal-panel
     :background Color/LIGHT_GRAY
-    :items [(button :text "Undo"
+    :items [(button :text "<< Rewind"
+                    :listen [:action (fn [_] (do-rewind))])
+            (button :text "< Undo"
                     :listen [:action (fn [_] (do-undo))])
-            (button :text "Redo"
-                    :listen [:action (fn [_] (do-redo))])]))
+            (button :text "Redo >"
+                    :listen [:action (fn [_] (do-redo))])
+            (button :text "End >>"
+                    :listen [:action (fn [_] (do-end))])]))
+
+
+
+;; HISTORY
+
+(def history-panel
+  (vertical-panel
+    :background Color/LIGHT_GRAY
+    :items []))
 
 
 
 (def control-panel
-  (vertical-panel
+  (horizontal-panel
     :background Color/LIGHT_GRAY
-    :items [#_antialias-panel
-            viewport-panel
-            tiling-panel
-            expression-panel
-            nav-buttons]))
+    :items [(vertical-panel :background Color/LIGHT_GRAY
+                            :items [imagesize-panel
+                                    viewport-panel
+                                    tiling-panel
+                                    expression-panel
+                                    nav-buttons])
+            history-panel]))
 
 
+
+(add-watch app-state :history-watch (fn [k r old-state new-state]
+                                      (seesaw/config! history-panel
+                                                      :items (mapv #(:command %) @app-history))))
 
 
 #_
