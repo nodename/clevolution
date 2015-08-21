@@ -85,7 +85,7 @@
 (defn clisk-image
   [node & {:keys [size]
            :or {size (:image-size @app-state)}}]
-  (if class-loader-undefined?
+  (if @class-loader-undefined?
     (ClassPatch/pushClassLoader)
     (reset! class-loader-undefined? false))
   (clisk/image node :size size))
