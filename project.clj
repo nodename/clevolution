@@ -1,7 +1,7 @@
 (defproject com.nodename/clevolution "0.1.1"
   :description "Evolutionary art library in Clojure"
   :source-paths ["src/clj" #_"../clisk/src/main/clojure" #_"../seesaw/src"]
-  :java-source-paths ["src/java" "../clisk/src/main/java"]
+  :java-source-paths ["src/java" #_"../clisk/src/main/java"]
   :dependencies [[org.clojure/clojure "1.8.0-alpha4"]
                  [net.mikera/clisk "0.10.1"]
                  [net.mikera/vectorz-clj "0.31.0"]
