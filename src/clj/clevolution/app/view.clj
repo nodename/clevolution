@@ -9,15 +9,16 @@
     [clevolution.file-output :refer :all]
     [clevolution.cliskeval :refer :all]
     [clevolution.app.appstate :refer :all]
-    [clevolution.app.timetravel :refer [forget-everything!]]
+    [clevolution.app.timetravel :refer [forget-everything! app-history]]
     [clevolution.app.controlpanel :refer [control-panel]]
     [seesaw.core :as seesaw]
     [seesaw.widget-options :refer [widget-option-provider]])
   (:import [java.awt FileDialog Dimension Color]
            [java.awt.image BufferedImage]
-           [mikera.gui JIcon BufferedImageIcon]
+           [mikera.gui JIcon]
            [java.awt.event WindowListener]
-           [javax.swing JFrame JMenu JMenuBar JPanel]))
+           [javax.swing JFrame JMenu JMenuBar]
+           (clevolution ClassPatch)))
 
 
 ;; Java interop code in this namespace proudly stolen from Mike Anderson:
@@ -28,12 +29,10 @@
 (widget-option-provider mikera.gui.JIcon seesaw/default-options)
 
 
-(def FRAMESIZE 800)
-
 
 (defn frame
   [^BufferedImage bi]
-  (let [factor (/ FRAMESIZE (.getWidth bi))]
+  (let [factor (/ (:frame-size @app-state) (.getWidth bi))]
     (img/zoom bi factor)))
 
 
@@ -74,19 +73,22 @@
   (doto (JIcon. image)
     (.setMinimumSize (Dimension. 800 800))
     (.setMaximumSize(Dimension. 800 800))
-      #_(Dimension. (.getWidth image nil)
-                                 (.getHeight image nil))))
+    #_(Dimension. (.getWidth image nil)
+                  (.getHeight image nil))))
 
 
+(defonce class-loader-undefined? (atom true))
+
+;; When clisk/image is called from the AWT EventQueue thread,
+;; the Compiler's LOADER is unbound.
+;; So we set it before calling clisk/image:
 (defn clisk-image
-  "Make clisk/image work in the AWT-EventQueue thread"
-  [node]
-  #_{:pre [(= (class node) clisk.node.Node)]}
-  (try
-    (eval `(clisk/image ~node :size 512))
-    (catch Exception e
-      (println "view.clisk-image: ERROR," (.getMessage e))
-      nil)))
+  [node & {:keys [size]
+           :or {size (:image-size @app-state)}}]
+  (if class-loader-undefined?
+    (ClassPatch/pushClassLoader)
+    (reset! class-loader-undefined? false))
+  (clisk/image node :size size))
 
 
 (defn load-image
@@ -97,22 +99,18 @@
 
 
 (defn set-image-from-node
-  [node]
-  (let [image (clisk-image node)]
+  [node & {:keys [size]
+           :or {size (:image-size @app-state)}}]
+  (let [image (clisk-image node :size size)]
     (if image
       (load-image image)
-      (println "clisk-image-from-node: image was nil"))
+      (println "set-image-from-node: image was nil"))
     (set-image! image)))
-
-
-
 
 
 (defn redo-image
   [viewport generator]
-  (let [view-generator (if (= viewport DEFAULT-VIEWPORT)
-                         generator
-                         (merge-viewport viewport generator))
+  (let [view-generator (merge-viewport viewport generator)
         node (clisk-eval view-generator)]
     (set-image-from-node node)))
 
@@ -127,7 +125,7 @@
     (when-let [file-name (.getFile file-dialog)]
       (let [file-path (str (.getDirectory file-dialog) file-name)
             generator (get-generator file-path)]
-        (set-generator! generator)))))
+        (set-generator! generator "Load File")))))
 
 
 (defn save-file-dialog
@@ -139,8 +137,26 @@
                       (.setVisible true))]
     (when-let [file-name (.getFile file-dialog)]
       (write-image-to-file (:image @app-state)
-                           (make-generator-metadata (:generator @app-state) (:context @app-state))
+                           (make-generator-metadata (merge-viewport (:viewport @app-state)
+                                                                    (:generator @app-state))
+                                                    (:context @app-state))
                            (str (.getDirectory file-dialog) file-name)))))
+
+
+(defn save-history-dialog
+  [frame]
+  (let [file-dialog (doto (FileDialog. frame
+                                       "Save History As..."
+                                       FileDialog/SAVE)
+                      (.setFile "*")
+                      (.setVisible true))]
+    (when-let [file-name (.getFile file-dialog)]
+      (doseq [[index state] (map-indexed vector @app-history)]
+        (write-image-to-file (:image state)
+                             (make-generator-metadata (merge-viewport (:viewport state)
+                                                                      (:generator state))
+                                                      (:context state))
+                             (str (.getDirectory file-dialog) file-name index ".png"))))))
 
 
 (defn create-image-frame
@@ -159,17 +175,24 @@
     (.add frame panel)
     (initialize-state! generator image context panel)
 
-    (let [load-menuitem (seesaw/menu-item :text "Load..."
-                                          :listen [:action (fn [_] (load-file-dialog frame))])
-          save-menuitem (seesaw/menu-item :text "Save As..."
-                                          :listen [:action (fn [_] (save-file-dialog frame))])
+    (let [load-menuitem (seesaw/menu-item
+                          :text "Load..."
+                          :listen [:action (fn [_] (load-file-dialog frame))])
+          save-menuitem (seesaw/menu-item
+                          :text "Save As..."
+                          :listen [:action (fn [_] (save-file-dialog frame))])
+          save-history-menu-item (seesaw/menu-item
+                                   :text "Save History As..."
+                                   :listen [:action (fn [_] (save-history-dialog frame))])
 
           file-menu (doto (JMenu. "File")
                       (.add load-menuitem)
-                      (.add save-menuitem))
+                      (.add save-menuitem)
+                      (.add save-history-menu-item))
 
-          fullscreen-menuitem (seesaw/menu-item :text "Toggle Full Screen"
-                                                :listen [:action (fn [_] (seesaw/toggle-full-screen! frame))])
+          fullscreen-menuitem (seesaw/menu-item
+                                :text "Toggle Full Screen"
+                                :listen [:action (fn [_] (seesaw/toggle-full-screen! frame))])
 
           view-menu (doto (JMenu. "View")
                       (.add fullscreen-menuitem))
@@ -188,7 +211,6 @@
   "Shows a component in a new frame"
   ([component
     & {:keys [^String generator ^String title on-close]
-       :as options
        :or {generator nil title nil}}]
    (let [^JFrame fr (create-image-frame component
                                         (str generator)
