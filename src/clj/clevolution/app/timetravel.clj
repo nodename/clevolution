@@ -53,14 +53,19 @@
     (do
       (println "REDO")
       (swap! ignore assoc :time-machine true)
-      (reset! app-state (last @app-future))
-      (push-onto-undo-stack (last @app-future))
-      (swap! app-future pop))
+      (let [redo-state (last @app-future)]
+        (push-onto-undo-stack redo-state)
+        (swap! app-future pop)
+        (reset! app-state redo-state)))
     (println "can't redo: at newest state")))
 
 (defn do-rewind
   []
   (while (do-undo)))
+
+(defn do-end
+  []
+  (while (do-redo)))
 
 
 (def watch-fn (fn [_ _ old-state new-state]
