@@ -1,11 +1,9 @@
 (ns clevolution.core
-  (:require [clisk.core :refer [image]]
-            [mikera.image.core :as img]
+  (:require [clisk.core :as clisk]
             [clevolution.file-output :refer :all]
             [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.cliskstring :refer [random-clisk-expression]]
-            [clevolution.app.view :refer [show frame]] :reload-all)
-  (:import [java.awt.image BufferedImage]))
+            [clevolution.app.view :refer [show frame]] :reload-all))
 
 
 (def default-depth 3)
@@ -22,14 +20,12 @@
     (with-out-str (print expr))))
 
 
-
-
-
 (defn show-clisk-image
   "Generate an image from a generator string and show it in a JFrame"
-  [^String generator & {:keys [title]}]
+  [^String generator & {:keys [title size]
+                        :or {size 512}}]
   (try
-    (let [make-image (fn [node] (image node :size 512))
+    (let [make-image (fn [node] (clisk/image node :size size))
           show-it (fn [frame] (show frame
                                     :generator generator
                                     :title (if title
@@ -46,17 +42,16 @@
 
 (defn save-clisk-image
   "Generate an image from generator string and save it as a file"
-  ([^String generator ^String uri]
-   (save-clisk-image generator 512 uri))
-  ([^String generator size ^String uri]
-   (try
-     (let [context-name "clisk"
-           metadata (make-generator-metadata generator context-name)
-           node (clisk-eval generator)
-           image (image node :size size)]
-       (write-image-to-file image metadata uri))
-     (catch Exception e
-       (.printStackTrace e)))))
+  [^String generator ^String uri & {:keys [size]
+                                    :or {size 512}}]
+  (try
+    (let [context-name "clisk"
+          metadata (make-generator-metadata generator context-name)
+          node (clisk-eval generator)
+          image (clisk/image node :size size)]
+      (write-image-to-file image metadata uri))
+    (catch Exception e
+      (.printStackTrace e))))
 
 
 (defn uri-for-index
