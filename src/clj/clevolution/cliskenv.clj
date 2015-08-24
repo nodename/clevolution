@@ -52,6 +52,61 @@
   (seed-simplex-noise! seed)
   '(clisk.noise.Simplex/snoise x y z t))
 
+(def ev-noise ev-simplex-noise)
+(def ev-snoise ev-simplex-snoise)
+
+(defn ev-vnoise
+  [seed]
+  (seed-simplex-noise! seed)
+  (vnoise))
+
+(defn ev-vsnoise
+  [seed]
+  (seed-simplex-noise! seed)
+  (vsnoise))
+
+(defn ev-plasma
+  [seed]
+  (seed-simplex-noise! seed)
+  (plasma))
+
+(defn ev-splasma
+  [seed]
+  (seed-simplex-noise! seed)
+  (splasma))
+
+(defn ev-turbulence
+  [seed]
+  (seed-simplex-noise! seed)
+  (turbulence))
+
+(defn ev-vturbulence
+  [seed]
+  (seed-simplex-noise! seed)
+  (vturbulence))
+
+(defn ev-vplasma
+  [seed]
+  (seed-simplex-noise! seed)
+  (vplasma))
+
+(defn ev-vsplasma
+  [seed]
+  (seed-simplex-noise! seed)
+  (vsplasma))
+
+(defn ev-turbulate
+  [seed factor func]
+  (seed-simplex-noise! seed)
+  (turbulate factor func))
+
+(defn ev-psychedelic
+  [seed src noise-scale noise-bands]
+  (seed-simplex-noise! seed)
+  (psychedelic src :noise-scale noise-scale :noise-bands noise-bands))
+
+
+
 (defn read-file
   [uri]
   (texture-map (read-image-from-file uri)))

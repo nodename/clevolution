@@ -3,16 +3,18 @@
   (:require
     [clojure.pprint :refer [pprint]]
     [clisk.core :as clisk]
+    [clisk.node :refer [ZERO-NODE]]
     [clisk.functions] ;; include for Test purposes
     [mikera.image.core :as img]
     [mikera.image.colours :as col]
     [clevolution.file-output :refer :all]
     [clevolution.cliskeval :refer :all]
-    [clevolution.app.appstate :refer :all]
+    [clevolution.app.appstate :as appstate :refer [app-state merge-view-elements]]
     [clevolution.app.timetravel :refer [forget-everything! app-history]]
     [clevolution.app.controlpanel :refer [control-panel]]
     [seesaw.core :as seesaw]
-    [seesaw.widget-options :refer [widget-option-provider]])
+    [seesaw.widget-options :refer [widget-option-provider]]
+    [seesaw.border :refer [line-border]])
   (:import [java.awt FileDialog Dimension Color]
            [java.awt.image BufferedImage]
            [mikera.gui JIcon]
@@ -30,9 +32,12 @@
 
 
 
-(defn frame
+
+
+
+(defn to-display-size
   [^BufferedImage bi]
-  (let [factor (/ (:frame-size @app-state) (.getWidth bi))]
+  (let [factor (/ (:image-display-size @app-state) (.getWidth bi))]
     (img/zoom bi factor)))
 
 
@@ -70,11 +75,10 @@
 
 (defn make-component
   [image]
-  (doto (JIcon. image)
-    (.setMinimumSize (Dimension. 800 800))
-    (.setMaximumSize(Dimension. 800 800))
-    #_(Dimension. (.getWidth image nil)
-                  (.getHeight image nil))))
+  (let [size (:image-display-size @appstate/app-state)]
+    (doto (JIcon. image)
+      (.setMinimumSize (Dimension. size size))
+      (.setMaximumSize (Dimension. size size)))))
 
 
 (defonce class-loader-undefined? (atom true))
@@ -83,36 +87,29 @@
 ;; the Compiler's LOADER is unbound.
 ;; So we set it before calling clisk/image:
 (defn clisk-image
-  [node & {:keys [size]
-           :or {size (:image-size @app-state)}}]
+  [node size]
   (if @class-loader-undefined?
     (ClassPatch/pushClassLoader)
     (reset! class-loader-undefined? false))
   (clisk/image node :size size))
 
 
-(defn load-image
+(defn display-image
   [image]
-  (let [image-component (make-component (frame image))]
+  (let [image-component (make-component (to-display-size image))]
     (seesaw/config! (:panel @app-state)
                     :items [image-component control-panel])))
 
 
 (defn set-image-from-node
-  [node & {:keys [size]
-           :or {size (:image-size @app-state)}}]
-  (let [image (clisk-image node :size size)]
+  [node & {:keys [size status]
+           :or {size (:image-size @app-state)
+                status :ok}}]
+  (let [image (clisk-image node size)]
     (if image
-      (load-image image)
+      (display-image image)
       (println "set-image-from-node: image was nil"))
-    (set-image! image)))
-
-
-(defn redo-image
-  [viewport generator]
-  (let [view-generator (merge-viewport viewport generator)
-        node (clisk-eval view-generator)]
-    (set-image-from-node node)))
+    (appstate/set-image! image :status status)))
 
 
 (defn load-file-dialog
@@ -125,7 +122,8 @@
     (when-let [file-name (.getFile file-dialog)]
       (let [file-path (str (.getDirectory file-dialog) file-name)
             generator (get-generator file-path)]
-        (set-generator! generator "Load File")))))
+        (.setTitle frame file-path)
+        (appstate/set-generator! generator "Load File")))))
 
 
 (defn save-file-dialog
@@ -137,8 +135,7 @@
                       (.setVisible true))]
     (when-let [file-name (.getFile file-dialog)]
       (write-image-to-file (:image @app-state)
-                           (make-generator-metadata (merge-viewport (:viewport @app-state)
-                                                                    (:generator @app-state))
+                           (make-generator-metadata (merge-view-elements @app-state)
                                                     (:context @app-state))
                            (str (.getDirectory file-dialog) file-name)))))
 
@@ -153,27 +150,29 @@
     (when-let [file-name (.getFile file-dialog)]
       (doseq [[index state] (map-indexed vector @app-history)]
         (write-image-to-file (:image state)
-                             (make-generator-metadata (merge-viewport (:viewport state)
-                                                                      (:generator state))
+                             (make-generator-metadata (merge-view-elements state)
                                                       (:context state))
                              (str (.getDirectory file-dialog) file-name index ".png"))))))
 
 
-(defn create-image-frame
+(defn create-app-frame
   [image generator context title]
   (forget-everything!)
-  (let [frame (doto (create-frame title)
-                (.setMinimumSize (Dimension. (+ 20 800 #_(.getWidth control-panel nil))
-                                             (+ 100 800))))
+
+  (let [frame-size (Dimension. (+ 650 (:image-display-size @app-state))
+                               (+ 100 (:image-display-size @app-state)))
+        frame (doto (create-frame title)
+                (.setMinimumSize frame-size)
+                (.setMaximumSize frame-size))
 
         image-component (make-component image)
 
-        panel (seesaw/horizontal-panel
-                :background (Color. 224 224 224)
-                :items [image-component control-panel])]
+        content-panel (seesaw/horizontal-panel
+                        :background (Color. 224 224 224)
+                        :items [image-component control-panel])]
 
-    (.add frame panel)
-    (initialize-state! generator image context panel)
+    (.add frame content-panel)
+    (appstate/initialize-state! generator image context content-panel)
 
     (let [load-menuitem (seesaw/menu-item
                           :text "Load..."
@@ -212,10 +211,10 @@
   ([component
     & {:keys [^String generator ^String title on-close]
        :or {generator nil title nil}}]
-   (let [^JFrame fr (create-image-frame component
-                                        (str generator)
-                                        "clisk"
-                                        (str title))]
+   (let [^JFrame fr (create-app-frame component
+                                      (str generator)
+                                      "clisk"
+                                      (str title))]
      (when on-close
        (.addWindowListener fr (proxy [WindowListener] []
                                 (windowActivated [e])
@@ -229,9 +228,33 @@
 
 
 
+
+
+(defn calc-image
+  [state]
+  (-> state
+      merge-view-elements
+      clisk-eval
+      set-image-from-node))
+
+
+(def current-calc (atom nil))
+
+(defn cancel-current-calc
+  []
+  (let [calc @current-calc]
+    (when calc
+      (future-cancel calc))))
+
 (add-watch app-state :generator-watch (fn [k r old-state new-state]
-                                        (if (:image-dirty new-state)
-                                          (do
-                                            (println "Redoing image")
-                                            (redo-image (:viewport new-state) (:generator new-state)))
-                                          (load-image (:image new-state)))))
+                                        (if (= :dirty (:image-status new-state))
+                                          (let [new-calc
+                                                (future
+                                                  (try
+                                                    (calc-image new-state)
+                                                    (catch Exception e
+                                                      (println "calc-image ERROR:" (.getMessage e))
+                                                      (set-image-from-node ZERO-NODE :status :failed))))]
+                                            (cancel-current-calc)
+                                            (reset! current-calc new-calc))
+                                          (display-image (:image new-state)))))

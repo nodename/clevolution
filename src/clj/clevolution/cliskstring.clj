@@ -7,6 +7,13 @@
    :arity arity})
 
 
+(defn replace-%
+  [expression child-expr]
+  (let [new-first (.replaceFirst (first expression) "%"
+                                 (with-out-str (print child-expr)))]
+    (concat (list new-first) (rest expression))))
+
+
 (def named-colors
   (map (partial make-with-arity 0)
        ["sunset-map" "black" "blue" "cyan" "darkGray" "gray" "green" "lightGray"
@@ -33,22 +40,6 @@
                                :arity 0})]
     (map input-image uris)))
 
-; can't find mikera.util.Maths.java version that defines t(), needed for triangle-wave
-;(defn random-vector-nullary-operation
-;  []
-;  'triangle-wave)
-
-
-(def make-multi-fractal
-  {:function (fn []
-               (let [octaves (rand-int 9)
-                     lacunarity (rand 10.0)
-                     gain (rand 1.0)
-                     scale (rand 1.0)]
-                 (str "make-multi-fractal % :octaves " octaves " :lacunarity " lacunarity
-                      " :gain " gain " :scale " scale)))
-   :arity 1})
-
 
 (def unary-v-operators
   "Operators that take one argument, either scalar or vector"
@@ -57,6 +48,31 @@
         "vsqrt" "sigmoid" "tile" "max-component" "min-component" "length" "gradient"]))
 
 
+
+; can't find mikera.util.Maths.java version that defines t(), needed for triangle-wave
+;(defn random-vector-nullary-operation
+;  []
+;  'triangle-wave)
+
+
+(def make-multi-fractal
+  {:function (fn []
+               (let [octaves (inc (rand-int 9))
+                     lacunarity (+ 1.5 (rand 2.0))
+                     gain (rand 1.0)
+                     scale (rand 5.0)]
+                 (str "make-multi-fractal % :octaves " octaves " :lacunarity " lacunarity
+                      " :gain " gain " :scale " scale)))
+   :arity 1})
+
+
+
+
+
+;; We do not call any of Clisk's noise, turbulence, or plasma functions directly
+;; because their effects are not repeatable.
+;; Our versions incorporate setting the corresponding seed
+;; so that they will produce the same result whenever they are invoked.
 
 (def ev-perlin-noise
   {:function (fn []
@@ -84,34 +100,116 @@
                  (str "(ev-simplex-snoise " seed ")")))
    :arity 0})
 
-
-(def turbulate
+(def ev-vnoise
   {:function (fn []
-               (let [factor (rand 10.0)]
-                 (str "turbulate " factor)))
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-vnoise " seed ")")))
+   :arity 0})
+
+(def ev-vsnoise
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-vsnoise " seed ")")))
+   :arity 0})
+
+(def ev-plasma
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (replace-% (list ((:function make-multi-fractal)))
+                            (str "(ev-noise " seed ")"))))
+   ;(str "(ev-plasma " seed ")")))
+   :arity 0})
+
+(def ev-splasma
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (replace-% (list ((:function make-multi-fractal)))
+                            (str "(ev-snoise " seed ")"))))
+   ;(str "(ev-splasma " seed ")")))
+   :arity 0})
+
+(def ev-turbulence
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (replace-% (list ((:function make-multi-fractal)))
+                            (str "(vabs (ev-snoise " seed "))"))))
+   ;(str "(ev-turbulence " seed ")")))
+   :arity 0})
+
+(def ev-vturbulence
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (replace-% (list ((:function make-multi-fractal)))
+                            (str "(vabs (ev-vsnoise " seed "))"))))
+   ;(str "(ev-vturbulence " seed ")")))
+   :arity 0})
+
+(def ev-vplasma
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-vplasma " seed ")")))
+   :arity 0})
+
+(def ev-vsplasma
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))]
+                 (str "(ev-vsplasma " seed ")")))
+   :arity 0})
+
+(def ev-turbulate
+  {:function (fn []
+               (let [seed (.nextLong (mikera.util.Random.))
+                     factor (rand 10.0)]
+                 (str "ev-turbulate " seed " " factor)))
    :arity 1})
+
+
+
+
+(def voronoi-points
+  {:function (fn []
+               (let [points (+ 3 (rand-int 27))]
+                 (str "(voronoi-points :points " points ")")))
+   :arity 0})
+
+(def voronoi-blocks
+  {:function (fn []
+               (let [points (+ 3 (rand-int 27))]
+                 (str "(voronoi-blocks :points " points ")")))
+   :arity 0})
+
+
+(def gridlines
+  {:function (fn []
+               (let [color [(rand 1.0) (rand 1.0) (rand 1.0) (rand 1.0)]
+                     background [(rand 1.0) (rand 1.0) (rand 1.0) (rand 1.0)]
+                     width (rand 0.5)
+                     scale (rand 2.0)]
+                 (str "(gridlines :colour " color " :background " background
+                      " :width " width " :scale " scale ")")))
+   :arity 0})
 
 
 
 (def nullary-operators-scalar
   "() -> Scalar"
   (map (partial make-with-arity 0)
-       ["x" "y" "z"
+       ["x" "y" "z" "t"
         "max-component" "min-component"]))
 
 (def nullary-operators-vector
   "() -> Vector"
   (map (partial make-with-arity 0)
-       ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac"
+       ["vsin" "vcos" "vfloor" "vfrac"
         "square" "vsqrt" "sigmoid" "tile" "grain"
-        "hash-cubes" "colour-cubes" "plasma" "splasma" "turbulence" "vturbulence"
-        "vplasma" "vsplasma" "globe"]))
+        "hash-cubes" "colour-cubes" "globe"]))
 
-(def psychedelic
+(def ev-psychedelic
   {:function (fn []
-               (let [noise-scale (rand 1.0)
+               (let [seed (.nextLong (mikera.util.Random.))
+                     noise-scale (rand 1.0)
                      noise-bands (rand 10.0)]
-                 (str "psychedelic % :noise-scale " noise-scale " :noise-bands " noise-bands)))
+                 (str "ev-psychedelic " seed " % " noise-scale " " noise-bands)))
    :arity 1})
 
 (def posterize
@@ -142,12 +240,20 @@
                  (str "swirl " rate)))
    :arity 1})
 
+
+(def lerp
+  {:function (fn []
+               (let [proportion (rand 1.0)]
+                 (str "lerp " proportion)))
+   :arity 2})
+
+
 #_(def add-glow {})
 
 (def unary-operators-vector
   "_ -> Vector"
   (map (partial make-with-arity 1)
-       ["rgb-from-hsl" "monochrome" "height-normal" "normalize"
+       ["rgb-from-hsl" "monochrome" "height" "height-normal" "normalize"
         "theta" "radius" "polar"]))
 
 (def unary-scale
@@ -193,16 +299,16 @@
                (str "affine-transform " [[a b c] [d e f] [g h i]]))
    :arity 1})
 
-(def average
-  {:function #(str "average")
-   :arity #(+ 2 (rand-int 3))})
+
+(def variadic-ops
+  (map (partial make-with-arity #(+ 2 (rand-int 3)))
+       ["average" "v+" "v*" "v-" "vdivide"]))
 
 
-;; TODO some of these can do multiple arities; check all
-;; TODO cross3 requires two vectors; normalize requires one vector
+
 (def binary-operators
   (map (partial make-with-arity 2)
-       ["v+" "v*" "v-" "vdivide" "vpow" "vmod" #_"checker" ;; checker is boring
+       ["vpow" "vmod" "checker"
         "scale" "rotate" "offset" "dot" "warp" "compose" "cross3" "light-value"]))
 
 
@@ -211,12 +317,14 @@
   (concat #_named-colors ;; boring
     random-scalar-color random-vector-color
     textures unary-v-operators nullary-operators-scalar nullary-operators-vector
-    unary-operators-vector binary-operators
-    [#_psychedelic ;; overdone
+    unary-operators-vector binary-operators variadic-ops
+    [ev-psychedelic
      posterize pixelize radial swirl make-multi-fractal
-     unary-scale #_unary-offset unary-rotate #_shatter ;; not using shatter pending resolution of eval issue on :objects map
+     unary-scale #_unary-offset unary-rotate shatter voronoi-points voronoi-blocks gridlines
      ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
-     turbulate matrix-transform affine-transform average]
+     ev-vnoise ev-vsnoise
+     ev-plasma ev-splasma ev-turbulence ev-vturbulence ev-vplasma ev-vsplasma ev-turbulate
+     matrix-transform affine-transform lerp]
     ))
 
 
@@ -250,6 +358,7 @@
    :full (nonterminals ops)})
 
 
+
 ;; The :full method always fills out the tree so all leaves are at the same depth;
 ;; the :grow method may choose a nullary op, creating a leaf node, before reaching the full depth
 
@@ -272,9 +381,22 @@
                                 ;; default: image argument goes at the end:
                                 (concat expression (list child-expr))
                                 ;; if "%" is found, image arg replaces it:
-                                (let [new-first (.replaceFirst (first expression) "%"
-                                                               (with-out-str (print child-expr)))]
-                                  (concat (list new-first) (rest expression))))))]
+                                (replace-% expression child-expr))))]
         (reduce build-subexpr (list operation) (range arity))))))
 
 
+
+(def default-depth 3)
+(def default-method :full)
+(def default-input-files [])
+
+
+
+
+(defn random-clisk-string
+  [& {:keys [depth method input-files]
+      :or {depth default-depth
+           method default-method
+           input-files default-input-files}}]
+  (let [expr (random-clisk-expression depth method input-files)]
+    (with-out-str (print expr))))

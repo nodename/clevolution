@@ -1,13 +1,15 @@
 (ns clevolution.app.controlpanel
   (:require [clevolution.app.appstate :refer :all]
             [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
+            [clevolution.cliskstring :refer [random-clisk-string]]
             [seesaw.core :refer :all]
             [seesaw.mig :refer [mig-panel]]
             [seesaw.border :refer [custom-border compound-border line-border]]
             [seesaw.bind :as b]
             [seesaw.core :as seesaw])
   (:import [java.awt Color]
-           [javax.swing.border TitledBorder]))
+           [javax.swing.border TitledBorder]
+           (javax.swing SpinnerListModel)))
 
 
 (defn rounded-border
@@ -30,20 +32,30 @@
 
 
 
+
 ;; IMAGE SIZE
 
-(def imagesize-field (text :columns 6))
+(def imagesize-spinnermodel
+  (SpinnerListModel. [128 256 512 1024 2048]))
+
+(def imagesize-spinner (spinner
+                         :model (doto imagesize-spinnermodel
+                                  (.setValue 512))))
 
 (def imagesize-panel
   (horizontal-panel
     :border (titled-border "Image Size")
-    :items [imagesize-field
-            (button :text "Apply"
-                    :listen [:action (fn [_] (set-imagesize! (value imagesize-field)))])]))
+    :items [imagesize-spinner
+            (button
+              :text "Apply"
+              :listen [:action (fn [_] (let [value (value imagesize-spinner)]
+                                         (set-imagesize! value
+                                                         (str "Set Image Size " value))))])]))
 
-
-
-
+(b/bind
+  app-state
+  (b/transform (fn [a] (doto imagesize-spinnermodel (.setValue (:image-size a)))))
+  (b/property imagesize-spinner :model))
 
 
 
@@ -70,21 +82,33 @@
 
 
 
+
+
+;; VIEW FROM Z
+
+(def z-spinner (spinner :model (spinner-model 0.0 :by 1.0)))
+
+(def z-panel
+  (horizontal-panel
+    :border (titled-border "z")
+    :items [z-spinner
+            (button :text "Apply"
+                    :listen [:action (fn [_]
+                                       (let [z (value z-spinner)]
+                                         (set-z! z (str "Set Z " z))))])]))
+
+;; update z-spinner when :z in app-state changes:
+;(b/bind
+;  app-state
+; (b/transform (fn [a] (:x a))
+;              (b/property z-spinner
+
+
+
+
+
 ;; ZOOM
 
-
-#_
-    (defn zoom-center
-      "Zoom in or out from center of the image,
-      rather than the default top left corner.
-      factor < 1: zoom out; factor > 1: zoom in"
-      [factor generator]
-      (let [zoom-from-origin (fn [generator] (str "(scale " factor " " generator ")"))
-            offset (/ (- factor 1.0) 2)
-            restore-center (fn [generator] (str "(offset [" offset " " offset " 0.0] " generator ")"))]
-        (-> generator
-            zoom-from-origin
-            restore-center)))
 
 (defn zoom-viewport
   [factor [[ax ay] [bx by]]]
@@ -97,11 +121,11 @@
 
 
 (def zoom-spinner
-  (spinner :model (spinner-model 1.0 :from 1.0 :by 1.0)))
+  (spinner :model (spinner-model 2.0 :from 1.0 :by 1.0)))
 
 (def zoom-panel
   (horizontal-panel
-    :border (rounded-border)
+    :border (titled-border "Zoom")
     :items [(button :text "Zoom In"
                     :listen [:action (fn [_] (let [factor (value zoom-spinner)]
                                                (set-viewport! (zoom-viewport (/ 1 factor)
@@ -116,7 +140,52 @@
                                                               (str "Zoom Out " factor))))])]))
 
 
+;; TRANSLATE
 
+
+(defn translate-viewport
+  [amount direction [[ax ay] [bx by]]]
+  (let [horizontal? (or (= direction "Left") (= direction "Right"))
+        width (- bx ax)
+        height (- by ay)
+        amount (if (or (= direction "Up") (= direction "Left")) (- amount) amount)
+        ax (if horizontal? (+ ax (* width amount)) ax)
+        ay (if horizontal? ay (+ ay (* height amount)))
+        bx (if horizontal? (+ bx (* width amount)) bx)
+        by (if horizontal? by (+ by (* height amount)))]
+    [[ax ay] [bx by]]))
+
+
+(def translate-spinner
+  (spinner :model (spinner-model 0 :from 0 :by 1)))
+
+(defn translate-action
+  [direction]
+  (fn [_]
+    (let [amount (/(value translate-spinner) 100)]
+      (set-viewport! (translate-viewport amount direction (:viewport @app-state))
+                     (str direction " " amount)))))
+
+(def up-button
+  (button :text "^"
+          :listen [:action (translate-action "Up")]))
+(def left-button
+  (button :text "<"
+          :listen [:action (translate-action "Left")]))
+(def right-button
+  (button :text ">"
+          :listen [:action (translate-action "Right")]))
+(def down-button
+  (button :text "v"
+          :listen [:action (translate-action "Down")]))
+
+(def translate-grid
+  (grid-panel
+    :border (titled-border "Translate")
+    :columns 3
+    :items ["" up-button ""
+            left-button (horizontal-panel :items [translate-spinner "%"]) right-button
+            "" down-button ""]))
 
 
 ;; VIEWPORT
@@ -176,10 +245,10 @@
   (vertical-panel
     :border (titled-border "Viewport")
     :items [viewport-buttons
-            zoom-panel
-            vp-set-values
-            (button :text "Apply viewport to image"
-                    :listen [:action (fn [_] (merge-viewport!))])]))
+            (horizontal-panel :items
+                              [zoom-panel
+                               translate-grid])
+            vp-set-values]))
 
 
 
@@ -192,7 +261,7 @@
 
 (def seamless-scale
   (doto (slider :min 0
-                :max 100
+                :max 200
                 :value 100)
     (.setMajorTickSpacing 10)
     (.setPaintTicks true)
@@ -205,7 +274,7 @@
                              (let [value (value seamless-scale)]
                                (set-generator! (seamless-tile
                                                  (/ value 100)
-                                                 (:generator @app-state))
+                                                 (merge-view-elements @app-state))
                                                (str "Seamless Tile " value "%"))))]))
 
 
@@ -236,9 +305,39 @@
                              (line-border :color Color/WHITE :thickness 1))
     :background Color/BLACK
     :items [editor
-            (button :text "Apply"
-                    :listen [:action (fn [_] (set-generator! (text editor)
-                                                             "Edited Generator"))])]))
+            (horizontal-panel
+              :background Color/BLACK
+              :items [(button :text "Generate"
+                              :listen [:action (fn [_] (.setText editor (random-clisk-string :depth 3)))])
+                      (button :text "Evaluate"
+                              :listen [:action (fn [_] (set-generator! (text editor)
+                                                                       "Edited Generator"))])])]))
+
+
+
+
+;; STATUS LINE
+
+(def status-line (label :text ""))
+
+(def status-panel (horizontal-panel
+                    :border (titled-border "Status")
+                    :items [status-line]))
+
+(b/bind app-state
+        (b/tee
+          (b/bind
+            (b/transform (fn [a] (condp = (:image-status a)
+                                   :dirty Color/BLACK
+                                   :ok Color/GREEN
+                                   :failed Color/RED)))
+            (b/property status-line :foreground))
+          (b/bind
+            (b/transform (fn [a] (condp = (:image-status a)
+                                   :dirty "Calculating image..."
+                                   :ok "Image loaded"
+                                   :failed "FAILED to calculate image")))
+            (b/property status-line :text))))
 
 
 
@@ -273,9 +372,11 @@
     :background Color/LIGHT_GRAY
     :items [(vertical-panel :background Color/LIGHT_GRAY
                             :items [imagesize-panel
+                                    ;z-panel
                                     viewport-panel
                                     tiling-panel
                                     expression-panel
+                                    status-panel
                                     nav-buttons])
             history-panel]))
 

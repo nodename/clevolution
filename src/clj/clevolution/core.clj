@@ -2,22 +2,9 @@
   (:require [clisk.core :as clisk]
             [clevolution.file-output :refer :all]
             [clevolution.cliskeval :refer [clisk-eval]]
-            [clevolution.cliskstring :refer [random-clisk-expression]]
-            [clevolution.app.view :refer [show frame]] :reload-all))
+            [clevolution.cliskstring :refer [random-clisk-string]]
+            [clevolution.app.view :refer [show to-display-size]] :reload-all))
 
-
-(def default-depth 3)
-(def default-method :full)
-(def default-input-files [])
-
-
-(defn random-clisk-string
-  [& {:keys [depth method input-files]
-      :or {depth default-depth
-           method default-method
-           input-files default-input-files}}]
-  (let [expr (random-clisk-expression depth method input-files)]
-    (with-out-str (print expr))))
 
 
 (defn show-clisk-image
@@ -34,7 +21,7 @@
       (-> generator
           clisk-eval
           make-image
-          frame
+          to-display-size
           show-it))
     (catch Exception e
       (.printStackTrace e))))

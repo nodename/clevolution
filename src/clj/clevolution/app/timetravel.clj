@@ -33,14 +33,13 @@
   (reset! app-history (conj (vec (butlast @app-history))
                             new-state)))
 
-;; undo and redo cause state changes that we want our watch-fn to ignore,
-;; hence the ignore atom
+;; Undo and redo cause state changes that we want our watch-fn to ignore,
+;; hence the ignore atom. (This technique copied from Om's :tx-listen implementation)
 
 (defn do-undo
   []
   (if (undo-is-possible)
     (do
-      (println "UNDO")
       (swap! app-future conj (last @app-history))
       (swap! app-history pop)
       (swap! ignore assoc :time-machine true)
@@ -51,7 +50,6 @@
   []
   (if (redo-is-possible)
     (do
-      (println "REDO")
       (swap! ignore assoc :time-machine true)
       (let [redo-state (last @app-future)]
         (push-onto-undo-stack redo-state)
@@ -80,11 +78,13 @@
                       (reset! app-future [])
                       (push-onto-undo-stack new-state))
 
+
                     ;; image has been updated in response to new state data:
                     (not= (:image old-state) (:image new-state))
                     (do
                       (println "Only image changed: amending state")
                       (replace-last-state new-state))
+
 
                     :else
                     (println "no change"))
