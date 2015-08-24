@@ -7,6 +7,16 @@ Copyright (C) 2012-2015 Alan Shaw
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
+GUI
+
+(use 'clevolution.core)
+
+(show-clisk-file "images/drops.png")
+
+
+;; Then you can play around with the app.
+
+
 
 API
 
