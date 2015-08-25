@@ -194,8 +194,7 @@
 (def nullary-operators-scalar
   "() -> Scalar"
   (map (partial make-with-arity 0)
-       ["x" "y" "z" "t"
-        "max-component" "min-component"]))
+       ["x" "y" "z" "t"]))
 
 (def nullary-operators-vector
   "() -> Vector"
