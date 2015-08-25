@@ -84,13 +84,16 @@
 
 
 
-;; VIEW FROM Z
+;; Z LEVEL
 
-(def z-spinner (spinner :model (spinner-model 0.0 :by 1.0)))
+(def z-spinnermodel (spinner-model 0.0 :by 0.005))
+
+(def z-spinner (spinner :model (doto z-spinnermodel
+                                 (.setValue 0.0))))
 
 (def z-panel
   (horizontal-panel
-    :border (titled-border "z")
+    :border (titled-border "Z Level")
     :items [z-spinner
             (button :text "Apply"
                     :listen [:action (fn [_]
@@ -98,12 +101,20 @@
                                          (set-z! z (str "Set Z " z))))])]))
 
 ;; update z-spinner when :z in app-state changes:
-;(b/bind
-;  app-state
-; (b/transform (fn [a] (:x a))
-;              (b/property z-spinner
+(b/bind
+  app-state
+  (b/transform (fn [a] (doto z-spinnermodel (.setValue (:z a)))))
+  (b/property z-spinner :model))
 
 
+
+
+;; Z MOVIE
+
+
+(def z-movie-button
+  (button :text "Z Movie"
+          :listen [:action (fn [_] )]))
 
 
 
@@ -124,20 +135,24 @@
   (spinner :model (spinner-model 2.0 :from 1.0 :by 1.0)))
 
 (def zoom-panel
-  (horizontal-panel
-    :border (titled-border "Zoom")
-    :items [(button :text "Zoom In"
-                    :listen [:action (fn [_] (let [factor (value zoom-spinner)]
-                                               (set-viewport! (zoom-viewport (/ 1 factor)
-                                                                             (:viewport @app-state))
-                                                              (str "Zoom In " factor))))])
-            "Factor:"
-            zoom-spinner
-            (button :text "Zoom Out"
-                    :listen [:action (fn [_] (let [factor (value zoom-spinner)]
-                                               (set-viewport! (zoom-viewport factor
-                                                                             (:viewport @app-state))
-                                                              (str "Zoom Out " factor))))])]))
+  (grid-panel
+    :columns 1
+    :items [""
+            (horizontal-panel
+              :border (titled-border "Zoom")
+              :items [(button :text "Zoom In"
+                              :listen [:action (fn [_] (let [factor (value zoom-spinner)]
+                                                         (set-viewport! (zoom-viewport (/ 1 factor)
+                                                                                       (:viewport @app-state))
+                                                                        (str "Zoom In " factor))))])
+                      "Factor:"
+                      zoom-spinner
+                      (button :text "Zoom Out"
+                              :listen [:action (fn [_] (let [factor (value zoom-spinner)]
+                                                         (set-viewport! (zoom-viewport factor
+                                                                                       (:viewport @app-state))
+                                                                        (str "Zoom Out " factor))))])])
+            ""]))
 
 
 ;; TRANSLATE
@@ -298,20 +313,43 @@
         (b/transform #(:generator %))
         (b/property editor :text))
 
+(defn generate!
+  []
+  (.setText editor (random-clisk-string :depth 2)))
+
+(defn evaluate!
+  []
+  (set-generator! (text editor)
+                  "Edited Generator"))
+
+(defn generate-and-evaluate!
+  [depth]
+  (set-generator! (random-clisk-string :depth depth)
+                  "Random Generator"))
+
+(def depth-spinner
+  (spinner :model (spinner-model 2 :from 1 :by 1)))
+
 
 (def expression-panel
   (vertical-panel
-    :border (compound-border (titled-border "Expression" :color Color/WHITE)
+    :border (compound-border (titled-border "Expression Editor" :color Color/WHITE)
                              (line-border :color Color/WHITE :thickness 1))
     :background Color/BLACK
     :items [editor
             (horizontal-panel
               :background Color/BLACK
-              :items [(button :text "Generate"
-                              :listen [:action (fn [_] (.setText editor (random-clisk-string :depth 3)))])
+              :items [(horizontal-panel
+                        :background Color/BLACK
+                        :foreground Color/WHITE
+                        :border (titled-border "Generate and Evaluate" :color Color/WHITE)
+                        :items [(label :foreground Color/WHITE :text "Depth:")
+                                depth-spinner
+                                (button :text "Go"
+                                        :listen [:action (fn [_] (generate-and-evaluate!
+                                                                   (value depth-spinner)))])])
                       (button :text "Evaluate"
-                              :listen [:action (fn [_] (set-generator! (text editor)
-                                                                       "Edited Generator"))])])]))
+                              :listen [:action (fn [_] (evaluate!))])])]))
 
 
 
@@ -371,9 +409,11 @@
   (horizontal-panel
     :background Color/LIGHT_GRAY
     :items [(vertical-panel :background Color/LIGHT_GRAY
-                            :items [imagesize-panel
-                                    ;z-panel
-                                    viewport-panel
+                            :items [(horizontal-panel
+                                      :items [(vertical-panel
+                                                :items [imagesize-panel
+                                                        z-panel])
+                                              viewport-panel])
                                     tiling-panel
                                     expression-panel
                                     status-panel

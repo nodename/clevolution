@@ -65,6 +65,16 @@
              :image-status :dirty))))
 
 
+(defn set-loaded-file-data!
+  [generator command]
+  (swap! app-state assoc
+         :generator generator
+         :viewport DEFAULT-VIEWPORT
+         :z 0
+         :command command
+         :image-status :dirty))
+
+
 (defn set-image!
   [image & {:keys [status]
             :or {status :ok}}]
@@ -82,7 +92,7 @@
   [z generator]
   (if (= z 0.0)
     generator
-    (str "(v+ [0.0 0.0 " (- z) "] " generator ")")))
+    (str "(offset [0.0 0.0 " (- z) "] " generator ")")))
 
 (defn merge-viewport
   [viewport generator]

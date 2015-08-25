@@ -123,7 +123,7 @@
       (let [file-path (str (.getDirectory file-dialog) file-name)
             generator (get-generator file-path)]
         (.setTitle frame file-path)
-        (appstate/set-generator! generator "Load File")))))
+        (appstate/set-loaded-file-data! generator "Load File")))))
 
 
 (defn save-file-dialog

@@ -72,6 +72,7 @@
                     ;; there is new state data:
                     (or (not= (:generator old-state) (:generator new-state))
                         (not= (:viewport old-state) (:viewport new-state))
+                        (not= (:z old-state) (:z new-state))
                         (not= (:panel old-state) (:panel new-state)))
                     (do
                       (println "NEW STATE")
