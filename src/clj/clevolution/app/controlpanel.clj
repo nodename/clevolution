@@ -7,7 +7,7 @@
             [seesaw.border :refer [custom-border compound-border line-border]]
             [seesaw.bind :as b]
             [seesaw.core :as seesaw])
-  (:import [java.awt Color]
+  (:import [java.awt Color Dimension]
            [javax.swing.border TitledBorder]
            (javax.swing SpinnerListModel)))
 
@@ -324,11 +324,10 @@
 
 (defn generate-and-evaluate!
   [depth]
-  (set-generator! (random-clisk-string :depth depth)
-                  "Random Generator"))
+  (set-loaded-data! (random-clisk-string :depth depth) "Random Generator"))
 
 (def depth-spinner
-  (spinner :model (spinner-model 2 :from 1 :by 1)))
+  (spinner :model (spinner-model 2 :from 0 :by 1)))
 
 
 (def expression-panel
@@ -405,8 +404,15 @@
 
 
 
+
+;; CONTROL PANEL
+
+
+
 (def control-panel
   (horizontal-panel
+    :minimum-size (Dimension. 800 800)
+    :maximum-size (Dimension. 800 800)
     :background Color/LIGHT_GRAY
     :items [(vertical-panel :background Color/LIGHT_GRAY
                             :items [(horizontal-panel

@@ -45,7 +45,7 @@
   "Operators that take one argument, either scalar or vector"
   (map (partial make-with-arity 1)
        ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac" "square"
-        "vsqrt" "sigmoid" "tile" "max-component" "min-component" "length" "gradient"]))
+        "vsqrt" "sigmoid" #_"tile" "max-component" "min-component" "length" "gradient"]))
 
 
 
@@ -202,7 +202,7 @@
   (map (partial make-with-arity 0)
        ["vsin" "vcos" "vfloor" "vfrac"
         "square" "vsqrt" "sigmoid" "tile" "grain"
-        "hash-cubes" "colour-cubes" "globe"]))
+        "hash-cubes" #_"colour-cubes" "globe"]))
 
 (def ev-psychedelic
   {:function (fn []
@@ -308,7 +308,7 @@
 
 (def binary-operators
   (map (partial make-with-arity 2)
-       ["vpow" "vmod" "checker"
+       ["vpow" "vmod" #_"checker" ; boring
         "scale" "rotate" "offset" "dot" "warp" "compose" "cross3" "light-value"]))
 
 
@@ -318,9 +318,9 @@
     random-scalar-color random-vector-color
     textures unary-v-operators nullary-operators-scalar nullary-operators-vector
     unary-operators-vector binary-operators variadic-ops
-    [ev-psychedelic
+    [#_ev-psychedelic
      posterize pixelize radial swirl make-multi-fractal
-     unary-scale #_unary-offset unary-rotate shatter voronoi-points voronoi-blocks gridlines
+     unary-scale #_unary-offset unary-rotate #_shatter voronoi-points voronoi-blocks gridlines
      ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
      ev-vnoise ev-vsnoise
      ev-plasma ev-splasma ev-turbulence ev-vturbulence ev-vplasma ev-vsplasma ev-turbulate

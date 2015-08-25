@@ -48,12 +48,13 @@
 
 (defn set-generator!
   [generator command]
-  ;; Do not check for (not= generator old-generator);
-  ;; the same generator may yield a different image
-  (swap! app-state assoc
-         :command command
-         :generator generator
-         :image-status :dirty))
+  (let [old-generator (:generator @app-state)]
+    (when (not= generator old-generator)
+      (swap! app-state assoc
+             :command command
+             :generator generator
+             :image-status :dirty))))
+
 
 (defn set-z!
   [z command]
@@ -65,11 +66,11 @@
              :image-status :dirty))))
 
 
-(defn set-loaded-file-data!
+(defn set-loaded-data!
   [generator command]
   (swap! app-state assoc
          :generator generator
-         :viewport DEFAULT-VIEWPORT
+         :viewport (if (= command "Load File") DEFAULT-VIEWPORT ORIGIN-VIEWPORT)
          :z 0
          :command command
          :image-status :dirty))
