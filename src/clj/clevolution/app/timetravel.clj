@@ -73,7 +73,7 @@
                     (or (not= (:generator old-state) (:generator new-state))
                         (not= (:viewport old-state) (:viewport new-state))
                         (not= (:z old-state) (:z new-state))
-                        (not= (:panel old-state) (:panel new-state)))
+                        (not= (:content-panel old-state) (:content-panel new-state)))
                     (do
                       (println "NEW STATE")
                       (reset! app-future [])

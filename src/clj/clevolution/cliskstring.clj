@@ -22,14 +22,14 @@
 
 
 (def random-scalar-color
-  [{:function #(let [color (rand 1.0)]
+  {:function #(let [color (rand 1.0)]
                 (str "[" color " " color " " color "]"))
-    :arity 0}])
+    :arity 0})
 
 
 (def random-vector-color
-  [{:function #(str "[" (rand 1.0) " " (rand 1.0) " " (rand 1.0) "]")
-    :arity 0}])
+  {:function #(str "[" (rand 1.0) " " (rand 1.0) " " (rand 1.0) "]")
+    :arity 0})
 
 (def textures
   (map (partial make-with-arity 0)
@@ -201,7 +201,7 @@
   (map (partial make-with-arity 0)
        ["vsin" "vcos" "vfloor" "vfrac"
         "square" "vsqrt" "sigmoid" "tile" "grain"
-        "hash-cubes" #_"colour-cubes" "globe"]))
+        #_"hash-cubes" #_"colour-cubes" "globe"]))
 
 (def ev-psychedelic
   {:function (fn []
@@ -249,11 +249,15 @@
 
 #_(def add-glow {})
 
+(def unary-operators-scalar
+  "Vector -> Scalar"
+  (map (partial make-with-arity 1)
+       ["theta" "radius"]))
+
 (def unary-operators-vector
   "_ -> Vector"
   (map (partial make-with-arity 1)
-       ["rgb-from-hsl" "monochrome" "height" "height-normal" "normalize"
-        "theta" "radius" "polar"]))
+       ["rgb-from-hsl" "monochrome" "height" "height-normal" "normalize" "polar"]))
 
 (def unary-scale
   ;; scale by a constant factor
@@ -304,27 +308,28 @@
        ["average" "v+" "v*" "v-" "vdivide"]))
 
 
-
+;; dot produces a scalar
 (def binary-operators
   (map (partial make-with-arity 2)
        ["vpow" "vmod" #_"checker" ; boring
         "scale" "rotate" "offset" "dot" "warp" "compose" "cross3" "light-value"]))
 
-
+(defn weight
+  [n v]
+  (vec (flatten (repeat n v))))
 
 (def ops
   (concat #_named-colors ;; boring
-    random-scalar-color random-vector-color
-    textures unary-v-operators nullary-operators-scalar nullary-operators-vector
-    unary-operators-vector binary-operators variadic-ops
+    (weight 10 [random-scalar-color random-vector-color])
+    #_textures unary-v-operators nullary-operators-scalar nullary-operators-vector
+    unary-operators-scalar unary-operators-vector binary-operators variadic-ops
     [#_ev-psychedelic
      posterize pixelize radial swirl make-multi-fractal
      unary-scale #_unary-offset unary-rotate #_shatter voronoi-points voronoi-blocks gridlines
      ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
      ev-vnoise ev-vsnoise
      ev-plasma ev-splasma ev-turbulence ev-vturbulence ev-vplasma ev-vsplasma ev-turbulate
-     matrix-transform affine-transform lerp]
-    ))
+     matrix-transform affine-transform lerp]))
 
 
 
@@ -375,11 +380,11 @@
       (let [build-subexpr (fn [expression _]
                             (let [child-expr (random-clisk-expression (dec depth) method input-files)]
                               ;; "%", if present, represents the position in the expression
-                              ;; where the image argument should be inserted:
+                              ;; where the child expression should be inserted:
                               (if (= -1 (.indexOf (first expression) "%"))
-                                ;; default: image argument goes at the end:
+                                ;; default: child expression goes at the end:
                                 (concat expression (list child-expr))
-                                ;; if "%" is found, image arg replaces it:
+                                ;; if "%" is found, child expression replaces it:
                                 (replace-% expression child-expr))))]
         (reduce build-subexpr (list operation) (range arity))))))
 
@@ -388,8 +393,6 @@
 (def default-depth 3)
 (def default-method :full)
 (def default-input-files [])
-
-
 
 
 (defn random-clisk-string

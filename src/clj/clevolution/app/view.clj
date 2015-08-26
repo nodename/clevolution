@@ -59,7 +59,7 @@
   [frame title]
   (.setTitle frame title)
   (.removeAll (.getContentPane frame))
-  (if (.isVisible frame)
+  (if-not (.isVisible frame)
     (.validate frame)
     (.setVisible frame true))
   (.repaint frame)
@@ -92,24 +92,6 @@
     (ClassPatch/pushClassLoader)
     (reset! class-loader-undefined? false))
   (clisk/image node :size size))
-
-
-(defn display-image
-  [image]
-  (let [image-component (make-component (to-display-size image))]
-    (seesaw/config! (:panel @app-state)
-                    :items [image-component control-panel])))
-
-
-(defn set-image-from-node
-  [node & {:keys [size status]
-           :or {size (:image-size @app-state)
-                status :ok}}]
-  (let [image (clisk-image node size)]
-    (if image
-      (display-image image)
-      (println "set-image-from-node: image was nil"))
-    (appstate/set-image! image :status status)))
 
 
 (defn load-file-dialog
@@ -229,13 +211,19 @@
 
 
 
+(defn set-image-from-node!
+  [node state status]
+  (appstate/set-image! (clisk-image node (:image-size state))
+                       state
+                       status))
+
 
 (defn calc-image
   [state]
   (-> state
       merge-view-elements
       clisk-eval
-      set-image-from-node))
+      (set-image-from-node! state :ok)))
 
 
 (def current-calc (atom nil))
@@ -246,15 +234,26 @@
     (when calc
       (future-cancel calc))))
 
+(defn start-calc
+  [state]
+  (future
+    (try
+      (calc-image state)
+      (catch Exception e
+        (println "calc-image ERROR:" (.getMessage e))
+        (set-image-from-node! ZERO-NODE state :failed)))))
+
+
+(defn display-image
+  [image]
+  (let [image-component (make-component (to-display-size image))]
+    (seesaw/config! (:content-panel @app-state)
+                    :items [image-component control-panel])))
+
+
 (add-watch app-state :generator-watch (fn [k r old-state new-state]
                                         (if (= :dirty (:image-status new-state))
-                                          (let [new-calc
-                                                (future
-                                                  (try
-                                                    (calc-image new-state)
-                                                    (catch Exception e
-                                                      (println "calc-image ERROR:" (.getMessage e))
-                                                      (set-image-from-node ZERO-NODE :status :failed))))]
+                                          (do
                                             (cancel-current-calc)
-                                            (reset! current-calc new-calc))
+                                            (reset! current-calc (start-calc new-state)))
                                           (display-image (:image new-state)))))

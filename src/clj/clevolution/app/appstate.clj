@@ -4,7 +4,7 @@
 (defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
 
 
-(def app-state (atom {:panel               nil
+(def app-state (atom {:content-panel       nil
                       :image-display-size  800
                       :image-size          512
                       :command             nil
@@ -15,6 +15,34 @@
                       :viewport            nil
                       :z                   0.0}))
 
+
+
+
+;; The image is a function of z, viewport, and generator.
+;; When we display the image or save the file we call merge-view-elements:
+
+(defn merge-z
+  [z generator]
+  (if (zero? z)
+    generator
+    (str "(offset [0.0 0.0 " (- z) "] " generator ")")))
+
+(defn merge-viewport
+  [viewport generator]
+  (let [[a b] viewport]
+    (if (= viewport DEFAULT-VIEWPORT)
+      generator
+      (str "(viewport " a " " b " " generator ")"))))
+
+(defn merge-view-elements
+  [{:keys [viewport z generator] :as state}]
+  (->> generator
+       (merge-z z)
+       (merge-viewport viewport)))
+
+
+
+
 (defn initialize-state!
   [generator image context panel]
   (swap! app-state assoc
@@ -23,7 +51,7 @@
          :image image
          :image-status :ok
          :context context
-         :panel panel
+         :content-panel panel
          :viewport ORIGIN-VIEWPORT))
 
 
@@ -77,35 +105,14 @@
 
 
 (defn set-image!
-  [image & {:keys [status]
-            :or {status :ok}}]
-  (if image
+  "Update the :image in app-state, but not if the state has changed.
+  (Called asynchronously)"
+  [image target-state status]
+  (when (and image
+             (= (merge-view-elements target-state) (merge-view-elements @app-state)))
     (swap! app-state assoc
            :image image
            :image-status status)))
 
-
-
-;; The image is a function of z, viewport, and generator.
-;; When we display the image or save the file we call merge-view-elements:
-
-(defn merge-z
-  [z generator]
-  (if (= z 0.0)
-    generator
-    (str "(offset [0.0 0.0 " (- z) "] " generator ")")))
-
-(defn merge-viewport
-  [viewport generator]
-  (let [[a b] viewport]
-    (if (= viewport DEFAULT-VIEWPORT)
-      generator
-      (str "(viewport " a " " b " " generator ")"))))
-
-(defn merge-view-elements
-  [{:keys [viewport z generator] :as state}]
-  (->> generator
-       (merge-z z)
-       (merge-viewport viewport)))
 
 

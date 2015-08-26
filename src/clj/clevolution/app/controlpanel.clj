@@ -2,11 +2,12 @@
   (:require [clevolution.app.appstate :refer :all]
             [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
             [clevolution.cliskstring :refer [random-clisk-string]]
-            [seesaw.core :refer :all]
+            [seesaw.core :refer [horizontal-panel vertical-panel grid-panel
+                                 editor-pane popup label spinner spinner-model slider button
+                                 select config! value text action]]
             [seesaw.mig :refer [mig-panel]]
             [seesaw.border :refer [custom-border compound-border line-border]]
-            [seesaw.bind :as b]
-            [seesaw.core :as seesaw])
+            [seesaw.bind :as b])
   (:import [java.awt Color Dimension]
            [javax.swing.border TitledBorder]
            (javax.swing SpinnerListModel)))
@@ -305,9 +306,20 @@
 
 ;; EXPRESSION EDITOR
 
+(def cut-action (action :name "Cut"))
+(def copy-action (action :name "Copy"))
+(def paste-action (action :name "Paste"))
+
+(def editor-popup (popup :border (rounded-border)
+                         :items [cut-action copy-action paste-action]))
+
 (def editor (editor-pane
               :background Color/BLACK
-              :foreground Color/WHITE))
+              :foreground Color/WHITE
+              :caret-color Color/WHITE
+              :popup editor-popup))
+
+(config! cut-action :handler (fn [_] (println "Cut: " editor-pane)))
 
 (b/bind app-state
         (b/transform #(:generator %))
@@ -429,8 +441,8 @@
 
 
 (add-watch app-state :history-watch (fn [k r old-state new-state]
-                                      (seesaw/config! history-panel
-                                                      :items (mapv #(:command %) @app-history))))
+                                      (config! history-panel
+                                               :items (mapv #(:command %) @app-history))))
 
 
 #_
