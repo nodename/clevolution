@@ -1,14 +1,17 @@
 (ns clevolution.app.controlpanel
-  (:require [clevolution.app.appstate :refer :all]
+  (:require [clevolution.state :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT merge-view-elements]]
+            [clevolution.app.appstate :refer [app-state
+                                              set-imagesize! set-z! set-viewport! set-generator!
+                                              set-loaded-data!]]
             [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [seesaw.core :refer [horizontal-panel vertical-panel grid-panel
                                  editor-pane popup label spinner spinner-model slider button
-                                 select config! value text action]]
+                                 select config! value text listen action]]
             [seesaw.mig :refer [mig-panel]]
             [seesaw.border :refer [custom-border compound-border line-border]]
             [seesaw.bind :as b])
-  (:import [java.awt Color Dimension]
+  (:import [java.awt Color Dimension Point]
            [javax.swing.border TitledBorder]
            (javax.swing SpinnerListModel)))
 
@@ -319,7 +322,12 @@
               :caret-color Color/WHITE
               :popup editor-popup))
 
-(config! cut-action :handler (fn [_] (println "Cut: " editor-pane)))
+(listen editor :mouse-clicked (fn [e]
+                                (let [point (Point. (.getX e) (.getY e))
+                                      char-position (.viewToModel editor point)]
+                                  (println "position=" char-position))))
+
+(config! cut-action :handler (fn [e] (println "Cut: " e " " editor-pane)))
 
 (b/bind app-state
         (b/transform #(:generator %))
@@ -370,7 +378,7 @@
 (def status-line (label :text ""))
 
 (def status-panel (horizontal-panel
-                    :border (titled-border "Status")
+                    :border (titled-border "Image Status")
                     :items [status-line]))
 
 (b/bind app-state

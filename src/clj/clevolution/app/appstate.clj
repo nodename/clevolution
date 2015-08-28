@@ -1,7 +1,7 @@
-(ns clevolution.app.appstate)
-
-(defonce DEFAULT-VIEWPORT [[0.0 0.0] [1.0 1.0]])
-(defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
+(ns clevolution.app.appstate
+  (:require [clevolution.state :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
+                                       merge-view-elements
+                                       set-image-in-state!]]))
 
 
 (def app-state (atom {:content-panel       nil
@@ -14,33 +14,6 @@
                       :context             nil
                       :viewport            nil
                       :z                   0.0}))
-
-
-
-
-;; The image is a function of z, viewport, and generator.
-;; When we display the image or save the file we call merge-view-elements:
-
-(defn merge-z
-  [z generator]
-  (if (zero? z)
-    generator
-    (str "(offset [0.0 0.0 " (- z) "] " generator ")")))
-
-(defn merge-viewport
-  [viewport generator]
-  (let [[a b] viewport]
-    (if (= viewport DEFAULT-VIEWPORT)
-      generator
-      (str "(viewport " a " " b " " generator ")"))))
-
-(defn merge-view-elements
-  [{:keys [viewport z generator] :as state}]
-  (->> generator
-       (merge-z z)
-       (merge-viewport viewport)))
-
-
 
 
 (defn initialize-state!
@@ -110,9 +83,5 @@
   [image target-state status]
   (when (and image
              (= (merge-view-elements target-state) (merge-view-elements @app-state)))
-    (swap! app-state assoc
-           :image image
-           :image-status status)))
-
-
-
+    (reset! app-state
+            (set-image-in-state! image @app-state status))))

@@ -1,15 +1,12 @@
 (ns clevolution.app.view
   (:use [mikera.cljutils.error])
   (:require
-    [clojure.pprint :refer [pprint]]
-    [clisk.core :as clisk]
-    [clisk.node :refer [ZERO-NODE]]
     [clisk.functions] ;; include for Test purposes
     [mikera.image.core :as img]
     [mikera.image.colours :as col]
     [clevolution.file-output :refer :all]
-    [clevolution.cliskeval :refer :all]
-    [clevolution.app.appstate :as appstate :refer [app-state merge-view-elements]]
+    [clevolution.state :as state :refer [merge-view-elements do-calc]]
+    [clevolution.app.appstate :as appstate :refer [app-state]]
     [clevolution.app.timetravel :refer [forget-everything! app-history]]
     [clevolution.app.controlpanel :refer [control-panel]]
     [seesaw.core :as seesaw]
@@ -19,8 +16,7 @@
            [java.awt.image BufferedImage]
            [mikera.gui JIcon]
            [java.awt.event WindowListener]
-           [javax.swing JFrame JMenu JMenuBar]
-           (clevolution ClassPatch)))
+           [javax.swing JFrame JMenu JMenuBar]))
 
 
 ;; Java interop code in this namespace proudly stolen from Mike Anderson:
@@ -79,19 +75,6 @@
     (doto (JIcon. image)
       (.setMinimumSize (Dimension. size size))
       (.setMaximumSize (Dimension. size size)))))
-
-
-(defonce class-loader-undefined? (atom true))
-
-;; When clisk/image is called from the AWT EventQueue thread,
-;; the Compiler's LOADER is unbound.
-;; So we set it before calling clisk/image:
-(defn clisk-image
-  [node size]
-  (if @class-loader-undefined?
-    (ClassPatch/pushClassLoader)
-    (reset! class-loader-undefined? false))
-  (clisk/image node :size size))
 
 
 (defn load-file-dialog
@@ -211,20 +194,6 @@
 
 
 
-(defn set-image-from-node!
-  [node state status]
-  (appstate/set-image! (clisk-image node (:image-size state))
-                       state
-                       status))
-
-
-(defn calc-image
-  [state]
-  (-> state
-      merge-view-elements
-      clisk-eval
-      (set-image-from-node! state :ok)))
-
 
 (def current-calc (atom nil))
 
@@ -237,11 +206,7 @@
 (defn start-calc
   [state]
   (future
-    (try
-      (calc-image state)
-      (catch Exception e
-        (println "calc-image ERROR:" (.getMessage e))
-        (set-image-from-node! ZERO-NODE state :failed)))))
+    (do-calc state appstate/set-image!)))
 
 
 (defn display-image
