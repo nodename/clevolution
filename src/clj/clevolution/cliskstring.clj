@@ -59,8 +59,8 @@
   {:function (fn []
                (let [octaves (inc (rand-int 9))
                      lacunarity (+ 1.5 (rand 2.0))
-                     gain (rand 1.0)
-                     scale (rand 5.0)]
+                     gain (rand 1.0) ;; also known as persistence
+                     scale (rand 1.0)]
                  (str "make-multi-fractal % :octaves " octaves " :lacunarity " lacunarity
                       " :gain " gain " :scale " scale)))
    :arity 1})
@@ -199,9 +199,7 @@
 (def nullary-operators-vector
   "() -> Vector"
   (map (partial make-with-arity 0)
-       ["vsin" "vcos" "vfloor" "vfrac"
-        "square" "vsqrt" "sigmoid" "tile" "grain"
-        #_"hash-cubes" #_"colour-cubes" "globe"]))
+       ["grain" #_"hash-cubes" #_"colour-cubes"]))
 
 (def ev-psychedelic
   {:function (fn []
@@ -307,6 +305,10 @@
   (map (partial make-with-arity #(+ 2 (rand-int 3)))
        ["average" "v+" "v*" "v-" "vdivide"]))
 
+(def globe
+  {:function "globe"
+   :arity #(rand-int 3)})
+
 
 ;; dot produces a scalar
 (def binary-operators
@@ -324,10 +326,10 @@
     #_textures unary-v-operators nullary-operators-scalar nullary-operators-vector
     unary-operators-scalar unary-operators-vector binary-operators variadic-ops
     [#_ev-psychedelic
-     posterize pixelize radial swirl make-multi-fractal
-     unary-scale #_unary-offset unary-rotate #_shatter voronoi-points voronoi-blocks gridlines
-     ev-perlin-noise ev-perlin-snoise ev-simplex-noise ev-simplex-snoise
-     ev-vnoise ev-vsnoise
+     posterize pixelize radial swirl make-multi-fractal globe
+     unary-scale #_unary-offset unary-rotate #_shatter voronoi-points #_voronoi-blocks gridlines
+     ev-perlin-noise #_ev-perlin-snoise ev-simplex-noise #_ev-simplex-snoise
+     ev-vnoise #_ev-vsnoise
      ev-plasma ev-splasma ev-turbulence ev-vturbulence ev-vplasma ev-vsplasma ev-turbulate
      matrix-transform affine-transform lerp]))
 
