@@ -5,11 +5,8 @@
 (defn clisk-eval-form
   [form]
   (binding [*ns* (the-ns 'clevolution.cliskenv)]
-    (try
-      (eval form)
-      (catch Exception e
-        (println "clisk-eval-form: ERROR:" (str (.getMessage e) ",") "returning black")
-        [0.0 0.0 0.0]))))
+    (eval form)))
+
 
 
 (defmulti clisk-eval class)

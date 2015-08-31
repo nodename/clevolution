@@ -1,12 +1,16 @@
 (ns clevolution.state
   (:require [clisk.core :as clisk]
-            [clisk.node :refer [ZERO-NODE]]
+            [clevolution.file-input :refer [read-image-from-file]]
+            [clevolution.cliskstring :refer [random-clisk-string]]
+            [clevolution.evolve :refer [replace-random-subtree]]
             [clevolution.cliskeval :refer [clisk-eval]])
   (:import [clevolution ClassPatch]))
 
 
 (defonce DEFAULT-VIEWPORT [[0.0 0.0] [1.0 1.0]])
 (defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
+
+(defonce ERROR-NODE (clisk.node/node (read-image-from-file "resources/Error.png")))
 
 
 ;; The image is a function of z, viewport, and generator.
@@ -49,7 +53,7 @@
 
 
 
-(defn set-image-in-state!
+(defn set-image-in-state
   [image state status]
   (assoc state
     :image image
@@ -69,7 +73,7 @@
 
 (defn set-failed-image!
   [state image-fn]
-  (set-image-from-node! ZERO-NODE state :failed image-fn))
+  (set-image-from-node! ERROR-NODE state :failed image-fn))
 
 
 (defn node-from-state
@@ -100,20 +104,31 @@
 
 
 (defn make-state
-  [generator]
-  (let [new-state (atom {:image-size          512
+  "Create a state from the given generator
+  and start an async calculation of its image"
+  [generator image-size context]
+  (let [new-state (atom {:image-size          image-size
                          :command             nil
                          :generator           generator
                          :image               nil
                          :image-status        :ok
-                         :context             nil
-                         :viewport            nil
+                         :context             context
+                         :viewport            DEFAULT-VIEWPORT
                          :z                   0.0})]
-    (future (do-calc new-state set-image-in-state!))))
+    (future (do-calc @new-state set-image-in-state))
+    new-state))
 
 
-
-
+(defn mutate-state
+  "Returns a new state representing a mutation of the input state"
+  [state depth]
+  (let [current-generator-form (read-string (:generator state))
+        new-subform (read-string (random-clisk-string :depth depth))
+        new-generator-string (println-str
+                               (replace-random-subtree
+                                 current-generator-form
+                                 new-subform))]
+    (make-state new-generator-string (:image-size state) (:context state))))
 
 
 

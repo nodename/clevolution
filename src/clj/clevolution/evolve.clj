@@ -1,6 +1,7 @@
-(ns clevolution.evolve)
+(ns clevolution.evolve
+  (:require [clojure.pprint :refer [pprint]]))
 
-;; https://raw.githubusercontent.com/lspector/gp/master/src/gp/evolvefn.clj
+;; based upon https://raw.githubusercontent.com/lspector/gp/master/src/gp/evolvefn.clj
 
 
 ;; To help write mutation and crossover functions we'll write a utility
@@ -8,43 +9,61 @@
 ;; replaces a random subtree of an expression.
 
 (defn codesize [c]
-  (if (seq? c)
+  (if (list? c) ;; we regard a vector as a primitive
     (count (flatten c))
     1))
 
 (defn random-subtree
-  [i]
-  (if (zero? (rand-int (codesize i)))
-    i
-    (random-subtree
-      (rand-nth
-        (apply concat
-               (map #(repeat (codesize %) %)
-                    (rest i)))))))
+  [tree]
+  (println)
+  (println "random-subtree: tree=")
+  (pprint tree)
+  (println)
+  (if (zero? (rand-int (codesize tree)))
+    tree
+    (let [foo (apply concat
+                     (map #(repeat (codesize %) %)
+                          (rest tree)))]
+      (println)
+      (println "random-subtree: foo=")
+      (pprint foo)
+      (println)
+      (random-subtree
+        (rand-nth
+          foo)))))
 
 ;(random-subtree '(+ (* x (+ y z)) w))
 
 (defn replace-random-subtree
-  [i replacement]
-  (if (zero? (rand-int (codesize i)))
+  [tree replacement]
+  ;(println)
+  ;(pprint ["TREE:" tree])
+  ;(println)
+  (if (zero? (rand-int (codesize tree)))
     replacement
-    (let [position-to-change
-          (rand-nth
-            (apply concat
-                   (map #(repeat (codesize %1) %2)
-                        (rest i)
-                        (iterate inc 1))))]
+    (let [foo (apply concat
+                     (map #(repeat (codesize %1) %2)
+                          (rest tree)
+                          (iterate inc 1)))
+
+          position-to-change (rand-nth foo)]
+
+      ;(println)
+      ;(pprint ["FOO:" foo])
+      ;(println)
+
       (map #(if %1 (replace-random-subtree %2 replacement) %2)
            (for [n (iterate inc 0)] (= n position-to-change))
-           i))))
+           tree))))
 
 ;(replace-random-subtree '(0 (1) (2 2) (3 3 3) (4 4 4 4) (5 5 5 5 5) (6 6 6 6 6 6 6)) 'x)
 
 ;(replace-random-subtree '(+ (* x (+ y z)) w) 3)
 
-(defn mutate
-  [i]
-  (replace-random-subtree i (random-code 2)))
+#_
+    (defn mutate
+      [i]
+      (replace-random-subtree i (random-code 2)))
 
 ;(mutate '(+ (* x (+ y z)) w))
 

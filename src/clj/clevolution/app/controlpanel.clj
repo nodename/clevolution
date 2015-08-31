@@ -5,7 +5,9 @@
                                               set-loaded-data!]]
             [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
             [clevolution.cliskstring :refer [random-clisk-string]]
-            [seesaw.core :refer [horizontal-panel vertical-panel grid-panel
+            [clevolution.cliskeval :refer [clisk-eval]]
+            [clevolution.evolve :refer [replace-random-subtree]]
+            [seesaw.core :refer [horizontal-panel vertical-panel grid-panel scrollable
                                  editor-pane popup label spinner spinner-model slider button
                                  select config! value text listen action]]
             [seesaw.mig :refer [mig-panel]]
@@ -125,38 +127,35 @@
 ;; ZOOM
 
 
-(defn zoom-viewport
-  [factor [[ax ay] [bx by]]]
-  (let [center-x (/ (+ ax bx) 2)
-        center-y (/ (+ ay by) 2)
-        half-width (* factor (/ (- bx ax) 2))
-        half-height (* factor (/ (- by ay) 2))]
-    [[(- center-x half-width) (- center-y half-height)]
-     [(+ center-x half-width) (+ center-y half-height)]]))
-
-
-(def zoom-spinner
-  (spinner :model (spinner-model 2.0 :from 1.0 :by 1.0)))
-
 (def zoom-panel
-  (grid-panel
-    :columns 1
-    :items [""
-            (horizontal-panel
-              :border (titled-border "Zoom")
-              :items [(button :text "Zoom In"
-                              :listen [:action (fn [_] (let [factor (value zoom-spinner)]
-                                                         (set-viewport! (zoom-viewport (/ 1 factor)
-                                                                                       (:viewport @app-state))
-                                                                        (str "Zoom In " factor))))])
-                      "Factor:"
-                      zoom-spinner
-                      (button :text "Zoom Out"
-                              :listen [:action (fn [_] (let [factor (value zoom-spinner)]
-                                                         (set-viewport! (zoom-viewport factor
-                                                                                       (:viewport @app-state))
-                                                                        (str "Zoom Out " factor))))])])
-            ""]))
+  (let [zoom-viewport (fn [factor [[ax ay] [bx by]]]
+                        (let [center-x (/ (+ ax bx) 2)
+                              center-y (/ (+ ay by) 2)
+                              half-width (* factor (/ (- bx ax) 2))
+                              half-height (* factor (/ (- by ay) 2))]
+                          [[(- center-x half-width) (- center-y half-height)]
+                           [(+ center-x half-width) (+ center-y half-height)]]))
+        zoom-spinner (spinner :model (spinner-model 2.0 :from 1.0 :by 1.0))]
+    (grid-panel
+      :columns 1
+      :items [""
+              (horizontal-panel
+                :border (titled-border "Zoom")
+                :items [(button :text "Zoom In"
+                                :listen [:action
+                                         (fn [_] (let [factor (value zoom-spinner)]
+                                                   (set-viewport! (zoom-viewport (/ 1 factor)
+                                                                                 (:viewport @app-state))
+                                                                  (str "Zoom In " factor))))])
+                        "Factor:"
+                        zoom-spinner
+                        (button :text "Zoom Out"
+                                :listen [:action
+                                         (fn [_] (let [factor (value zoom-spinner)]
+                                                   (set-viewport! (zoom-viewport factor
+                                                                                 (:viewport @app-state))
+                                                                  (str "Zoom Out " factor))))])])
+              ""])))
 
 
 ;; TRANSLATE
@@ -201,6 +200,7 @@
 (def translate-grid
   (grid-panel
     :border (titled-border "Translate")
+    :size (Dimension. 200 120)
     :columns 3
     :items ["" up-button ""
             left-button (horizontal-panel :items [translate-spinner "%"]) right-button
@@ -208,6 +208,18 @@
 
 
 ;; VIEWPORT
+
+
+(def viewport-buttons
+  (horizontal-panel :items [(button :text "Default"
+                                    :listen [:action (fn [_]
+                                                       (set-viewport! DEFAULT-VIEWPORT
+                                                                      "Set Default Viewport"))])
+                            (button :text "Center at Origin"
+                                    :listen [:action (fn [_]
+                                                       (set-viewport! ORIGIN-VIEWPORT
+                                                                      "Set Origin Viewport"))])]))
+
 
 (def viewport-grid
   (grid-panel
@@ -249,24 +261,15 @@
                                                 (str "Set Viewport " ax " " ay " " bx " " by))))])]))
 
 
-(def viewport-buttons
-  (horizontal-panel :items [(button :text "Default"
-                                    :listen [:action (fn [_]
-                                                       (set-viewport! DEFAULT-VIEWPORT
-                                                                      "Set Default Viewport"))])
-                            (button :text "Center at Origin"
-                                    :listen [:action (fn [_]
-                                                       (set-viewport! ORIGIN-VIEWPORT
-                                                                      "Set Origin Viewport"))])]))
-
 
 (def viewport-panel
   (vertical-panel
     :border (titled-border "Viewport")
     :items [viewport-buttons
-            (horizontal-panel :items
-                              [zoom-panel
-                               translate-grid])
+            (horizontal-panel
+              :size (Dimension. 650 140)
+              :items [zoom-panel
+                      translate-grid])
             vp-set-values]))
 
 
@@ -316,59 +319,102 @@
 (def editor-popup (popup :border (rounded-border)
                          :items [cut-action copy-action paste-action]))
 
-(def editor (editor-pane
-              :background Color/BLACK
-              :foreground Color/WHITE
-              :caret-color Color/WHITE
-              :popup editor-popup))
-
-(listen editor :mouse-clicked (fn [e]
-                                (let [point (Point. (.getX e) (.getY e))
-                                      char-position (.viewToModel editor point)]
-                                  (println "position=" char-position))))
 
 (config! cut-action :handler (fn [e] (println "Cut: " e " " editor-pane)))
 
-(b/bind app-state
-        (b/transform #(:generator %))
-        (b/property editor :text))
 
-(defn generate!
-  []
-  (.setText editor (random-clisk-string :depth 2)))
+
+
+
 
 (defn evaluate!
-  []
-  (set-generator! (text editor)
+  [s]
+  (set-generator! s
                   "Edited Generator"))
 
 (defn generate-and-evaluate!
   [depth]
-  (set-loaded-data! (random-clisk-string :depth depth) "Random Generator"))
+  (set-loaded-data! (random-clisk-string :depth depth)
+                    "Random Generator"))
 
-(def depth-spinner
-  (spinner :model (spinner-model 2 :from 0 :by 1)))
+(defn mutate!
+  [depth]
+  (let [current-generator-form (read-string (:generator @app-state))
+        new-subform (read-string (random-clisk-string :depth depth))
+        new-generator-form (replace-random-subtree
+                             current-generator-form
+                             new-subform)
+        new-generator-string (println-str new-generator-form)]
+    (set-loaded-data!
+      new-generator-string
+      (str "Mutate " depth))))
+
+
+
+(def generate-and-evaluate-panel
+  (let [depth-spinner (spinner :model (spinner-model 2 :from 0 :by 1))]
+    (horizontal-panel
+      :background Color/BLACK
+      :foreground Color/WHITE
+      :border (titled-border "Generate" :color Color/WHITE)
+      :items [(label :foreground Color/WHITE :text "Depth:")
+              depth-spinner
+              (button :text "Fresh"
+                      :tip "Generate a new expression and evaluate it"
+                      :listen [:action (fn [_] (generate-and-evaluate!
+                                                 (value depth-spinner)))])])))
+
+
+
+(def mutate-panel
+  (let [depth-spinner (spinner :model (spinner-model 0 :from 0 :by 1)
+                               :tip "Depth of new subexpression")]
+    (horizontal-panel
+      :background Color/BLACK
+      :foreground Color/WHITE
+      :border (titled-border "Mutate" :color Color/WHITE)
+      :items [(label :foreground Color/WHITE :text "Depth:")
+              depth-spinner
+              (button :text "Mutate"
+                      :tip "Replace a random subexpression with a new random subexpression"
+                      :listen [:action (fn [_] (mutate! (value depth-spinner)))])])))
+
 
 
 (def expression-panel
-  (vertical-panel
-    :border (compound-border (titled-border "Expression Editor" :color Color/WHITE)
-                             (line-border :color Color/WHITE :thickness 1))
-    :background Color/BLACK
-    :items [editor
-            (horizontal-panel
-              :background Color/BLACK
-              :items [(horizontal-panel
-                        :background Color/BLACK
-                        :foreground Color/WHITE
-                        :border (titled-border "Generate and Evaluate" :color Color/WHITE)
-                        :items [(label :foreground Color/WHITE :text "Depth:")
-                                depth-spinner
-                                (button :text "Go"
-                                        :listen [:action (fn [_] (generate-and-evaluate!
-                                                                   (value depth-spinner)))])])
-                      (button :text "Evaluate"
-                              :listen [:action (fn [_] (evaluate!))])])]))
+  (let [editor (editor-pane
+                 :background Color/BLACK
+                 :foreground Color/WHITE
+                 :caret-color Color/WHITE
+                 ;; :popup editor-popup
+                 )
+
+        show-mouse-char-position (fn [e]
+                                   (let [point (Point. (.getX e) (.getY e))
+                                         char-position (.viewToModel editor point)]
+                                     (println "position=" char-position)))]
+    (b/bind app-state
+            (b/transform (fn [state]
+                           (with-out-str (clojure.pprint/pprint (read-string (:generator state))))))
+            (b/property editor :text))
+
+    (listen editor :mouse-clicked show-mouse-char-position)
+
+    (vertical-panel
+      :border (compound-border (titled-border "Expression Editor" :color Color/WHITE)
+                               (line-border :color Color/WHITE :thickness 1))
+      :background Color/BLACK
+      :items [(scrollable editor
+                          :border nil
+                          :hscroll :never
+                          :preferred-size (Dimension. 600 200))
+              (horizontal-panel
+                :background Color/BLACK
+                :items [generate-and-evaluate-panel
+                        mutate-panel
+                        (button :text "Evaluate"
+                                :tip "Evaluate the current text"
+                                :listen [:action (fn [_] (evaluate! (text editor)))])])])))
 
 
 
@@ -422,7 +468,9 @@
     :background Color/LIGHT_GRAY
     :items []))
 
-
+(add-watch app-state :history-watch (fn [k r old-state new-state]
+                                      (config! history-panel
+                                               :items (mapv #(:command %) @app-history))))
 
 
 ;; CONTROL PANEL
@@ -431,8 +479,8 @@
 
 (def control-panel
   (horizontal-panel
-    :minimum-size (Dimension. 800 800)
-    :maximum-size (Dimension. 800 800)
+    ;:minimum-size (Dimension. 600 800)
+    ;:maximum-size (Dimension. 600 800)
     :background Color/LIGHT_GRAY
     :items [(vertical-panel :background Color/LIGHT_GRAY
                             :items [(horizontal-panel
@@ -444,13 +492,11 @@
                                     expression-panel
                                     status-panel
                                     nav-buttons])
-            history-panel]))
+            #_history-panel]))
 
 
 
-(add-watch app-state :history-watch (fn [k r old-state new-state]
-                                      (config! history-panel
-                                               :items (mapv #(:command %) @app-history))))
+
 
 
 #_

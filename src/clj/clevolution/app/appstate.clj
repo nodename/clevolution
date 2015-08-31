@@ -1,7 +1,7 @@
 (ns clevolution.app.appstate
   (:require [clevolution.state :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
                                        merge-view-elements
-                                       set-image-in-state!]]))
+                                       set-image-in-state]]))
 
 
 (def app-state (atom {:content-panel       nil
@@ -84,4 +84,4 @@
   (when (and image
              (= (merge-view-elements target-state) (merge-view-elements @app-state)))
     (reset! app-state
-            (set-image-in-state! image @app-state status))))
+            (set-image-in-state image @app-state status))))

@@ -12,8 +12,8 @@
 (defn read-image-from-file
   [uri]
   (let [input-stream (ImageIO/createImageInputStream (File. uri))
-        imagereader (get-imagereader input-stream)
-        _ (.setInput imagereader input-stream true)
+        imagereader (doto (get-imagereader input-stream)
+                      (.setInput input-stream true))
         image-index 0
         bi (.read imagereader image-index)]
     (.close input-stream)
