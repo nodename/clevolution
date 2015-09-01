@@ -1,4 +1,4 @@
-(ns clevolution.appdata
+(ns clevolution.imagedata
   (:require [clisk.core :as clisk]
             [clevolution.file-input :refer [read-image-from-file]]
             [clevolution.cliskstring :refer [random-clisk-string]]
@@ -30,7 +30,7 @@
       (str "(viewport " a " " b " " generator ")"))))
 
 (defn merge-view-elements
-  [{:keys [viewport z generator] :as app-data}]
+  [{:keys [viewport z generator] :as image-data}]
   (->> generator
        (merge-z z)
        (merge-viewport viewport)))
@@ -53,7 +53,7 @@
 
 
 
-(defn set-image-in-app-data
+(defn set-image-in-image-data
   [image data status]
   (assoc data
     :image image
@@ -61,10 +61,10 @@
 
 
 (defn set-image-from-node!
-  [node app-data status image-fn]
+  [node image-data status image-fn]
   (try
-    (image-fn (clisk-image node (:image-size app-data))
-              app-data
+    (image-fn (clisk-image node (:image-size image-data))
+              image-data
               status)
     (catch Exception e
       (println "set-image-from-node! failed")
@@ -72,54 +72,54 @@
 
 
 (defn set-failed-image!
-  [app-data image-fn]
-  (set-image-from-node! ERROR-NODE app-data :failed image-fn))
+  [image-data image-fn]
+  (set-image-from-node! ERROR-NODE image-data :failed image-fn))
 
 
-(defn node-from-app-data
+(defn node-from-image-data
   [data]
   (try
     (-> data
         merge-view-elements
         clisk-eval)
     (catch Exception e
-      (println "node-from-app-data failed")
+      (println "node-from-image-data failed")
       (throw e))))
 
 
 (defn calc-image!
-  [app-data image-fn]
-  (let [node (node-from-app-data app-data)]
-    (set-image-from-node! node app-data :ok image-fn)))
+  [image-data image-fn]
+  (let [node (node-from-image-data image-data)]
+    (set-image-from-node! node image-data :ok image-fn)))
 
 
 (defn do-calc
-  [app-data image-fn]
+  [image-data image-fn]
   (try
-    (calc-image! app-data image-fn)
+    (calc-image! image-data image-fn)
     (catch Exception e
       (println "calc-image! ERROR:" (.getMessage e))
-      (set-failed-image! app-data image-fn))))
+      (set-failed-image! image-data image-fn))))
 
 
 
-(defn make-app-data
-  "Create an app-data from the given generator
+(defn make-image-data
+  "Create an image-data from the given generator
   and start an async calculation of its image"
   [generator image-size context]
-  (let [new-app-data (atom {:image-size          image-size
-                            :command             nil
-                            :generator           generator
-                            :image               nil
-                            :image-status        :ok
-                            :context             context
-                            :viewport            DEFAULT-VIEWPORT
-                            :z                   0.0})]
-    (future (do-calc @new-app-data set-image-in-app-data))
-    new-app-data))
+  (let [new-image-data (atom {:image-size          image-size
+                              :command             nil
+                              :generator           generator
+                              :image               nil
+                              :image-status        :ok
+                              :context             context
+                              :viewport            DEFAULT-VIEWPORT
+                              :z                   0.0})]
+    (future (do-calc @new-image-data set-image-in-image-data))
+    new-image-data))
 
 
-(defn mutate-app-data
+(defn mutate-image-data
   "Returns a new app-data representing a mutation of the input app-data"
   [data depth]
   (let [current-generator-form (read-string (:generator data))
@@ -128,7 +128,7 @@
                                (replace-random-subtree
                                  current-generator-form
                                  new-subform))]
-    (make-app-data new-generator-string (:image-size data) (:context data))))
+    (make-image-data new-generator-string (:image-size data) (:context data))))
 
 
 

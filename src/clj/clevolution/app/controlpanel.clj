@@ -1,5 +1,5 @@
 (ns clevolution.app.controlpanel
-  (:require [clevolution.appdata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT merge-view-elements]]
+  (:require [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT merge-view-elements]]
             [clevolution.app.appstate :refer [app-state
                                               set-imagesize! set-z! set-viewport! set-generator!
                                               set-loaded-data!]]
