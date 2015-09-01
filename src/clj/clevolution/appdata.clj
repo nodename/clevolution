@@ -1,4 +1,4 @@
-(ns clevolution.state
+(ns clevolution.appdata
   (:require [clisk.core :as clisk]
             [clevolution.file-input :refer [read-image-from-file]]
             [clevolution.cliskstring :refer [random-clisk-string]]
@@ -30,7 +30,7 @@
       (str "(viewport " a " " b " " generator ")"))))
 
 (defn merge-view-elements
-  [{:keys [viewport z generator] :as state}]
+  [{:keys [viewport z generator] :as app-data}]
   (->> generator
        (merge-z z)
        (merge-viewport viewport)))
@@ -53,18 +53,18 @@
 
 
 
-(defn set-image-in-state
-  [image state status]
-  (assoc state
+(defn set-image-in-app-data
+  [image data status]
+  (assoc data
     :image image
     :image-status status))
 
 
 (defn set-image-from-node!
-  [node state status image-fn]
+  [node app-data status image-fn]
   (try
-    (image-fn (clisk-image node (:image-size state))
-              state
+    (image-fn (clisk-image node (:image-size app-data))
+              app-data
               status)
     (catch Exception e
       (println "set-image-from-node! failed")
@@ -72,63 +72,63 @@
 
 
 (defn set-failed-image!
-  [state image-fn]
-  (set-image-from-node! ERROR-NODE state :failed image-fn))
+  [app-data image-fn]
+  (set-image-from-node! ERROR-NODE app-data :failed image-fn))
 
 
-(defn node-from-state
-  [state]
+(defn node-from-app-data
+  [data]
   (try
-    (-> state
+    (-> data
         merge-view-elements
         clisk-eval)
     (catch Exception e
-      (println "node-from-state failed")
+      (println "node-from-app-data failed")
       (throw e))))
 
 
 (defn calc-image!
-  [state image-fn]
-  (let [node (node-from-state state)]
-    (set-image-from-node! node state :ok image-fn)))
+  [app-data image-fn]
+  (let [node (node-from-app-data app-data)]
+    (set-image-from-node! node app-data :ok image-fn)))
 
 
 (defn do-calc
-  [state image-fn]
+  [app-data image-fn]
   (try
-    (calc-image! state image-fn)
+    (calc-image! app-data image-fn)
     (catch Exception e
       (println "calc-image! ERROR:" (.getMessage e))
-      (set-failed-image! state image-fn))))
+      (set-failed-image! app-data image-fn))))
 
 
 
-(defn make-state
-  "Create a state from the given generator
+(defn make-app-data
+  "Create an app-data from the given generator
   and start an async calculation of its image"
   [generator image-size context]
-  (let [new-state (atom {:image-size          image-size
-                         :command             nil
-                         :generator           generator
-                         :image               nil
-                         :image-status        :ok
-                         :context             context
-                         :viewport            DEFAULT-VIEWPORT
-                         :z                   0.0})]
-    (future (do-calc @new-state set-image-in-state))
-    new-state))
+  (let [new-app-data (atom {:image-size          image-size
+                            :command             nil
+                            :generator           generator
+                            :image               nil
+                            :image-status        :ok
+                            :context             context
+                            :viewport            DEFAULT-VIEWPORT
+                            :z                   0.0})]
+    (future (do-calc @new-app-data set-image-in-app-data))
+    new-app-data))
 
 
-(defn mutate-state
-  "Returns a new state representing a mutation of the input state"
-  [state depth]
-  (let [current-generator-form (read-string (:generator state))
+(defn mutate-app-data
+  "Returns a new app-data representing a mutation of the input app-data"
+  [data depth]
+  (let [current-generator-form (read-string (:generator data))
         new-subform (read-string (random-clisk-string :depth depth))
         new-generator-string (println-str
                                (replace-random-subtree
                                  current-generator-form
                                  new-subform))]
-    (make-state new-generator-string (:image-size state) (:context state))))
+    (make-app-data new-generator-string (:image-size data) (:context data))))
 
 
 

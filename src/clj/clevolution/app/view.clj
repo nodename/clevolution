@@ -5,7 +5,7 @@
     [mikera.image.core :as img]
     [mikera.image.colours :as col]
     [clevolution.file-output :refer :all]
-    [clevolution.state :as state :refer [merge-view-elements do-calc]]
+    [clevolution.appdata :as state :refer [merge-view-elements do-calc]]
     [clevolution.app.appstate :as appstate :refer [app-state]]
     [clevolution.app.timetravel :refer [forget-everything! app-history]]
     [clevolution.app.controlpanel :refer [control-panel]]
