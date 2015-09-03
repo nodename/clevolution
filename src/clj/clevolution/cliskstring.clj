@@ -322,7 +322,7 @@
 
 (def ops
   (concat #_named-colors ;; boring
-    (weight 10 [random-scalar-color random-vector-color])
+    [random-scalar-color random-vector-color]
     #_textures unary-v-operators nullary-operators-scalar nullary-operators-vector
     unary-operators-scalar unary-operators-vector binary-operators variadic-ops
     [#_ev-psychedelic

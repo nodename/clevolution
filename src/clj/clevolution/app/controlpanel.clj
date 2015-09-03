@@ -1,15 +1,18 @@
 (ns clevolution.app.controlpanel
-  (:require [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT merge-view-elements]]
+  (:require [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT ERROR-IMAGE
+                                           merge-view-elements mutate-image-data]]
             [clevolution.app.appstate :refer [app-state
                                               set-imagesize! set-z! set-viewport! set-generator!
                                               set-loaded-data!]]
+            [clevolution.app.view :refer [make-current-image-component]]
             [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.evolve :refer [replace-random-subtree]]
             [seesaw.core :refer [horizontal-panel vertical-panel grid-panel scrollable
                                  editor-pane popup label spinner spinner-model slider button
-                                 select config! value text listen action]]
+                                 select replace! config! value text listen action]]
+            [seesaw.swingx :refer [busy-label]]
             [seesaw.mig :refer [mig-panel]]
             [seesaw.border :refer [custom-border compound-border line-border]]
             [seesaw.bind :as b])
@@ -36,7 +39,7 @@
 
 
 
-
+(def CONTROL-PANEL-WIDTH 750)
 
 
 ;; IMAGE SIZE
@@ -200,7 +203,7 @@
 (def translate-grid
   (grid-panel
     :border (titled-border "Translate")
-    :size (Dimension. 200 120)
+    ;:size (Dimension. 200 120)
     :columns 3
     :items ["" up-button ""
             left-button (horizontal-panel :items [translate-spinner "%"]) right-button
@@ -267,7 +270,6 @@
     :border (titled-border "Viewport")
     :items [viewport-buttons
             (horizontal-panel
-              :size (Dimension. 650 140)
               :items [zoom-panel
                       translate-grid])
             vp-set-values]))
@@ -302,6 +304,7 @@
 
 (def tiling-panel
   (vertical-panel
+    :size [CONTROL-PANEL-WIDTH :by 80]
     :border (titled-border "Seamless Tiling")
     :items [(horizontal-panel
               :items [seamless-scale
@@ -321,9 +324,6 @@
 
 
 (config! cut-action :handler (fn [e] (println "Cut: " e " " editor-pane)))
-
-
-
 
 
 
@@ -348,6 +348,33 @@
     (set-loaded-data!
       new-generator-string
       (str "Mutate " depth))))
+
+(def NUM_MUTATIONS 16)
+
+
+(defn replace-mutation
+  [new-image index]
+  (let [content-panel (:content-panel @app-state)
+        mutations-grid-panel (select content-panel [:#mutations-grid-panel])
+        component-id (keyword (str "#mutation-" index))
+        old-component (select mutations-grid-panel [component-id])
+        new-component (make-current-image-component new-image 150)]
+    (replace! mutations-grid-panel old-component new-component)))
+
+
+(defn mutations!
+  [depth]
+  (let [current-image-data @app-state
+        mutations (mapv (fn [index]
+                          (let [image-data-atom (mutate-image-data current-image-data depth)]
+                            (add-watch image-data-atom :image-watch
+                                       (fn [k r old-state new-state]
+                                         (condp = (:image-status new-state)
+                                           :ok (replace-mutation (:image new-state) index)
+                                           :failed (replace-mutation ERROR-IMAGE index))))
+                            image-data-atom))
+                        (range NUM_MUTATIONS))]
+    (swap! app-state assoc :mutations mutations)))
 
 
 
@@ -377,7 +404,9 @@
               depth-spinner
               (button :text "Mutate"
                       :tip "Replace a random subexpression with a new random subexpression"
-                      :listen [:action (fn [_] (mutate! (value depth-spinner)))])])))
+                      :listen [:action (fn [_] (mutate! (value depth-spinner)))])
+              #_(button :text "Mutations"
+                      :listen [:action (fn [_] (mutations! (value depth-spinner)))])])))
 
 
 
@@ -401,14 +430,17 @@
     (listen editor :mouse-clicked show-mouse-char-position)
 
     (vertical-panel
+      :size [CONTROL-PANEL-WIDTH :by 340]
       :border (compound-border (titled-border "Expression Editor" :color Color/WHITE)
                                (line-border :color Color/WHITE :thickness 1))
       :background Color/BLACK
       :items [(scrollable editor
                           :border nil
                           :hscroll :never
-                          :preferred-size (Dimension. 600 200))
+                          ;:preferred-size (Dimension. 600 200)
+                          )
               (horizontal-panel
+                :size [CONTROL-PANEL-WIDTH :by 50]
                 :background Color/BLACK
                 :items [generate-and-evaluate-panel
                         mutate-panel
@@ -421,7 +453,8 @@
 
 ;; STATUS LINE
 
-(def status-line (label :text ""))
+(def status-line (busy-label :text ""
+                             :busy? false))
 
 (def status-panel (horizontal-panel
                     :border (titled-border "Image Status")
@@ -440,7 +473,13 @@
                                    :dirty "Calculating image..."
                                    :ok "Image loaded"
                                    :failed "FAILED to calculate image")))
-            (b/property status-line :text))))
+            (b/property status-line :text))
+          (b/bind
+            (b/transform (fn [a] (condp = (:image-status a)
+                                   :dirty true
+                                   :ok false
+                                   :failed false)))
+            (b/property status-line :busy?))))
 
 
 
@@ -479,11 +518,11 @@
 
 (def control-panel
   (horizontal-panel
-    ;:minimum-size (Dimension. 600 800)
-    ;:maximum-size (Dimension. 600 800)
+    :id :controlpanel
     :background Color/LIGHT_GRAY
     :items [(vertical-panel :background Color/LIGHT_GRAY
                             :items [(horizontal-panel
+                                      :size [CONTROL-PANEL-WIDTH :by 325]
                                       :items [(vertical-panel
                                                 :items [imagesize-panel
                                                         z-panel])

@@ -10,7 +10,8 @@
 (defonce DEFAULT-VIEWPORT [[0.0 0.0] [1.0 1.0]])
 (defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
 
-(defonce ERROR-NODE (clisk.node/node (read-image-from-file "resources/Error.png")))
+(defonce ERROR-IMAGE (read-image-from-file "resources/Error.png"))
+(defonce ERROR-NODE (clisk.node/node ERROR-IMAGE))
 
 
 ;; The image is a function of z, viewport, and generator.
@@ -20,7 +21,7 @@
   [z generator]
   (if (zero? z)
     generator
-    (str "(offset [0.0 0.0 " (- z) "] " generator ")")))
+    (str "(offset [0.0 0.0 " z "] " generator ")")))
 
 (defn merge-viewport
   [viewport generator]
@@ -103,7 +104,7 @@
 
 
 
-(defn make-image-data
+(defn make-image-data-atom
   "Create an image-data from the given generator
   and start an async calculation of its image"
   [generator image-size context]
@@ -120,7 +121,7 @@
 
 
 (defn mutate-image-data
-  "Returns a new app-data representing a mutation of the input app-data"
+  "Returns a new image-data representing a mutation of the input image-data"
   [data depth]
   (let [current-generator-form (read-string (:generator data))
         new-subform (read-string (random-clisk-string :depth depth))
@@ -128,7 +129,7 @@
                                (replace-random-subtree
                                  current-generator-form
                                  new-subform))]
-    (make-image-data new-generator-string (:image-size data) (:context data))))
+    (make-image-data-atom new-generator-string (:image-size data) (:context data))))
 
 
 

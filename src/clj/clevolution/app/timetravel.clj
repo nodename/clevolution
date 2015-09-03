@@ -69,7 +69,7 @@
 (def watch-fn (fn [_ _ old-state new-state]
                 (if (not (@ignore :time-machine))
                   (cond
-                    ;; there is new state data:
+                    ;; there is new image or panel data:
                     (or (not= (:generator old-state) (:generator new-state))
                         (not= (:viewport old-state) (:viewport new-state))
                         (not= (:z old-state) (:z new-state))
@@ -88,7 +88,7 @@
 
 
                     :else
-                    (println "no change"))
+                    (println "no image change"))
 
                   (println "no new state"))
                 (swap! ignore assoc :time-machine false)))

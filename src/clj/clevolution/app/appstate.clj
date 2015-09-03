@@ -4,16 +4,17 @@
                                            set-image-in-image-data]]))
 
 
-(def app-state (atom {:content-panel       nil
-                      :image-display-size  800
-                      :image-size          512
-                      :command             nil
-                      :generator           nil
-                      :image               nil
-                      :image-status        :ok
-                      :context             nil
-                      :viewport            nil
-                      :z                   0.0}))
+(defonce app-state (atom {:content-panel       nil
+                          :image-display-size  600
+
+                          :image-size          512
+                          :command             nil
+                          :generator           nil
+                          :image               nil
+                          :image-status        :ok
+                          :context             nil
+                          :viewport            nil
+                          :z                   0.0}))
 
 
 (defn initialize-state!
@@ -33,6 +34,7 @@
   (let [old-image-size (:image-size @app-state)]
     (when (not= size old-image-size)
       (swap! app-state assoc
+             :command command
              :image-size size
              :image-status :dirty))))
 
@@ -78,7 +80,7 @@
 
 
 (defn set-image!
-  "Update the :image in app-state, but not if the state has changed.
+  "Update the :image in app-state, but not if app-state's image data has changed.
   (Called asynchronously)"
   [image target-state status]
   (when (and image

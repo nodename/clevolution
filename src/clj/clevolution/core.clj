@@ -3,7 +3,8 @@
             [clevolution.file-output :refer :all]
             [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.cliskstring :refer [random-clisk-string]]
-            [clevolution.app.view :refer [show to-display-size]] :reload-all))
+            [clevolution.app.app :refer [show]]
+            [clevolution.app.view :refer [to-display-size]] :reload-all))
 
 
 
