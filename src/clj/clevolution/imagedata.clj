@@ -112,7 +112,7 @@
 
 
 (defn make-image-data-atom
-  "Create an image-data from the given generator"
+  "Create an image-data atom from the given generator"
   [generator image-size context]
   (atom {:image-size          image-size
          :command             nil
@@ -120,7 +120,7 @@
          :image               nil
          :image-status        :dirty
          :context             context
-         :viewport            DEFAULT-VIEWPORT
+         :viewport            ORIGIN-VIEWPORT
          :z                   0.0}))
 
 

@@ -341,7 +341,7 @@
 
 (defn make-mutation-atoms
   [image-data depth]
-  (pmap (fn [_] (make-mutation-atom image-data depth))
+  (map (fn [_] (make-mutation-atom image-data depth))
         (range NUM_MUTATIONS)))
 
 

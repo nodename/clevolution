@@ -13,10 +13,6 @@
     [java.awt Color]))
 
 
-
-
-
-
 (defn make-current-image-component
   [image]
   (let [icon (make-image-icon image
@@ -31,66 +27,4 @@
                               (:image-display-size @appstate/app-state))]
     (.removeAll current-image-component)
     (.add current-image-component icon)))
-
-
-
-#_
-    (defn make-mutations-component
-      [mutation-atoms & [id]]
-      (let [xform-mutation (fn [image-data-atom] (-> image-data-atom
-                                                     deref
-                                                     (get :image)
-                                                     (make-image-icon 150)))
-            component (seesaw/border-panel
-                        :size [600 :by 600]
-                        :center (seesaw/grid-panel
-                                  :id :mutations-grid-panel
-                                  :columns 4
-                                  :items (mapv (fn [image index] (make-image-component
-                                                                   image
-                                                                   (keyword (str "mutation-" index))
-                                                                   150))
-                                               (repeat PENDING-IMAGE)
-                                               (range 16))))]
-        (when id (selector/id-of! component id))
-        component))
-
-
-
-
-
-
-
-
-
-
-
-
-#_
-    (defn display-mutations
-      [mutations]
-      (let [content-panel (:content-panel @app-state)
-            display-tabs (seesaw/select content-panel [:#display-tabs])
-            content (.getComponentAt display-tabs 1)]
-        (.removeAll content)
-        (.add content (make-mutations-component mutations :mutations-component))
-        (.revalidate content)
-        (.repaint content)
-        (seesaw/selection! display-tabs 1)))
-
-
-
-
-#_
-    (add-watch app-state :generator-watch (fn [k r old-state new-state]
-                                            (if (= :dirty (:image-status new-state))
-                                              (do
-                                                (println "image changed")
-                                                ;(display-image PENDING-IMAGE)
-                                                (cancel-current-calc)
-                                                (reset! current-calc (start-calc new-state)))
-                                              (display-image (:image new-state)))))
-
-
-
 

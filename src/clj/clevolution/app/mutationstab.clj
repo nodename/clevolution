@@ -6,28 +6,75 @@
             [clevolution.app.appstate :refer [app-state]]))
 
 
+(def MUTATION-DISPLAY-SIZE 150)
+
+(defn mutation-id
+  [i]
+  (keyword (str "mutation-" i)))
+
+(defn mutation-search-id
+  [i]
+  (keyword (str "#mutation-" i)))
+
+(defn mutation-index
+  [mutation-id]
+  (read-string (.replace (name mutation-id) "mutation-" "")))
+
+
+(defn image-from-status
+  [image-data]
+  (condp = (:image-status image-data)
+    :ok (:image image-data)
+    :dirty PENDING-IMAGE
+    :failed ERROR-IMAGE))
+
+
 (defn make-image-component
-  [image id size]
+  [image id size mutation-atom]
+  ;; for some reason, calling image-from-status from this function
+  ;; gives a crazy error "BufferedImage cannot be cast to Future",
+  ;; so we pass the mutation-atom in as a separqte argument
   (let [icon (make-image-icon image size)]
-    (seesaw/border-panel :id id
-                         :center icon)))
+    (seesaw/border-panel
+      :id id
+      :center icon
+      ;; TODO popup should be on icon, not entire component
+      :popup (seesaw/popup
+               :items
+               [(seesaw/menu-item
+                  :text "Show Expression"
+                  :listen [:action (fn [_]
+                                     (println (:generator @mutation-atom)))])
+
+                (seesaw/menu-item
+                  :text "Make Current Image"
+                  :listen [:action (fn [_]
+                                     (reset! app-state
+                                             (merge @app-state
+                                                    @mutation-atom
+                                                    {:command "Make Current Image"})))])
+                (seesaw/menu-item
+                  :text "Delete"
+                  :listen [:action
+                           (fn [_]
+                             (let [mutation-atoms (:mutations @app-state)
+                                   new-mutation-atoms (remove (fn [m] (= m mutation-atom)) mutation-atoms)]
+                                 (swap! app-state assoc :mutations new-mutation-atoms)))])]))))
 
 
 (defn make-mutations-grid-panel
   [mutation-atoms]
   (seesaw/grid-panel
-    :id :mutations-grid-panel
-    :columns 4
-    :items (mapv (fn [index mutation-atom]
-                   (make-image-component
-                     (condp = (:image-status @mutation-atom)
-                       :ok (:image @mutation-atom)
-                       :dirty PENDING-IMAGE
-                       :failed ERROR-IMAGE)
-                     (keyword (str "mutation-" index))
-                     150))
-                 (range)
-                 mutation-atoms)))
+      :id :mutations-grid-panel
+      :columns 4
+      :items (mapv (fn [index mutation-atom]
+                     (make-image-component
+                       (image-from-status @mutation-atom)
+                       (mutation-id index)
+                       MUTATION-DISPLAY-SIZE
+                       mutation-atom))
+                   (range)
+                   mutation-atoms)))
 
 
 (defn make-mutations-component
@@ -53,13 +100,13 @@
 
 
 
-(defn replace-mutation
-  [new-image index]
+(defn replace-mutation-image
+  [new-image index image-data-atom]
   (let [content-panel (:content-panel @app-state)
         mutations-grid-panel (seesaw/select content-panel [:#mutations-grid-panel])
-        component-id (keyword (str "mutation-" index))
-        old-component (seesaw/select mutations-grid-panel [(keyword (str "#mutation-" index))])
-        new-component (make-image-component new-image component-id 150)]
+        component-id (mutation-id index)
+        old-component (seesaw/select mutations-grid-panel [(mutation-search-id index)])
+        new-component (make-image-component new-image component-id MUTATION-DISPLAY-SIZE image-data-atom)]
     (seesaw/replace! mutations-grid-panel old-component new-component)))
 
 
@@ -70,8 +117,8 @@
              (fn [k r old-state new-state]
                (when (not= (:image-status old-state) (:image-status new-state))
                  (condp = (:image-status new-state)
-                   :ok (replace-mutation (:image new-state) index)
-                   :failed (replace-mutation ERROR-IMAGE index)))))
+                   :ok (replace-mutation-image (:image new-state) index image-data-atom)
+                   :failed (replace-mutation-image ERROR-IMAGE index image-data-atom)))))
 
   ;; kick off image calc on mutation:
   (future (do-calc @image-data-atom (partial set-image-in-image-data! image-data-atom))))
@@ -90,8 +137,9 @@
 
     (loop [mutation-atoms mutation-atoms
            index 0]
-      (kick-off (first mutation-atoms) index)
-      (recur (rest mutation-atoms) (inc index)))))
+      (when-let [m-atom (first mutation-atoms)]
+        (kick-off m-atom index)
+        (recur (rest mutation-atoms) (inc index))))))
 
 
 
