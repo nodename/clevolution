@@ -16,5 +16,5 @@
                  #_[com.fifesoft/rsyntaxtextarea "2.5.6"]]
   :plugins [[lein-marginalia "0.7.1"]]
 
-  ;:main clevolution.main
+  :main clevolution.main
   )
