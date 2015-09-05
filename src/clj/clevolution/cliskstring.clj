@@ -23,13 +23,13 @@
 
 (def random-scalar-color
   {:function #(let [color (rand 1.0)]
-                (str "[" color " " color " " color "]"))
-    :arity 0})
+               (str "[" color " " color " " color "]"))
+   :arity 0})
 
 
 (def random-vector-color
   {:function #(str "[" (rand 1.0) " " (rand 1.0) " " (rand 1.0) "]")
-    :arity 0})
+   :arity 0})
 
 (def textures
   (map (partial make-with-arity 0)
@@ -380,14 +380,16 @@
     (if (zero? arity)
       operation
       (let [build-subexpr (fn [expression _]
-                            (let [child-expr (random-clisk-expression (dec depth) method input-files)]
-                              ;; "%", if present, represents the position in the expression
-                              ;; where the child expression should be inserted:
-                              (if (= -1 (.indexOf (first expression) "%"))
-                                ;; default: child expression goes at the end:
-                                (concat expression (list child-expr))
-                                ;; if "%" is found, child expression replaces it:
-                                (replace-% expression child-expr))))]
+                            (if (zero? depth) ;; this is an error I should fix
+                              expression
+                              (let [child-expr (random-clisk-expression (dec depth) method input-files)]
+                                ;; "%", if present, represents the position in the expression
+                                ;; where the child expression should be inserted:
+                                (if (= -1 (.indexOf (first expression) "%"))
+                                  ;; default: child expression goes at the end:
+                                  (concat expression (list child-expr))
+                                  ;; if "%" is found, child expression replaces it:
+                                  (replace-% expression child-expr)))))]
         (reduce build-subexpr (list operation) (range arity))))))
 
 

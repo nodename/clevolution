@@ -1,5 +1,6 @@
 (ns clevolution.imagedata
   (:require [clisk.core :as clisk]
+            [clevolution.app.imagefunctions :refer [ERROR-IMAGE]]
             [clevolution.file-input :refer [read-image-from-file]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.evolve :refer [replace-random-subtree]]
@@ -10,7 +11,7 @@
 (defonce DEFAULT-VIEWPORT [[0.0 0.0] [1.0 1.0]])
 (defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
 
-(defonce ERROR-IMAGE (read-image-from-file "resources/Error.png"))
+
 (defonce ERROR-NODE (clisk.node/node ERROR-IMAGE))
 
 
@@ -53,12 +54,18 @@
 
 
 
-
 (defn set-image-in-image-data
   [image data status]
   (assoc data
     :image image
     :image-status status))
+
+
+(defn set-image-in-image-data!
+  "Update the :image in the atom"
+  [image-data-atom image image-data status]
+  (reset! image-data-atom
+          (set-image-in-image-data image image-data status)))
 
 
 (defn set-image-from-node!
@@ -105,23 +112,20 @@
 
 
 (defn make-image-data-atom
-  "Create an image-data from the given generator
-  and start an async calculation of its image"
+  "Create an image-data from the given generator"
   [generator image-size context]
-  (let [new-image-data (atom {:image-size          image-size
-                              :command             nil
-                              :generator           generator
-                              :image               nil
-                              :image-status        :ok
-                              :context             context
-                              :viewport            DEFAULT-VIEWPORT
-                              :z                   0.0})]
-    (future (do-calc @new-image-data set-image-in-image-data))
-    new-image-data))
+  (atom {:image-size          image-size
+         :command             nil
+         :generator           generator
+         :image               nil
+         :image-status        :dirty
+         :context             context
+         :viewport            DEFAULT-VIEWPORT
+         :z                   0.0}))
 
 
-(defn mutate-image-data
-  "Returns a new image-data representing a mutation of the input image-data"
+(defn make-mutation-atom
+  "Returns a new image-data atom representing a mutation of the input image-data"
   [data depth]
   (let [current-generator-form (read-string (:generator data))
         new-subform (read-string (random-clisk-string :depth depth))

@@ -4,7 +4,8 @@
             [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.app.app :refer [show]]
-            [clevolution.app.view :refer [to-display-size]] :reload-all))
+            [clevolution.app.appstate :refer [app-state]]
+            [clevolution.app.imagefunctions :refer [to-display-size]] :reload-all))
 
 
 
@@ -22,7 +23,7 @@
       (-> generator
           clisk-eval
           make-image
-          to-display-size
+          (to-display-size (:image-display-size @app-state))
           show-it))
     (catch Exception e
       (.printStackTrace e))))

@@ -1,41 +1,25 @@
 (ns clevolution.app.controlpanel
-  (:require [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT ERROR-IMAGE
-                                           merge-view-elements mutate-image-data]]
+  (:require [seesaw.core :refer [horizontal-panel vertical-panel grid-panel scrollable
+                                 editor-pane popup label spinner spinner-model slider button
+                                 select replace! config! value text listen action]]
+            [seesaw.mig :refer [mig-panel]]
+            [seesaw.border :refer [compound-border line-border]]
+            [seesaw.bind :as b]
+            [clevolution.app.imagefunctions :refer [ERROR-IMAGE]]
+            [clevolution.app.widgets.border :refer [rounded-border titled-border]]
+            [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
+                                           merge-view-elements make-mutation-atom]]
             [clevolution.app.appstate :refer [app-state
                                               set-imagesize! set-z! set-viewport! set-generator!
                                               set-loaded-data!]]
-            [clevolution.app.view :refer [make-current-image-component]]
+            [clevolution.app.currentimagetab :refer [make-current-image-component]]
             [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.cliskeval :refer [clisk-eval]]
-            [clevolution.evolve :refer [replace-random-subtree]]
-            [seesaw.core :refer [horizontal-panel vertical-panel grid-panel scrollable
-                                 editor-pane popup label spinner spinner-model slider button
-                                 select replace! config! value text listen action]]
-            [seesaw.swingx :refer [busy-label]]
-            [seesaw.mig :refer [mig-panel]]
-            [seesaw.border :refer [custom-border compound-border line-border]]
-            [seesaw.bind :as b])
+            [clevolution.evolve :refer [replace-random-subtree]])
   (:import [java.awt Color Dimension Point]
-           [javax.swing.border TitledBorder]
            (javax.swing SpinnerListModel)))
 
-
-(defn rounded-border
-  [& [color]]
-  (let [color (or color Color/BLACK)]
-    (custom-border
-      :insets 10
-      :paint (fn [c g x y w h]
-               (doto g
-                 (.setColor color)
-                 (.drawRoundRect (+ 5 x) (+ 5 y) (- w 10) (- h 10) 15 15))))))
-
-(defn titled-border
-  [title & {:keys [color]
-            :or {color Color/BLACK}}]
-  (TitledBorder. (rounded-border color) title
-                 TitledBorder/LEADING TitledBorder/TOP nil color))
 
 
 
@@ -352,28 +336,18 @@
 (def NUM_MUTATIONS 16)
 
 
-(defn replace-mutation
-  [new-image index]
-  (let [content-panel (:content-panel @app-state)
-        mutations-grid-panel (select content-panel [:#mutations-grid-panel])
-        component-id (keyword (str "#mutation-" index))
-        old-component (select mutations-grid-panel [component-id])
-        new-component (make-current-image-component new-image 150)]
-    (replace! mutations-grid-panel old-component new-component)))
+
+
+
+(defn make-mutation-atoms
+  [image-data depth]
+  (pmap (fn [_] (make-mutation-atom image-data depth))
+        (range NUM_MUTATIONS)))
 
 
 (defn mutations!
-  [depth]
-  (let [current-image-data @app-state
-        mutations (mapv (fn [index]
-                          (let [image-data-atom (mutate-image-data current-image-data depth)]
-                            (add-watch image-data-atom :image-watch
-                                       (fn [k r old-state new-state]
-                                         (condp = (:image-status new-state)
-                                           :ok (replace-mutation (:image new-state) index)
-                                           :failed (replace-mutation ERROR-IMAGE index))))
-                            image-data-atom))
-                        (range NUM_MUTATIONS))]
+  [image-data depth]
+  (let [mutations (make-mutation-atoms image-data depth)]
     (swap! app-state assoc :mutations mutations)))
 
 
@@ -405,8 +379,8 @@
               (button :text "Mutate"
                       :tip "Replace a random subexpression with a new random subexpression"
                       :listen [:action (fn [_] (mutate! (value depth-spinner)))])
-              #_(button :text "Mutations"
-                      :listen [:action (fn [_] (mutations! (value depth-spinner)))])])))
+              (button :text "Mutations"
+                      :listen [:action (fn [_] (mutations! @app-state (value depth-spinner)))])])))
 
 
 
@@ -451,35 +425,7 @@
 
 
 
-;; STATUS LINE
 
-(def status-line (busy-label :text ""
-                             :busy? false))
-
-(def status-panel (horizontal-panel
-                    :border (titled-border "Image Status")
-                    :items [status-line]))
-
-(b/bind app-state
-        (b/tee
-          (b/bind
-            (b/transform (fn [a] (condp = (:image-status a)
-                                   :dirty Color/BLACK
-                                   :ok Color/GREEN
-                                   :failed Color/RED)))
-            (b/property status-line :foreground))
-          (b/bind
-            (b/transform (fn [a] (condp = (:image-status a)
-                                   :dirty "Calculating image..."
-                                   :ok "Image loaded"
-                                   :failed "FAILED to calculate image")))
-            (b/property status-line :text))
-          (b/bind
-            (b/transform (fn [a] (condp = (:image-status a)
-                                   :dirty true
-                                   :ok false
-                                   :failed false)))
-            (b/property status-line :busy?))))
 
 
 
@@ -529,7 +475,6 @@
                                               viewport-panel])
                                     tiling-panel
                                     expression-panel
-                                    status-panel
                                     nav-buttons])
             #_history-panel]))
 

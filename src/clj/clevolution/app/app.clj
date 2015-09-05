@@ -1,14 +1,19 @@
 (ns clevolution.app.app
-  (:require [clevolution.app.timetravel :refer [forget-everything! app-history]]
+  (:require [seesaw.core :as seesaw]
+            [clevolution.app.timetravel :refer [forget-everything! app-history]]
             [clevolution.app.appstate :as appstate :refer [app-state]]
-            [clevolution.app.view :refer [make-display-panel]]
+            [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
+            [clevolution.app.currentimagetab :refer [make-current-image-component replace-image]]
+            [clevolution.app.mutationstab :refer [make-mutations-tab]]
             [clevolution.app.controlpanel :refer [control-panel]]
-            [clevolution.imagedata :refer [merge-view-elements]]
-            [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]]
-            [seesaw.core :as seesaw])
+            [clevolution.app.widgets.imagestatus :refer [image-status-panel]]
+            [clevolution.imagedata :refer [merge-view-elements do-calc]]
+            [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]])
   (:import (java.awt FileDialog Dimension Color)
            (javax.swing JFrame JMenu JMenuBar)
            (java.awt.event WindowListener)))
+
+
 
 
 (def last-frame (atom nil))
@@ -37,9 +42,10 @@
 
 (defn create-frame
   [title]
-  (if @last-frame
-    (reuse-frame @last-frame title)
-    (create-new-frame title)))
+  (create-new-frame title)
+  #_(if @last-frame
+      (reuse-frame @last-frame title)
+      (create-new-frame title)))
 
 
 
@@ -87,23 +93,40 @@
                              (str (.getDirectory file-dialog) file-name index ".png"))))))
 
 
+(defn make-current-image-tab
+  [image]
+  (seesaw/left-right-split
+    (seesaw/vertical-panel
+      :background Color/LIGHT_GRAY
+      :items [(make-current-image-component image)
+              image-status-panel])
+    control-panel
+    :divider-location 1/2
+    :background Color/LIGHT_GRAY))
+
+
+(defn make-tabbed-panel
+  [image]
+  (seesaw/tabbed-panel
+    :id :display-tabs
+    :tabs [{:title "Current Image"
+            :content (make-current-image-tab (or image PENDING-IMAGE))}
+           {:title "Mutations"
+            :content (make-mutations-tab
+                       [])}]))
+
+
 
 (defn create-app-frame
   [image generator context title]
   (forget-everything!)
 
-  (let [frame-size (Dimension. (+ 800 (:image-display-size @app-state))
-                               (+ 100 (:image-display-size @app-state)))
-        frame #_(doto (create-frame title)
-                (.setMinimumSize frame-size)
-                (.setMaximumSize frame-size))
-        (create-frame title)
+  (let [frame (create-frame title)
 
-        content-panel (seesaw/left-right-split
-                        (make-display-panel image)
-                        control-panel
-                        :divider-location 1/2
-                        :background (Color. 224 224 224))]
+        content-panel (seesaw/border-panel
+                        :center (make-tabbed-panel image))]
+
+
 
     (.add frame content-panel)
     (appstate/initialize-state! generator image context content-panel)
@@ -123,16 +146,8 @@
                       (.add save-menuitem)
                       (.add save-history-menu-item))
 
-          fullscreen-menuitem (seesaw/menu-item
-                                :text "Toggle Full Screen"
-                                :listen [:action (fn [_] (seesaw/toggle-full-screen! frame))])
-
-          view-menu (doto (JMenu. "View")
-                      (.add fullscreen-menuitem))
-
           menu-bar (doto (JMenuBar.)
-                     (.add file-menu)
-                     (.add view-menu))]
+                     (.add file-menu))]
 
       (doto frame
         (.setJMenuBar menu-bar)
@@ -160,3 +175,47 @@
                                 (windowIconified [e])
                                 (windowOpened [e])
                                 (windowClosed [e])))))))
+
+
+
+
+(defn display-image
+  "Replace the current image with image and switch to the current image tab"
+  [image]
+  (let [content-panel (:content-panel @app-state)
+        display-tabs (seesaw/select content-panel [:#display-tabs])
+        current-image-component (seesaw/select content-panel [:#current-image-component])]
+    (replace-image current-image-component image)
+    (.revalidate content-panel)
+    (.repaint content-panel)
+    (.setSelectedIndex display-tabs 0)))
+
+
+
+
+
+
+(def current-main-image-calc (atom nil))
+
+(defn cancel-current-main-image-calc
+  []
+  (let [calc @current-main-image-calc]
+    (when calc
+      (future-cancel calc))))
+
+(defn start-main-image-calc
+  [state]
+  (future
+    (do-calc state appstate/set-image!)))
+
+
+
+(add-watch app-state :generator-watch (fn [k r old-state new-state]
+                                        (if (= :dirty (:image-status new-state))
+                                          (do
+                                            (println "image changed")
+                                            (cancel-current-main-image-calc)
+                                            (reset! current-main-image-calc
+                                                    (start-main-image-calc new-state)))
+                                          (display-image (:image new-state)))))
+
