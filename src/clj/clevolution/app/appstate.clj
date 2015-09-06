@@ -12,6 +12,7 @@
                           :generator           nil
                           :image               nil
                           :image-status        :ok
+                          :error-message       nil
                           :context             nil
                           :viewport            nil
                           :z                   0.0}))
@@ -27,6 +28,7 @@
          :generator generator
          :image image
          :image-status :ok
+         :error-message nil
          :context context
          :content-panel panel
          :viewport ORIGIN-VIEWPORT))
@@ -85,8 +87,8 @@
 (defn set-image!
   "Update the :image in app-state, but not if app-state's image data has changed.
   (Called asynchronously)"
-  [image target-state status]
+  [image target-state status & [error-message]]
   (when (and image
              (= (merge-view-elements target-state) (merge-view-elements @app-state)))
     (reset! app-state
-            (set-image-in-image-data image @app-state status))))
+            (set-image-in-image-data image @app-state status error-message))))

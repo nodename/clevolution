@@ -7,8 +7,7 @@
     [clevolution.file-input :refer [read-image-from-file]]
     [clevolution.file-output :refer :all]
     [clevolution.app.imagefunctions :refer [to-display-size make-image-icon]]
-    [clevolution.app.appstate :as appstate :refer [app-state]]
-    [clevolution.app.widgets.imagestatus :refer [image-status-panel]])
+    [clevolution.app.appstate :as appstate :refer [app-state]])
   (:import
     [java.awt Color]))
 

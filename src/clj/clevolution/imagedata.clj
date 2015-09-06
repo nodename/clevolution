@@ -55,33 +55,35 @@
 
 
 (defn set-image-in-image-data
-  [image data status]
+  [image data status error-message]
   (assoc data
     :image image
-    :image-status status))
+    :image-status status
+    :error-message error-message))
 
 
 (defn set-image-in-image-data!
-  "Update the :image in the atom"
-  [image-data-atom image image-data status]
+  "Update the :image, :status, and :error-message in the atom"
+  [image-data-atom image image-data status error-message]
   (reset! image-data-atom
-          (set-image-in-image-data image image-data status)))
+          (set-image-in-image-data image image-data status error-message)))
 
 
 (defn set-image-from-node!
-  [node image-data status image-fn]
+  [node image-data status error-message image-fn]
   (try
     (image-fn (clisk-image node (:image-size image-data))
               image-data
-              status)
+              status
+              error-message)
     (catch Exception e
       (println "set-image-from-node! failed")
       (throw e))))
 
 
 (defn set-failed-image!
-  [image-data image-fn]
-  (set-image-from-node! ERROR-NODE image-data :failed image-fn))
+  [image-data error-message image-fn]
+  (set-image-from-node! ERROR-NODE image-data :failed  error-message image-fn))
 
 
 (defn node-from-image-data
@@ -98,7 +100,7 @@
 (defn calc-image!
   [image-data image-fn]
   (let [node (node-from-image-data image-data)]
-    (set-image-from-node! node image-data :ok image-fn)))
+    (set-image-from-node! node image-data :ok nil image-fn)))
 
 
 (defn do-calc
@@ -107,7 +109,8 @@
     (calc-image! image-data image-fn)
     (catch Exception e
       (println "calc-image! ERROR:" (.getMessage e))
-      (set-failed-image! image-data image-fn))))
+      (println "generator:" (:generator image-data))
+      (set-failed-image! image-data (.getMessage e) image-fn))))
 
 
 

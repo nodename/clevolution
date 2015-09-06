@@ -5,17 +5,13 @@
             [seesaw.mig :refer [mig-panel]]
             [seesaw.border :refer [compound-border line-border]]
             [seesaw.bind :as b]
-            [clevolution.app.imagefunctions :refer [ERROR-IMAGE]]
             [clevolution.app.widgets.border :refer [rounded-border titled-border]]
             [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
                                            merge-view-elements make-mutation-atom]]
             [clevolution.app.appstate :refer [app-state mutations-state
                                               set-imagesize! set-z! set-viewport! set-generator!
                                               set-loaded-data!]]
-            [clevolution.app.currentimagetab :refer [make-current-image-component]]
-            [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end app-history]]
             [clevolution.cliskstring :refer [random-clisk-string]]
-            [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.evolve :refer [replace-random-subtree]])
   (:import [java.awt Color Dimension Point]
            (javax.swing SpinnerListModel)))
@@ -407,32 +403,8 @@
                                 :listen [:action (fn [_] (evaluate! (text editor)))])])])))
 
 
-
-
-
-
-
-
-
-;; UNDO/REDO
-
-(defn make-nav-buttons
-  []
-  (horizontal-panel
-    :background Color/LIGHT_GRAY
-    :items [(button :text "<< Rewind"
-                    :listen [:action (fn [_] (do-rewind))])
-            (button :text "< Undo"
-                    :listen [:action (fn [_] (do-undo))])
-            (button :text "Redo >"
-                    :listen [:action (fn [_] (do-redo))])
-            (button :text "End >>"
-                    :listen [:action (fn [_] (do-end))])]))
-
-
-
 ;; HISTORY
-
+#_
 (defn make-history-panel
   []
   (let [history-panel
@@ -458,12 +430,12 @@
     :background Color/LIGHT_GRAY
     :items [(vertical-panel :background Color/LIGHT_GRAY
                             :items [(horizontal-panel
+                                      :background Color/LIGHT_GRAY
                                       :size [CONTROL-PANEL-WIDTH :by 325]
                                       :items [(vertical-panel
                                                 :items [(make-imagesize-panel)
                                                         (make-z-panel)])
                                               (make-viewport-panel)])
                                     (make-tiling-panel)
-                                    (make-expression-panel)
-                                    (make-nav-buttons)])
+                                    (make-expression-panel)])
             #_(make-history-panel)]))

@@ -6,7 +6,8 @@
             [clevolution.app.currentimagetab :refer [make-current-image-component replace-image]]
             [clevolution.app.mutationstab :refer [make-mutations-tab]]
             [clevolution.app.controlpanel :refer [make-control-panel]]
-            [clevolution.app.widgets.imagestatus :refer [image-status-panel]]
+            [clevolution.app.widgets.imagestatus :refer [make-image-status-panel]]
+            [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]]
             [clevolution.imagedata :refer [merge-view-elements do-calc]]
             [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]])
   (:import (java.awt FileDialog Dimension Color)
@@ -99,7 +100,8 @@
     (seesaw/vertical-panel
       :background Color/LIGHT_GRAY
       :items [(make-current-image-component image)
-              image-status-panel])
+              (make-image-status-panel)
+              (make-nav-buttons)])
     (make-control-panel)
     :divider-location 1/2
     :background Color/LIGHT_GRAY))
