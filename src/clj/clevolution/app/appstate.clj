@@ -17,6 +17,9 @@
                           :z                   0.0}))
 
 
+(defonce mutations-state (atom {:mutations     nil}))
+
+
 (defn initialize-state!
   [generator image context panel]
   (swap! app-state assoc

@@ -3,7 +3,7 @@
             [clevolution.imagedata :refer [do-calc set-image-in-image-data!]]
             [clevolution.app.imagefunctions :refer [make-image-icon
                                                     PENDING-IMAGE ERROR-IMAGE]]
-            [clevolution.app.appstate :refer [app-state]]))
+            [clevolution.app.appstate :refer [app-state mutations-state]]))
 
 
 (def MUTATION-DISPLAY-SIZE 150)
@@ -57,9 +57,9 @@
                   :text "Delete"
                   :listen [:action
                            (fn [_]
-                             (let [mutation-atoms (:mutations @app-state)
+                             (let [mutation-atoms (:mutations @mutations-state)
                                    new-mutation-atoms (remove (fn [m] (= m mutation-atom)) mutation-atoms)]
-                                 (swap! app-state assoc :mutations new-mutation-atoms)))])]))))
+                                 (swap! mutations-state assoc :mutations new-mutation-atoms)))])]))))
 
 
 (defn make-mutations-grid-panel
@@ -143,7 +143,7 @@
 
 
 
-(add-watch app-state :mutations-watch (fn [k r old-state new-state]
+(add-watch mutations-state :mutations-watch (fn [k r old-state new-state]
                                         (when (not= (:mutations old-state) (:mutations new-state))
                                           (println "Mutations changed!")
                                           (display-mutations (:mutations new-state)))))

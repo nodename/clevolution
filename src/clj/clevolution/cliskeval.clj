@@ -13,7 +13,6 @@
 
 (defmethod clisk-eval String
   ([generator]
-    (println generator)
     (clisk-eval (read-string generator))))
 
 (defmethod clisk-eval clojure.lang.PersistentList
