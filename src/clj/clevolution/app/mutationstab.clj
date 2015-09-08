@@ -4,12 +4,12 @@
             [clevolution.app.imagefunctions :refer [make-image-icon
                                                     PENDING-IMAGE ERROR-IMAGE]]
             [clevolution.app.appstate :refer [app-state mutations-state]])
-  (:import (java.awt Container)
-           (javax.swing JTabbedPane JPanel)))
+  (:import (javax.swing JTabbedPane JPanel)))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
 
+(def SOURCE-IMAGE-DISPLAY-SIZE 250)
 (def MUTATION-DISPLAY-SIZE 150)
 
 (defn mutation-id
@@ -99,9 +99,8 @@
 (defn make-inner-mutations-component
   [source-image-data mutation-atoms]
   (seesaw/border-panel
-    :id :mutations-component
     :west (make-source-image-component source-image-data
-                                       MUTATION-DISPLAY-SIZE)
+                                       SOURCE-IMAGE-DISPLAY-SIZE)
     :center (make-mutations-grid-panel mutation-atoms)))
 
 
@@ -166,7 +165,7 @@
 
 (defn display-mutations
   [new-state]
-  (let [source-image-data @app-state
+  (let [source-image-data (:source new-state)
         mutation-atoms (:mutations new-state)
         ^JPanel content-panel (:content-panel @app-state)
         ^JTabbedPane display-tabs (seesaw/select content-panel [:#display-tabs])

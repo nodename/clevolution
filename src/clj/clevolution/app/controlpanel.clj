@@ -328,7 +328,9 @@
 (defn mutations!
   [image-data depth]
   (let [mutations (make-mutation-atoms image-data depth)]
-    (swap! mutations-state assoc :mutations mutations)))
+    (swap! mutations-state assoc
+           :source image-data
+           :mutations mutations)))
 
 
 

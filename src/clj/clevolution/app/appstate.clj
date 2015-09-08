@@ -20,7 +20,8 @@
                           :z                   0.0}))
 
 
-(defonce mutations-state (atom {:mutations     nil}))
+(defonce mutations-state (atom {:source        nil
+                                :mutations     nil}))
 
 
 (defn initialize-state!

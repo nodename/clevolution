@@ -10,7 +10,8 @@
 (def ignore (atom {:time-machine false}))
 
 
-(defn forget-everything! []
+(defn forget-everything!
+  []
   (reset! app-future [])
   (reset! app-history []))
 
@@ -30,7 +31,7 @@
     (when-not (= old-watchable-app-state new-state)
       (swap! app-history conj new-state))))
 
-(defn replace-last-state
+(defn replace-last-state-with
   [new-state]
   (reset! app-history (conj (vec (butlast @app-history))
                             new-state)))
@@ -86,7 +87,7 @@
                     (not= (:image old-state) (:image new-state))
                     (do
                       (println "Only image changed: amending state")
-                      (replace-last-state new-state))
+                      (replace-last-state-with new-state))
 
 
                     :else
