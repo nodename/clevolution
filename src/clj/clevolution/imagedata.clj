@@ -72,9 +72,9 @@
 
 
 (defn set-image-from-node!
-  [node image-data status error-message image-fn]
+  [node image-data status error-message continuation]
   (try
-    (image-fn (clisk-image node (:image-size image-data))
+    (continuation (clisk-image node (:image-size image-data))
               image-data
               status
               error-message)
@@ -84,8 +84,8 @@
 
 
 (defn set-failed-image!
-  [image-data error-message image-fn]
-  (set-image-from-node! ERROR-NODE image-data :failed  error-message image-fn))
+  [image-data error-message continuation]
+  (set-image-from-node! ERROR-NODE image-data :failed  error-message continuation))
 
 
 (defn node-from-image-data
@@ -100,19 +100,21 @@
 
 
 (defn calc-image!
-  [image-data image-fn]
+  [image-data continuation]
   (let [node (node-from-image-data image-data)]
-    (set-image-from-node! node image-data :ok nil image-fn)))
+    (set-image-from-node! node image-data :ok nil continuation)))
 
 
 (defn do-calc
-  [image-data image-fn]
+  "Calculate an image from the image-data.
+  Send the result on to the continuation function to update the target."
+  [image-data continuation]
   (try
-    (calc-image! image-data image-fn)
+    (calc-image! image-data continuation)
     (catch Exception e
       (println "calc-image! ERROR:" (.getMessage e))
       (println "generator:" (:generator image-data))
-      (set-failed-image! image-data (.getMessage e) image-fn))))
+      (set-failed-image! image-data (.getMessage e) continuation))))
 
 
 

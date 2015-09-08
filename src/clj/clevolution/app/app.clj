@@ -117,7 +117,7 @@
             :content (make-current-image-tab (or image PENDING-IMAGE))}
            {:title "Mutations"
             :content (make-mutations-tab
-                       [])}]))
+                       {:image-status :dirty} [])}]))
 
 
 
