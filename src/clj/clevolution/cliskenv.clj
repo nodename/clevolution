@@ -2,6 +2,8 @@
   (:require [mikera.cljutils.namespace :as n]
             [clevolution.file-input :refer [read-image-from-file]]))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (n/pull-all clisk.core)
 (n/pull-all clisk.node)
@@ -15,9 +17,9 @@
 ;; a and b are between 0 and 1
 (defn bit-op
   [bit-fn a b]
-  (let [a (int (* a 255))
-        b (int (* b 255))]
-    (/ (bit-fn a b) 255)))
+  (let [a (int (* ^double a 255))
+        b (int (* ^double b 255))]
+    (/ ^double (bit-fn a b) 255)))
 
 (def band
   (partial bit-op bit-and))

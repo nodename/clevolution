@@ -3,8 +3,12 @@
             [clevolution.imagedata :refer [do-calc set-image-in-image-data!]]
             [clevolution.app.imagefunctions :refer [make-image-icon
                                                     PENDING-IMAGE ERROR-IMAGE]]
-            [clevolution.app.appstate :refer [app-state mutations-state]]))
+            [clevolution.app.appstate :refer [app-state mutations-state]])
+  (:import (java.awt Container)
+           (javax.swing JTabbedPane JPanel)))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (def MUTATION-DISPLAY-SIZE 150)
 
@@ -92,9 +96,9 @@
 
 
 (defn replace-mutations
-  [mutations-component mutation-atoms]
+  [^JPanel mutations-component mutation-atoms]
   (println "replace mutations")
-  (let [grid-panel (make-mutations-grid-panel mutation-atoms)]
+  (let [^JPanel grid-panel (make-mutations-grid-panel mutation-atoms)]
     (.removeAll mutations-component)
     (.add mutations-component grid-panel)))
 
@@ -126,8 +130,8 @@
 
 (defn display-mutations
   [mutation-atoms]
-  (let [content-panel (:content-panel @app-state)
-        display-tabs (seesaw/select content-panel [:#display-tabs])
+  (let [^JPanel content-panel (:content-panel @app-state)
+        ^JTabbedPane display-tabs (seesaw/select content-panel [:#display-tabs])
         mutations-tab (seesaw/select content-panel [:#mutations-tab])
         mutations-component (seesaw/select content-panel [:#mutations-component])]
     (replace-mutations mutations-component mutation-atoms)

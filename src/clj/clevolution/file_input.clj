@@ -1,8 +1,11 @@
 (ns clevolution.file-input
   (:import (java.io File)
-           (javax.imageio ImageIO)))
+           (javax.imageio ImageIO ImageReader)))
 
-(defn get-imagereader
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
+
+(defn ^ImageReader get-imagereader
   [inputstream]
   (let [iterator (ImageIO/getImageReaders inputstream)]
     (if-not (.hasNext iterator)
@@ -10,7 +13,7 @@
     (.next iterator)))
 
 (defn read-image-from-file
-  [uri]
+  [^String uri]
   (let [input-stream (ImageIO/createImageInputStream (File. uri))
         imagereader (doto (get-imagereader input-stream)
                       (.setInput input-stream true))

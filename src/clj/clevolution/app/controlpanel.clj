@@ -14,8 +14,11 @@
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.evolve :refer [replace-random-subtree]])
   (:import [java.awt Color Dimension Point]
-           (javax.swing SpinnerListModel)))
+           (javax.swing SpinnerListModel JSlider JEditorPane)
+           (java.awt.event MouseEvent)))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 
 
@@ -112,7 +115,7 @@
 
 (defn make-zoom-panel
   []
-  (let [zoom-viewport (fn [factor [[ax ay] [bx by]]]
+  (let [zoom-viewport (fn [^double factor [[^double ax ^double ay] [^double bx ^double by]]]
                         (let [center-x (/ (+ ax bx) 2)
                               center-y (/ (+ ay by) 2)
                               half-width (* factor (/ (- bx ax) 2))
@@ -127,7 +130,7 @@
                 :border (titled-border "Zoom")
                 :items [(button :text "Zoom In"
                                 :listen [:action
-                                         (fn [_] (let [factor (value zoom-spinner)]
+                                         (fn [_] (let [^double factor (value zoom-spinner)]
                                                    (set-viewport! (zoom-viewport (/ 1 factor)
                                                                                  (:viewport @app-state))
                                                                   (str "Zoom In " factor))))])
@@ -146,7 +149,7 @@
 
 
 (defn translate-viewport
-  [amount direction [[ax ay] [bx by]]]
+  [^double amount direction [[^double ax ^double ay] [^double bx ^double by]]]
   (let [horizontal? (or (= direction "Left") (= direction "Right"))
         width (- bx ax)
         height (- by ay)
@@ -162,7 +165,7 @@
   []
   (let [translate-spinner (spinner :model (spinner-model 0 :from 0 :by 1))
         translate-action (fn [direction]
-                           (fn [_] (let [amount (/(value translate-spinner) 100)]
+                           (fn [_] (let [amount (/ ^double (value translate-spinner) 100)]
                                      (set-viewport! (translate-viewport amount direction
                                                                         (:viewport @app-state))
                                                     (str direction " " amount)))))
@@ -251,15 +254,15 @@
   (let [seamless-tile (fn
                         [scale generator]
                         (str "(seamless " scale " " generator ")"))
-        seamless-scale (doto (slider :min 0
-                                     :max 200
-                                     :value 100)
+        seamless-scale (doto ^JSlider (slider :min 0
+                                              :max 200
+                                              :value 100)
                          (.setMajorTickSpacing 10)
                          (.setPaintTicks true)
                          (.setPaintLabels true))
         seamless-button (button :text "Apply"
                                 :listen [:action (fn [_]
-                                                   (let [value (value seamless-scale)]
+                                                   (let [^double value (value seamless-scale)]
                                                      (set-generator! (seamless-tile
                                                                        (/ value 100)
                                                                        (merge-view-elements @app-state))
@@ -365,14 +368,14 @@
 
 (defn make-expression-panel
   []
-  (let [editor (editor-pane
-                 :background Color/BLACK
-                 :foreground Color/WHITE
-                 :caret-color Color/WHITE
-                 ;; :popup editor-popup
-                 )
+  (let [^JEditorPane editor (editor-pane
+                              :background Color/BLACK
+                              :foreground Color/WHITE
+                              :caret-color Color/WHITE
+                              ;; :popup editor-popup
+                              )
 
-        show-mouse-char-position (fn [e]
+        show-mouse-char-position (fn [^MouseEvent e]
                                    (let [point (Point. (.getX e) (.getY e))
                                          char-position (.viewToModel editor point)]
                                      (println "position=" char-position)))]
@@ -405,18 +408,18 @@
 
 ;; HISTORY
 #_
-(defn make-history-panel
-  []
-  (let [history-panel
-        (vertical-panel
-          :background Color/LIGHT_GRAY
-          :items [])]
+    (defn make-history-panel
+      []
+      (let [history-panel
+            (vertical-panel
+              :background Color/LIGHT_GRAY
+              :items [])]
 
-    (add-watch app-state :history-watch (fn [k r old-state new-state]
-                                          (config! history-panel
-                                                   :items (mapv #(:command %) @app-history))))
+        (add-watch app-state :history-watch (fn [k r old-state new-state]
+                                              (config! history-panel
+                                                       :items (mapv #(:command %) @app-history))))
 
-    history-panel))
+        history-panel))
 
 
 ;; CONTROL PANEL

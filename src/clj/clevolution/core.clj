@@ -7,11 +7,12 @@
             [clevolution.app.appstate :refer [app-state]]
             [clevolution.app.imagefunctions :refer [to-display-size]] :reload-all))
 
-
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (defn show-clisk-image
   "Generate an image from a generator string and show it in a JFrame"
-  [^String generator & {:keys [title size]
+  [generator & {:keys [title size]
                         :or {size 512}}]
   (try
     (let [make-image (fn [node] (clisk/image node :size size))
@@ -31,7 +32,7 @@
 
 (defn save-clisk-image
   "Generate an image from generator string and save it as a file"
-  [^String generator ^String uri & {:keys [size]
+  [generator uri & {:keys [size]
                                     :or {size 512}}]
   (try
     (let [context-name "clisk"
@@ -68,7 +69,7 @@
   [form]
   (if (and (sequential? form)
            (not (vector? form))) ;; a vector is an rgb color
-    (inc (apply max (map depth (rest form))))
+    (inc ^int (apply max (map depth (rest form))))
     0))
 
 (defn file-depth

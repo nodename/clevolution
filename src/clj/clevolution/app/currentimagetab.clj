@@ -9,8 +9,12 @@
     [clevolution.app.imagefunctions :refer [to-display-size make-image-icon]]
     [clevolution.app.appstate :as appstate :refer [app-state]])
   (:import
-    [java.awt Color]))
+    [java.awt Color]
+    (javax.swing JPanel)
+    (mikera.gui JIcon)))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (defn make-current-image-component
   [image]
@@ -21,8 +25,8 @@
                          :center icon)))
 
 (defn replace-image
-  [current-image-component image]
-  (let [icon (make-image-icon image
+  [^JPanel current-image-component image]
+  (let [^JIcon icon (make-image-icon image
                               (:image-display-size @appstate/app-state))]
     (.removeAll current-image-component)
     (.add current-image-component icon)))

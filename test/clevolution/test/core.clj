@@ -36,6 +36,13 @@
     (vector? parsed)))
 
 
+(deftest parser
+  (is (and
+        (parses-ok? "(make-multi-fractal  (ev-noise 795706659898165)  :octaves\n  2  :lacunarity    2.736204502367921 :gain  0.5832703802782291  :scale  0.2915261766378404)")
+        (parses-ok? "(cross3 [1.0 1.0 1.0] [1.0 1.0 1.0])"))))
+
+
+#_
 (deftest parsing
   (binding [*test-out* (clojure.java.io/writer "test-out/parsing.txt" :append true)]
     (dotimes [_ 1000]

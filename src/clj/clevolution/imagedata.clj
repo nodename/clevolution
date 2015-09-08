@@ -7,6 +7,8 @@
             [clevolution.cliskeval :refer [clisk-eval]])
   (:import [clevolution ClassPatch]))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (defonce DEFAULT-VIEWPORT [[0.0 0.0] [1.0 1.0]])
 (defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
@@ -19,7 +21,7 @@
 ;; When we display the image or save the file we call merge-view-elements:
 
 (defn merge-z
-  [z generator]
+  [^double z generator]
   (if (zero? z)
     generator
     (str "(offset [0.0 0.0 " z "] " generator ")")))

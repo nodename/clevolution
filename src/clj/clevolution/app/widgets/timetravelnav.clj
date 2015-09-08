@@ -3,6 +3,8 @@
             [clevolution.app.timetravel :refer [do-rewind do-undo do-redo do-end]])
   (:import [java.awt Color]))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (defn make-nav-buttons
   []

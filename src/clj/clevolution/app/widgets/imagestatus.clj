@@ -6,6 +6,8 @@
             [clevolution.app.appstate :refer [app-state]])
   (:import (java.awt Color)))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 
 (defn make-status-line

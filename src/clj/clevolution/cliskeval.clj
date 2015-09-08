@@ -1,6 +1,8 @@
 (ns clevolution.cliskeval
   (:require [clevolution.cliskenv]))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (defn clisk-eval-form
   [form]

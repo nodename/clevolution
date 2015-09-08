@@ -10,10 +10,12 @@
             [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]]
             [clevolution.imagedata :refer [merge-view-elements do-calc]]
             [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]])
-  (:import (java.awt FileDialog Dimension Color)
-           (javax.swing JFrame JMenu JMenuBar)
+  (:import (java.awt FileDialog Dimension Color Container BorderLayout)
+           (javax.swing JFrame JMenu JMenuBar JPanel JMenuItem JTabbedPane)
            (java.awt.event WindowListener)))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 
 
@@ -21,7 +23,7 @@
 
 
 (defn create-new-frame
-  [title]
+  [^String title]
   (let [frame (doto (JFrame. title)
                 (.setVisible true)
                 (.pack)
@@ -31,9 +33,9 @@
 
 
 (defn reuse-frame
-  [frame title]
+  [^JFrame frame title]
   (.setTitle frame title)
-  (.removeAll (.getContentPane frame))
+  (.removeAll ^Container (.getContentPane frame))
   (if-not (.isVisible frame)
     (.validate frame)
     (.setVisible frame true))
@@ -52,7 +54,7 @@
 
 
 (defn load-file-dialog
-  [frame]
+  [^JFrame frame]
   (let [file-dialog (doto (FileDialog. frame
                                        "Load Image..."
                                        FileDialog/LOAD)
@@ -66,7 +68,7 @@
 
 
 (defn save-file-dialog
-  [frame]
+  [^JFrame frame]
   (let [file-dialog (doto (FileDialog. frame
                                        "Save Image As..."
                                        FileDialog/SAVE)
@@ -80,7 +82,7 @@
 
 
 (defn save-history-dialog
-  [frame]
+  [^JFrame frame]
   (let [file-dialog (doto (FileDialog. frame
                                        "Save History As..."
                                        FileDialog/SAVE)
@@ -123,25 +125,24 @@
   [image generator context title]
   (forget-everything!)
 
-  (let [frame (create-frame title)
+  (let [^JFrame frame (create-frame title)
 
-        content-panel (seesaw/border-panel
-                        :center (make-tabbed-panel image))]
-
+        ^JPanel content-panel (seesaw/border-panel
+                                :center (make-tabbed-panel image))]
 
 
     (.add frame content-panel)
     (appstate/initialize-state! generator image context content-panel)
 
-    (let [load-menuitem (seesaw/menu-item
-                          :text "Load..."
-                          :listen [:action (fn [_] (load-file-dialog frame))])
-          save-menuitem (seesaw/menu-item
-                          :text "Save As..."
-                          :listen [:action (fn [_] (save-file-dialog frame))])
-          save-history-menu-item (seesaw/menu-item
-                                   :text "Save History As..."
-                                   :listen [:action (fn [_] (save-history-dialog frame))])
+    (let [^JMenuItem load-menuitem (seesaw/menu-item
+                                     :text "Load..."
+                                     :listen [:action (fn [_] (load-file-dialog frame))])
+          ^JMenuItem save-menuitem (seesaw/menu-item
+                                     :text "Save As..."
+                                     :listen [:action (fn [_] (save-file-dialog frame))])
+          ^JMenuItem save-history-menu-item (seesaw/menu-item
+                                              :text "Save History As..."
+                                              :listen [:action (fn [_] (save-history-dialog frame))])
 
           file-menu (doto (JMenu. "File")
                       (.add load-menuitem)
@@ -161,7 +162,7 @@
 (defn show
   "Shows a component in a new frame"
   ([component
-    & {:keys [^String generator ^String title on-close]
+    & {:keys [generator title on-close]
        :or {generator nil title nil}}]
    (let [^JFrame fr (create-app-frame component
                                       (str generator)
@@ -184,8 +185,8 @@
 (defn display-image
   "Replace the current image with image and switch to the current image tab"
   [image]
-  (let [content-panel (:content-panel @app-state)
-        display-tabs (seesaw/select content-panel [:#display-tabs])
+  (let [^JPanel content-panel (:content-panel @app-state)
+        ^JTabbedPane display-tabs (seesaw/select content-panel [:#display-tabs])
         current-image-component (seesaw/select content-panel [:#current-image-component])]
     (replace-image current-image-component image)
     (.revalidate content-panel)

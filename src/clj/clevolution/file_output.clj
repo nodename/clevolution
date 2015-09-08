@@ -1,11 +1,16 @@
 (ns clevolution.file-output
   (:import (java.lang String)
            (java.io File)
-           (javax.imageio ImageIO IIOImage)
+           (javax.imageio ImageIO IIOImage ImageWriter)
            (javax.imageio.stream FileImageOutputStream)
-           (com.sun.imageio.plugins.png PNGMetadata))
+           (com.sun.imageio.plugins.png PNGMetadata)
+           (java.awt.image BufferedImage)
+           (java.util ArrayList))
   (:require  [clevolution.cliskenv :refer :all]
              [clevolution.file-input :refer [get-imagereader]]))
+
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
@@ -15,7 +20,7 @@
 (def default-context-name "clisk")
 
 
-(defn get-png-imagewriter
+(defn ^ImageWriter get-png-imagewriter
   "Return an ImageWriter for PNG images"
   []
   (let [iterator (ImageIO/getImageWritersBySuffix "png")]
@@ -36,8 +41,8 @@
 
 
 (defn write-image-to-file
-  [image metadata uri]
-  (let [iio-image (IIOImage. image nil metadata)
+  [^BufferedImage image ^String metadata ^String uri]
+  (let [^IIOImage iio-image (IIOImage. image nil metadata)
         imagewriter (get-png-imagewriter)
         output (FileImageOutputStream. (File. uri))]
     (.setOutput imagewriter output)
@@ -49,7 +54,7 @@
 
 (defn get-png-metadata
   "Get the PNG metadata from a PNG file"
-  [uri]
+  [^String uri]
   (let [input-stream (ImageIO/createImageInputStream (File. uri))
         imagereader (get-imagereader input-stream)
         _ (.setInput imagereader input-stream true)
@@ -62,7 +67,7 @@
 
 (defmulti get-width class)
 (defmethod get-width PNGMetadata
-  [png-metadata]
+  [^PNGMetadata png-metadata]
   (.IHDR_width png-metadata))
 (defmethod get-width String
   [uri]
@@ -71,7 +76,7 @@
 
 (defmulti get-height class)
 (defmethod get-height PNGMetadata
-  [png-metadata]
+  [^PNGMetadata png-metadata]
   (.IHDR_width png-metadata))
 (defmethod get-height String
   [uri]
@@ -83,15 +88,17 @@
 (defmulti get-chunk-data (fn [source _] (class source)))
 
 (defmethod get-chunk-data PNGMetadata
-  [png-metadata chunk-name]
-  (let [dataArrayList (.unknownChunkData png-metadata)
-        typeArrayList (.unknownChunkType png-metadata)]
+  [^PNGMetadata png-metadata chunk-name]
+  (let [^ArrayList dataArrayList (.unknownChunkData png-metadata)
+        ^ArrayList typeArrayList (.unknownChunkType png-metadata)]
     (loop [i 0]
       (cond
         (>= i (.size dataArrayList))
         ""
+
         (= (.get typeArrayList i) chunk-name)
-        (String. (.get dataArrayList i))
+        ^String (.get dataArrayList i)
+
         :else
         (recur (inc i))))))
 
@@ -111,24 +118,3 @@
     (if (= "" context)
       default-context-name
       context)))
-
-#_
-(defn eval-in
-  [^String generator ^String ns]
-  (let [form (read-string generator)
-        orig-ns *ns*]
-    ;; TODO check that ns is :required!
-    (in-ns (symbol ns))
-    (let [ret (eval form)]
-      (in-ns (ns-name orig-ns))
-      ret)))
-
-#_
-(defn save-image
-  "Generate and save an image from generator"
-  [^String generator ^String context-name ^String uri]
-  (let [metadata (make-generator-metadata generator context-name)
-        context (contexts (keyword context-name))
-        ns-name (context :ns)
-        image (eval-in generator ns-name)]
-    (write-image-to-file image metadata uri)))

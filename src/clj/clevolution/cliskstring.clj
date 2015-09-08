@@ -1,5 +1,8 @@
-(ns clevolution.cliskstring)
+(ns clevolution.cliskstring
+  (:import (clojure.lang PersistentList)))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (defn make-with-arity
   [arity f]
@@ -9,7 +12,7 @@
 
 (defn replace-%
   [expression child-expr]
-  (let [new-first (.replaceFirst (first expression) "%"
+  (let [new-first (.replaceFirst ^String (first expression) "%"
                                  (with-out-str (print child-expr)))]
     (concat (list new-first) (rest expression))))
 
@@ -57,8 +60,8 @@
 
 (def make-multi-fractal
   {:function (fn []
-               (let [octaves (inc (rand-int 9))
-                     lacunarity (+ 1.5 (rand 2.0))
+               (let [octaves (inc ^long (rand-int 9))
+                     lacunarity (+ 1.5 ^double (rand 2.0))
                      gain (rand 1.0) ;; also known as persistence
                      scale (rand 1.0)]
                  (str "make-multi-fractal % :octaves " octaves " :lacunarity " lacunarity
@@ -168,13 +171,13 @@
 
 (def voronoi-points
   {:function (fn []
-               (let [points (+ 3 (rand-int 27))]
+               (let [points (+ 3 ^long (rand-int 27))]
                  (str "(voronoi-points :points " points ")")))
    :arity 0})
 
 (def voronoi-blocks
   {:function (fn []
-               (let [points (+ 3 (rand-int 27))]
+               (let [points (+ 3 ^long (rand-int 27))]
                  (str "(voronoi-blocks :points " points ")")))
    :arity 0})
 
@@ -211,7 +214,7 @@
 
 (def posterize
   {:function (fn []
-               (let [bands (inc (rand-int 9))]
+               (let [bands (inc ^long (rand-int 9))]
                  (str "posterize % :bands " bands)))
    :arity 1})
 
@@ -222,12 +225,12 @@
    :arity 1})
 
 (def shatter
-  {:function #(str "shatter % :points " (+ 3 (rand-int 27)))
+  {:function #(str "shatter % :points " (+ 3 ^long (rand-int 27)))
    :arity 1})
 
 (def radial
   {:function (fn []
-               (let [repeat (inc (rand-int 11))]
+               (let [repeat (inc ^long (rand-int 11))]
                  (str "radial % :repeat " repeat)))
    :arity 1})
 
@@ -302,7 +305,7 @@
 
 
 (def variadic-ops
-  (map (partial make-with-arity #(+ 2 (rand-int 3)))
+  (map (partial make-with-arity #(+ 2 ^long (rand-int 3)))
        ["average" "v+" "v*" "v-" "vdivide"]))
 
 (def globe
@@ -354,10 +357,10 @@
 
 
 (defn terminals [ops]
-  (filter #(zero? (arity %)) ops))
+  (filter #(zero? ^long (arity %)) ops))
 
 (defn nonterminals [ops]
-  (filter #(not (zero? (arity %))) ops))
+  (filter #(not (zero? ^long (arity %))) ops))
 
 (defn non-leaf-choices [ops]
   {:grow ops
@@ -369,7 +372,7 @@
 ;; the :grow method may choose a nullary op, creating a leaf node, before reaching the full depth
 
 (defn random-clisk-expression
-  [depth method input-files]
+  [^long depth method input-files]
   (let [ops (concat ops (input-images input-files))
         fns (if (zero? depth)
               (terminals ops)
@@ -377,7 +380,7 @@
         f (rand-nth fns)
         operation (operation f)
         arity (arity f)]
-    (if (zero? arity)
+    (if (zero? ^long arity)
       operation
       (let [build-subexpr (fn [expression _]
                             (if (zero? depth) ;; this is an error I should fix
@@ -385,7 +388,7 @@
                               (let [child-expr (random-clisk-expression (dec depth) method input-files)]
                                 ;; "%", if present, represents the position in the expression
                                 ;; where the child expression should be inserted:
-                                (if (= -1 (.indexOf (first expression) "%"))
+                                (if (= -1 (.indexOf ^String (first expression) "%"))
                                   ;; default: child expression goes at the end:
                                   (concat expression (list child-expr))
                                   ;; if "%" is found, child expression replaces it:

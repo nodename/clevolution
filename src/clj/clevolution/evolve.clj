@@ -1,6 +1,9 @@
 (ns clevolution.evolve
   (:require [clojure.pprint :refer [pprint]]))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
+
 ;; based upon https://raw.githubusercontent.com/lspector/gp/master/src/gp/evolvefn.clj
 
 
@@ -19,7 +22,7 @@
   (println "random-subtree: tree=")
   (pprint tree)
   (println)
-  (if (zero? (rand-int (codesize tree)))
+  (if (zero? ^long (rand-int (codesize tree)))
     tree
     (let [foo (apply concat
                      (map #(repeat (codesize %) %)
@@ -39,7 +42,7 @@
   ;(println)
   ;(pprint ["TREE:" tree])
   ;(println)
-  (if (zero? (rand-int (codesize tree)))
+  (if (zero? ^long (rand-int (codesize tree)))
     replacement
     (let [foo (apply concat
                      (map #(repeat (codesize %1) %2)
