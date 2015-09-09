@@ -97,7 +97,7 @@
         ""
 
         (= (.get typeArrayList i) chunk-name)
-        ^String (.get dataArrayList i)
+        (String. (.get dataArrayList i))
 
         :else
         (recur (inc i))))))

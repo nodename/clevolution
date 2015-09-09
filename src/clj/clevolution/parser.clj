@@ -1,22 +1,13 @@
 (ns clevolution.parser
   (:require [instaparse.core :as insta]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (def exp-parser
   (insta/parser
     "S = Sexp | term
     Sexp =  <whitespace>* <'('> Word (<whitespace> (Sexp | term))* <')'> <whitespace>*
     <term> = Key-Value | Word | Number | Color | Matrix3x3
-    Key-Value = Octaves | Lacunarity | Gain | Scale
-    MakeMultiFractal = <'('> 'make-multi-fractal' Sexp <whitespace> Octaves <whitespace>
-                       Lacunarity <whitespace> Gain <whitespace> Scale <')'>
-    Octaves = ':octaves' <whitespace> Number
-    Lacunarity = ':lacunarity' <whitespace> Number
-    Gain = ':gain' <whitespace> Number
-    Scale = ':scale' <whitespace> Number
-    Cross3 = <'('> 'cross3' <whitespace> Vec3 <whitespace> Vec3 <')'>
+    Key-Value = Keyword <whitespace> (Number | Color)
     Keyword = ':' thing
     Word = thing
     Color = <'['> Number <whitespace> Number (<whitespace> Number)+ <']'>
