@@ -16,6 +16,6 @@
                     :listen [:action (fn [_] (undo))])
             (button :text "Forward >"
                     :listen [:action (fn [_] (redo))])
-            (button :text "End >>"Changed time-travel nav l
+            (button :text "End >>"
                     :listen [:action (fn [_] (end))])]))
 
