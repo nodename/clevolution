@@ -12,10 +12,10 @@
     :background Color/LIGHT_GRAY
     :items [(button :text "<< Rewind"
                     :listen [:action (fn [_] (rewind))])
-            (button :text "< Undo"
+            (button :text "< Back"
                     :listen [:action (fn [_] (undo))])
-            (button :text "Redo >"
+            (button :text "Forward >"
                     :listen [:action (fn [_] (redo))])
-            (button :text "End >>"
+            (button :text "End >>"Changed time-travel nav l
                     :listen [:action (fn [_] (end))])]))
 

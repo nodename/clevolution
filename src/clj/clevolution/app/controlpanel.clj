@@ -7,7 +7,7 @@
             [seesaw.bind :as b]
             [clevolution.app.widgets.border :refer [rounded-border titled-border]]
             [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
-                                           merge-view-elements make-mutation-atom dispose]]
+                                           merge-view-elements make-mutation-atom]]
             [clevolution.app.appstate :refer [app-state
                                               set-imagesize! set-z! set-viewport! set-generator!
                                               set-loaded-data!]]
