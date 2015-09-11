@@ -1,16 +1,18 @@
 (ns clevolution.app.app
   (:require [seesaw.core :as seesaw]
-            [clevolution.app.timetravel :refer [forget-everything! app-history]]
+            [clevolution.app.timetravel :as timetravel :refer [forget-everything! app-history]]
             [clevolution.app.appstate :as appstate :refer [app-state]]
+            [clevolution.app.mutationsstate :refer [mutations-state]]
             [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
             [clevolution.app.currentimagetab :refer [make-current-image-component replace-image]]
-            [clevolution.app.mutationstab :refer [make-mutations-tab]]
+            [clevolution.app.mutationstab :refer [make-mutations-component]]
             [clevolution.app.controlpanel :refer [make-control-panel]]
             [clevolution.app.widgets.imagestatus :refer [make-image-status-panel]]
             [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]]
             [clevolution.imagedata :refer [merge-view-elements do-calc]]
-            [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]])
-  (:import (java.awt FileDialog Dimension Color Container BorderLayout)
+            [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]]
+            [clevolution.app.mutationstimetravel :as m-timetravel])
+  (:import (java.awt FileDialog Color Container)
            (javax.swing JFrame JMenu JMenuBar JPanel JMenuItem JTabbedPane)
            (java.awt.event WindowListener)))
 
@@ -103,10 +105,28 @@
       :background Color/LIGHT_GRAY
       :items [(make-current-image-component image)
               (make-image-status-panel)
-              (make-nav-buttons)])
+              (make-nav-buttons timetravel/do-rewind
+                                timetravel/do-undo
+                                timetravel/do-redo
+                                timetravel/do-end)])
     (make-control-panel)
     :divider-location 1/2
     :background Color/LIGHT_GRAY))
+
+
+
+(defn make-mutations-tab
+  [mutations-state]
+  (seesaw/border-panel
+    :id :mutations-tab
+    :center (make-mutations-component (:source mutations-state)
+                                      (:mutation-atoms mutations-state)
+                                      (make-nav-buttons m-timetravel/do-rewind
+                                                        m-timetravel/do-undo
+                                                        m-timetravel/do-redo
+                                                        m-timetravel/do-end))))
+
+
 
 
 (defn make-tabbed-panel
@@ -115,15 +135,15 @@
     :id :display-tabs
     :tabs [{:title "Current Image"
             :content (make-current-image-tab (or image PENDING-IMAGE))}
-           {:title "Mutations"
-            :content (make-mutations-tab
-                       {:image-status :dirty} [])}]))
+           {:title   "Mutations"
+            :content (make-mutations-tab @mutations-state)}]))
 
 
 
 (defn create-app-frame
   [image generator context title]
   (forget-everything!)
+  (m-timetravel/forget-everything!)
 
   (let [^JFrame frame (create-frame title)
 

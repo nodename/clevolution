@@ -6,8 +6,10 @@
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
 
+
 (defonce app-state (atom {:content-panel       nil
                           :image-display-size  600
+                          :num-mutations       16
 
                           :image-size          512
                           :command             nil
@@ -18,10 +20,6 @@
                           :context             nil
                           :viewport            nil
                           :z                   0.0}))
-
-
-(defonce mutations-state (atom {:source        nil
-                                :mutations     nil}))
 
 
 (defn initialize-state!

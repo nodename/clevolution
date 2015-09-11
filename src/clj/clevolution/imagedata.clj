@@ -75,9 +75,9 @@
   [node image-data status error-message continuation]
   (try
     (continuation (clisk-image node (:image-size image-data))
-              image-data
-              status
-              error-message)
+                  image-data
+                  status
+                  error-message)
     (catch Exception e
       (println "set-image-from-node! failed")
       (throw e))))
@@ -131,18 +131,23 @@
          :z                   0.0}))
 
 
+(defn mutate-generator-string
+  [generator depth]
+  (let [current-generator-form (read-string generator)
+        new-subform (read-string (random-clisk-string :depth depth))]
+    (println-str
+      (replace-random-subtree
+        current-generator-form
+        new-subform))))
+
+
 (defn make-mutation-atom
   "Returns a new image-data atom representing a mutation of the input image-data"
-  [data depth]
-  (let [current-generator-form (read-string (:generator data))
-        new-subform (read-string (random-clisk-string :depth depth))
-        new-generator-string (println-str
-                               (replace-random-subtree
-                                 current-generator-form
-                                 new-subform))]
-    (make-image-data-atom new-generator-string (:image-size data) (:context data))))
-
-
+  [source-image-data depth]
+  (let [new-generator-string (mutate-generator-string (:generator source-image-data) depth)]
+    (make-image-data-atom new-generator-string
+                          (:image-size source-image-data)
+                          (:context source-image-data))))
 
 
 

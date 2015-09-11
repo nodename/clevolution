@@ -13,7 +13,7 @@
 (defn show-clisk-image
   "Generate an image from a generator string and show it in a JFrame"
   [generator & {:keys [title size]
-                        :or {size 512}}]
+                :or {size 512}}]
   (try
     (let [make-image (fn [node] (clisk/image node :size size))
           show-it (fn [frame] (show frame
@@ -33,7 +33,7 @@
 (defn save-clisk-image
   "Generate an image from generator string and save it as a file"
   [generator uri & {:keys [size]
-                                    :or {size 512}}]
+                    :or {size 512}}]
   (try
     (let [context-name "clisk"
           metadata (make-generator-metadata generator context-name)

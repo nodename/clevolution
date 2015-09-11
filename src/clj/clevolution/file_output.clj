@@ -9,9 +9,6 @@
   (:require  [clevolution.cliskenv :refer :all]
              [clevolution.file-input :refer [get-imagereader]]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
-
 ;; See the following document for requirements
 ;; for upper- and lower-case letters in the four-letter chunk name:
 ;; http://en.wikipedia.org/wiki/Portable_Network_Graphics#.22Chunks.22_within_the_file
@@ -32,7 +29,7 @@
 (defn make-generator-metadata
   "Create a PNGMetadata containing generator and context"
   [^String generator ^String context-name]
-  (let [png-metadata (PNGMetadata.)]
+  (let [^PNGMetadata png-metadata (PNGMetadata.)]
     (.add (.unknownChunkType png-metadata) generator-chunk-name)
     (.add (.unknownChunkData png-metadata) (.getBytes generator))
     (.add (.unknownChunkType png-metadata) context-chunk-name)
@@ -41,8 +38,8 @@
 
 
 (defn write-image-to-file
-  [^BufferedImage image ^String metadata ^String uri]
-  (let [^IIOImage iio-image (IIOImage. image nil metadata)
+  [^BufferedImage image ^PNGMetadata metadata ^String uri]
+  (let [^IIOImage iio-image (IIOImage. image ^ArrayList [] metadata)
         imagewriter (get-png-imagewriter)
         output (FileImageOutputStream. (File. uri))]
     (.setOutput imagewriter output)
@@ -56,12 +53,12 @@
   "Get the PNG metadata from a PNG file"
   [^String uri]
   (let [input-stream (ImageIO/createImageInputStream (File. uri))
-        imagereader (get-imagereader input-stream)
-        _ (.setInput imagereader input-stream true)
+        imagereader (doto (get-imagereader input-stream)
+                      (.setInput input-stream true))
         image-index 0
-        input-metadata (.getImageMetadata imagereader image-index)
-        _ (.close input-stream)
-        _ (.dispose imagereader)]
+        input-metadata (.getImageMetadata imagereader image-index)]
+    (.close input-stream)
+    (.dispose imagereader)
     input-metadata))
 
 

@@ -1,0 +1,87 @@
+(ns clevolution.app.mutationstimetravel
+  (:require [clevolution.app.mutationsstate :refer [mutations-state]]
+            [clevolution.app.mutationstab :refer [display-mutations kick-off-mutations!]]))
+
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* :warn-on-boxed)
+
+(def app-history (atom [@mutations-state]))
+(def app-future (atom []))
+
+(def ignore (atom {:time-machine false}))
+
+
+(defn forget-everything!
+  []
+  (reset! app-future [])
+  (reset! app-history []))
+
+
+(defn undo-is-possible
+  []
+  (> (count @app-history) 1))
+
+(defn redo-is-possible
+  []
+  (> (count @app-future) 0))
+
+
+(defn push-onto-undo-stack
+  [new-state]
+  (let [old-watchable-mutations-state (last @app-history)]
+    (when-not (= old-watchable-mutations-state new-state)
+      (swap! app-history conj new-state))))
+
+
+;; Undo and redo cause state changes that we want our watch-fn to ignore,
+;; hence the ignore atom. (This technique copied from Om's :tx-listen implementation)
+
+(defn do-undo
+  []
+  (try
+    (if (undo-is-possible)
+      (do
+        (swap! app-future conj (last @app-history))
+        (swap! app-history pop)
+        (swap! ignore assoc :time-machine true)
+        (reset! mutations-state (last @app-history)))
+      (println "can't undo: at initial state"))
+    (catch Exception e
+      (println (.getMessage e)))))
+
+(defn do-redo
+  []
+  (if (redo-is-possible)
+    (do
+      (swap! ignore assoc :time-machine true)
+      (let [redo-state (last @app-future)]
+        (push-onto-undo-stack redo-state)
+        (swap! app-future pop)
+        (reset! mutations-state redo-state)))
+    (println "can't redo: at newest state")))
+
+(defn do-rewind
+  []
+  (while (do-undo)))
+
+(defn do-end
+  []
+  (try
+    (while (do-redo))
+    (catch Exception e
+      (println (.getMessage e)))))
+
+
+(def watch-fn (fn [_ _ old-state new-state]
+                (display-mutations new-state)
+
+                (when-not (@ignore :time-machine)
+                  (println "NEW MUTATION STATE")
+                  (kick-off-mutations! (:mutation-atoms new-state))
+                  (reset! app-future [])
+                  (push-onto-undo-stack new-state))
+
+                (swap! ignore assoc :time-machine false)))
+
+
+(add-watch mutations-state :time-machine watch-fn)

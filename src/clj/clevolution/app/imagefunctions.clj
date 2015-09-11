@@ -7,9 +7,6 @@
            [java.awt Dimension]
            [java.awt.image BufferedImage]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
-
 
 (defonce PENDING-IMAGE (read-image-from-file "resources/Pending.png"))
 (defonce ERROR-IMAGE (read-image-from-file "resources/Error.png"))

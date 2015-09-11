@@ -7,13 +7,14 @@
             [seesaw.bind :as b]
             [clevolution.app.widgets.border :refer [rounded-border titled-border]]
             [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
-                                           merge-view-elements make-mutation-atom]]
-            [clevolution.app.appstate :refer [app-state mutations-state
+                                           merge-view-elements make-mutation-atom dispose]]
+            [clevolution.app.appstate :refer [app-state
                                               set-imagesize! set-z! set-viewport! set-generator!
                                               set-loaded-data!]]
+            [clevolution.app.mutationsstate :refer [mutations-state]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.evolve :refer [replace-random-subtree]])
-  (:import [java.awt Color Dimension Point]
+  (:import [java.awt Color Point]
            (javax.swing SpinnerListModel JSlider JEditorPane)
            (java.awt.event MouseEvent)))
 
@@ -313,16 +314,13 @@
       new-generator-string
       (str "Mutate " depth))))
 
-(def NUM_MUTATIONS 16)
-
-
 
 
 
 (defn make-mutation-atoms
   [image-data depth]
   (map (fn [_] (make-mutation-atom image-data depth))
-       (range NUM_MUTATIONS)))
+       (range (:num-mutations @app-state))))
 
 
 (defn mutations!
@@ -330,7 +328,7 @@
   (let [mutations (make-mutation-atoms image-data depth)]
     (swap! mutations-state assoc
            :source image-data
-           :mutations mutations)))
+           :mutation-atoms mutations)))
 
 
 
