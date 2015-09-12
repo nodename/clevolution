@@ -1,8 +1,8 @@
 (ns clevolution.app.app
   (:require [seesaw.core :as seesaw]
-            [clevolution.app.timetravel :as timetravel :refer [forget-everything! app-history]]
-            [clevolution.app.appstate :as appstate :refer [app-state]]
-            [clevolution.app.mutationsstate :refer [mutations-state]]
+            [clevolution.app.state.apptimetravel :as timetravel :refer [forget-everything! app-history]]
+            [clevolution.app.state.appstate :as appstate :refer [app-state]]
+            [clevolution.app.state.mutationsstate :refer [mutations-state]]
             [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
             [clevolution.app.currentimagetab :refer [make-current-image-component replace-image]]
             [clevolution.app.mutationstab :refer [make-mutations-component]]
@@ -11,7 +11,7 @@
             [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]]
             [clevolution.imagedata :refer [merge-view-elements do-calc]]
             [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]]
-            [clevolution.app.mutationstimetravel :as m-timetravel])
+            [clevolution.app.state.mutationstimetravel :as m-timetravel])
   (:import (java.awt FileDialog Color Container)
            (javax.swing JFrame JMenu JMenuBar JPanel JMenuItem JTabbedPane)
            (java.awt.event WindowListener)))
@@ -127,8 +127,6 @@
                                                         m-timetravel/do-end))))
 
 
-
-
 (defn make-tabbed-panel
   [image]
   (seesaw/tabbed-panel
@@ -236,7 +234,6 @@
 (add-watch app-state :generator-watch (fn [k r old-state new-state]
                                         (if (= :dirty (:image-status new-state))
                                           (do
-                                            (println "image changed")
                                             (cancel-current-main-image-calc)
                                             (reset! current-main-image-calc
                                                     (start-main-image-calc new-state)))

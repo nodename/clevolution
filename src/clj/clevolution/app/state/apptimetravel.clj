@@ -1,5 +1,5 @@
-(ns clevolution.app.timetravel
-  (:require [clevolution.app.appstate :refer [app-state]]))
+(ns clevolution.app.state.apptimetravel
+  (:require [clevolution.app.state.appstate :refer [app-state]]))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)

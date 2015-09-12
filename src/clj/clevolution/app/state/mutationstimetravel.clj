@@ -1,6 +1,6 @@
-(ns clevolution.app.mutationstimetravel
-  (:require [clevolution.app.mutationsstate :refer [mutations-state]]
-            [clevolution.app.mutationstab :refer [display-mutations kick-off-mutations!]]))
+(ns clevolution.app.state.mutationstimetravel
+  (:require [clevolution.app.state.mutationsstate :refer [mutations-state]]
+            [clevolution.app.mutationstab :refer [display-mutations kick-off-mutation-calcs!]]))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
@@ -77,7 +77,7 @@
 
                 (when-not (@ignore :time-machine)
                   (println "NEW MUTATION STATE")
-                  (kick-off-mutations! (:mutation-atoms new-state))
+                  (kick-off-mutation-calcs! (:mutation-atoms new-state))
                   (reset! app-future [])
                   (push-onto-undo-stack new-state))
 

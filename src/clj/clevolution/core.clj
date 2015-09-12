@@ -4,7 +4,7 @@
             [clevolution.cliskeval :refer [clisk-eval]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.app.app :refer [show]]
-            [clevolution.app.appstate :refer [app-state]]
+            [clevolution.app.state.appstate :refer [app-state]]
             [clevolution.app.imagefunctions :refer [to-display-size]] :reload-all))
 
 (set! *warn-on-reflection* true)

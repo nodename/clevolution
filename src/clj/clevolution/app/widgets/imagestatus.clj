@@ -3,7 +3,7 @@
             [seesaw.core :refer [horizontal-panel popup menu-item]]
             [seesaw.swingx :refer [busy-label]]
             [clevolution.app.widgets.border :refer (titled-border)]
-            [clevolution.app.appstate :refer [app-state]])
+            [clevolution.app.state.appstate :refer [app-state]])
   (:import (java.awt Color)))
 
 (set! *warn-on-reflection* true)

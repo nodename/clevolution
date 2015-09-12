@@ -1,4 +1,4 @@
-(ns clevolution.app.appstate
+(ns clevolution.app.state.appstate
   (:require [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
                                            merge-view-elements
                                            set-image-in-image-data]]))
