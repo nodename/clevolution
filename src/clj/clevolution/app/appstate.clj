@@ -3,9 +3,6 @@
                                            merge-view-elements
                                            set-image-in-image-data]]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
-
 
 (defonce app-state (atom {:content-panel       nil
                           :image-display-size  600

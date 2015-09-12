@@ -179,7 +179,7 @@
 
 (defn display-mutations
   [new-state]
-  (let [source-image-data (:source new-state)
+  (let [source-image-data (:source-image-data new-state)
         mutation-atoms (:mutation-atoms new-state)
         ^JPanel content-panel (:content-panel @app-state)
         ^JTabbedPane display-tabs (seesaw/select content-panel [:#display-tabs])

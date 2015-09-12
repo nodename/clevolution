@@ -18,9 +18,6 @@
            (javax.swing SpinnerListModel JSlider JEditorPane)
            (java.awt.event MouseEvent)))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
-
 
 
 (def CONTROL-PANEL-WIDTH 750)
@@ -327,7 +324,7 @@
   [image-data depth]
   (let [mutations (make-mutation-atoms image-data depth)]
     (swap! mutations-state assoc
-           :source image-data
+           :source-image-data image-data
            :mutation-atoms mutations)))
 
 
@@ -358,7 +355,7 @@
       :border (titled-border "Mutate" :color Color/WHITE)
       :items [(label :foreground Color/WHITE :text "Depth:")
               depth-spinner
-              (button :text "Mutate"
+              #_(button :text "Mutate"
                       :tip "Replace a random subexpression with a new random subexpression"
                       :listen [:action (fn [_] (mutate! (value depth-spinner)))])
               (button :text "Mutations"

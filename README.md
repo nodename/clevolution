@@ -26,7 +26,7 @@ This occurs when the expression is invalid Clisk, usually due to a type error,
 for example passing a scalar to a function that expects a vector.
 I'm not attempting to prevent this but I am considering implementing automatic
 do-over when it happens. (Failure to evaluate is reported more or less immediately;
-actual evalutaion takes longer.)
+actual evaluation takes longer.)
 
 And quite often the expression will produce a boring image. Such is life.
 

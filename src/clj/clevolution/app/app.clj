@@ -16,8 +16,8 @@
            (javax.swing JFrame JMenu JMenuBar JPanel JMenuItem JTabbedPane)
            (java.awt.event WindowListener)))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
+#_(set! *warn-on-reflection* true)
+#_(set! *unchecked-math* :warn-on-boxed)
 
 
 
@@ -119,7 +119,7 @@
   [mutations-state]
   (seesaw/border-panel
     :id :mutations-tab
-    :center (make-mutations-component (:source mutations-state)
+    :center (make-mutations-component (:source-image-data mutations-state)
                                       (:mutation-atoms mutations-state)
                                       (make-nav-buttons m-timetravel/do-rewind
                                                         m-timetravel/do-undo

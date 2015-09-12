@@ -12,5 +12,7 @@
           :context "clisk"
           :viewport ORIGIN-VIEWPORT})
 
-(defonce mutations-state (atom {:source         DEFAULT-IMAGE-DATA
-                                :mutation-atoms (repeat (:num-mutations @app-state) (atom DEFAULT-IMAGE-DATA))}))
+(defonce mutations-state (atom {:source-image-data DEFAULT-IMAGE-DATA
+                                :mutation-atoms    (repeat
+                                                     (:num-mutations @app-state)
+                                                     (atom DEFAULT-IMAGE-DATA))}))

@@ -18,46 +18,50 @@
 
 (defn random-subtree
   [tree]
-  (println)
-  (println "random-subtree: tree=")
-  (pprint tree)
-  (println)
   (if (zero? ^long (rand-int (codesize tree)))
     tree
     (let [foo (apply concat
                      (map #(repeat (codesize %) %)
                           (rest tree)))]
-      (println)
-      (println "random-subtree: foo=")
-      (pprint foo)
-      (println)
       (random-subtree
         (rand-nth
           foo)))))
 
 ;(random-subtree '(+ (* x (+ y z)) w))
 
+
+
 (defn replace-random-subtree
   [tree replacement]
-  ;(println)
-  ;(pprint ["TREE:" tree])
-  ;(println)
   (if (zero? ^long (rand-int (codesize tree)))
     replacement
-    (let [foo (apply concat
-                     (map #(repeat (codesize %1) %2)
-                          (rest tree)
-                          (iterate inc 1)))
+    (let [positions (apply concat
+                           (map #(repeat (codesize %1) %2)
+                                (rest tree)
+                                (iterate inc 1)))
 
-          position-to-change (rand-nth foo)]
+          node-at (fn [position] (get (vec tree) position))
 
-      ;(println)
-      ;(pprint ["FOO:" foo])
-      ;(println)
+          ;; Don't replace a keyword:
+          may-replace? (fn [position] (not (keyword? (node-at position))))
 
-      (map #(if %1 (replace-random-subtree %2 replacement) %2)
-           (for [n (iterate inc 0)] (= n position-to-change))
-           tree))))
+          may-replace-tree? (fn [] (some may-replace? positions))]
+
+      (if-not (may-replace-tree?)
+        tree
+        (let [replace (fn [position-to-change]
+                        (map (fn [replace? subtree]
+                               (if replace?
+                                 (replace-random-subtree subtree replacement)
+                                 subtree))
+                             (for [n (iterate inc 0)] (= n position-to-change))
+                             tree))]
+
+          (loop [position-to-change (rand-nth positions)]
+            (if-not (may-replace? position-to-change)
+              (recur (rand-nth positions))
+              (replace position-to-change))))))))
+
 
 ;(replace-random-subtree '(0 (1) (2 2) (3 3 3) (4 4 4 4) (5 5 5 5 5) (6 6 6 6 6 6 6)) 'x)
 
