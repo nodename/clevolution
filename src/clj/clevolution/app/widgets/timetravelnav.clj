@@ -2,8 +2,6 @@
   (:require [seesaw.core :refer [horizontal-panel button]])
   (:import [java.awt Color]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (defn make-nav-buttons
   [rewind undo redo end]

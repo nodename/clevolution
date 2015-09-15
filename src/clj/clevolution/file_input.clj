@@ -2,8 +2,6 @@
   (:import (java.io File)
            (javax.imageio ImageIO ImageReader)))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (defn ^ImageReader get-imagereader
   [inputstream]

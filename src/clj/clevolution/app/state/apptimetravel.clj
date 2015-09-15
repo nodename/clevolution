@@ -1,8 +1,6 @@
 (ns clevolution.app.state.apptimetravel
   (:require [clevolution.app.state.appstate :refer [app-state]]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (def app-history (atom [@app-state]))
 (def app-future (atom []))
@@ -70,30 +68,8 @@
 
 
 (def watch-fn (fn [_ _ old-state new-state]
-                (if (not (@ignore :time-machine))
-                  (cond
-                    ;; there is new image or panel data:
-                    (or (not= (:generator old-state) (:generator new-state))
-                        (not= (:viewport old-state) (:viewport new-state))
-                        (not= (:z old-state) (:z new-state))
-                        (not= (:content-panel old-state) (:content-panel new-state)))
-                    (do
-                      (println "NEW STATE")
-                      (reset! app-future [])
-                      (push-onto-undo-stack new-state))
-
-
-                    ;; image has been updated in response to new state data:
-                    (not= (:image old-state) (:image new-state))
-                    (do
-                      (println "Only image changed: amending state")
-                      (replace-last-state-with new-state))
-
-
-                    :else
-                    (println "no image change"))
-
-                  (println "no new state"))
+                (when (not (@ignore :time-machine))
+                  (println "new app state"))
                 (swap! ignore assoc :time-machine false)))
 
 

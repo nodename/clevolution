@@ -7,8 +7,8 @@
             [clevolution.app.state.appstate :refer [app-state]]
             [clevolution.app.imagefunctions :refer [to-display-size]] :reload-all))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
+#_(set! *warn-on-reflection* true)
+#_(set! *unchecked-math* :warn-on-boxed)
 
 (defn show-clisk-image
   "Generate an image from a generator string and show it in a JFrame"

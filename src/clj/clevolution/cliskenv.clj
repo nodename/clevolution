@@ -2,8 +2,6 @@
   (:require [mikera.cljutils.namespace :as n]
             [clevolution.file-input :refer [read-image-from-file]]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (n/pull-all clisk.core)
 (n/pull-all clisk.node)
@@ -34,78 +32,86 @@
   (vectorize-op 'bxor))
 
 
+;; Make the corresponding Clisk functions repeatable
+;; by explicitly setting the appropriate seed:
+
+(defmacro perlin-seed
+  [seed f & args]
+  `(dosync
+     (seed-perlin-noise! ~seed)
+     (apply ~f ~args)))
+
+
+(defmacro simplex-seed
+  [seed f & args]
+  `(dosync
+     (seed-simplex-noise! ~seed)
+     (apply ~f ~args)))
+
+;;;;;;;
+
+
 (defn ev-perlin-noise
   [seed]
-  (seed-perlin-noise! seed)
-  '(clisk.noise.Perlin/noise x y z t))
+  (perlin-seed seed (fn [] '(clisk.noise.Perlin/noise x y z t))))
 
 (defn ev-perlin-snoise
   [seed]
-  (seed-perlin-noise! seed)
-  '(clisk.noise.Perlin/snoise x y z t))
+  (perlin-seed seed (fn [] '(clisk.noise.Perlin/snoise x y z t))))
 
 (defn ev-simplex-noise
   [seed]
-  (seed-simplex-noise! seed)
-  '(clisk.noise.Simplex/noise x y z t))
+  (simplex-seed seed (fn [] '(clisk.noise.Simplex/noise x y z t))))
 
 (defn ev-simplex-snoise
   [seed]
-  (seed-simplex-noise! seed)
-  '(clisk.noise.Simplex/snoise x y z t))
+  (simplex-seed seed (fn [] '(clisk.noise.Simplex/snoise x y z t))))
 
 (def ev-noise ev-simplex-noise)
 (def ev-snoise ev-simplex-snoise)
 
 (defn ev-vnoise
   [seed]
-  (seed-simplex-noise! seed)
-  (vnoise))
+  (simplex-seed seed vnoise))
 
 (defn ev-vsnoise
   [seed]
-  (seed-simplex-noise! seed)
-  (vsnoise))
+  (simplex-seed seed vsnoise))
 
 (defn ev-plasma
   [seed]
-  (seed-simplex-noise! seed)
-  (plasma))
+  (simplex-seed seed plasma))
 
 (defn ev-splasma
   [seed]
-  (seed-simplex-noise! seed)
-  (splasma))
+  (simplex-seed seed splasma))
 
 (defn ev-turbulence
   [seed]
-  (seed-simplex-noise! seed)
-  (turbulence))
+  (simplex-seed seed turbulence))
 
 (defn ev-vturbulence
   [seed]
-  (seed-simplex-noise! seed)
-  (vturbulence))
+  (simplex-seed seed vturbulence))
 
 (defn ev-vplasma
   [seed]
-  (seed-simplex-noise! seed)
-  (vplasma))
+  (simplex-seed seed vplasma))
+
 
 (defn ev-vsplasma
   [seed]
-  (seed-simplex-noise! seed)
-  (vsplasma))
+  (simplex-seed seed vsplasma))
+
 
 (defn ev-turbulate
   [seed factor func]
-  (seed-simplex-noise! seed)
-  (turbulate factor func))
+  (simplex-seed seed turbulate factor func))
 
 (defn ev-psychedelic
   [seed src noise-scale noise-bands]
-  (seed-simplex-noise! seed)
-  (psychedelic src :noise-scale noise-scale :noise-bands noise-bands))
+  (simplex-seed seed psychedelic src :noise-scale noise-scale :noise-bands noise-bands))
+
 
 
 

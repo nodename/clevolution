@@ -13,6 +13,6 @@
           :viewport ORIGIN-VIEWPORT})
 
 (defonce mutations-state (atom {:source-image-data DEFAULT-IMAGE-DATA
-                                :mutation-atoms    (repeat
+                                :mutation-refs     (repeat
                                                      (:num-mutations @app-state)
-                                                     (atom DEFAULT-IMAGE-DATA))}))
+                                                     (ref DEFAULT-IMAGE-DATA))}))

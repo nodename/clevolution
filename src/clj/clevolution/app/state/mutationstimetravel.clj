@@ -2,8 +2,6 @@
   (:require [clevolution.app.state.mutationsstate :refer [mutations-state]]
             [clevolution.app.mutationstab :refer [display-mutations kick-off-mutation-calcs!]]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (def app-history (atom [@mutations-state]))
 (def app-future (atom []))
@@ -77,7 +75,7 @@
 
                 (when-not (@ignore :time-machine)
                   (println "NEW MUTATION STATE")
-                  (kick-off-mutation-calcs! (:mutation-atoms new-state))
+                  (kick-off-mutation-calcs! (:mutation-refs new-state))
                   (reset! app-future [])
                   (push-onto-undo-stack new-state))
 

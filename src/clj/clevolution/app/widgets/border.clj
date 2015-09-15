@@ -3,8 +3,6 @@
   (:import (java.awt Color Graphics)
            (javax.swing.border TitledBorder)))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (defn rounded-border
   [& [color]]

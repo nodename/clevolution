@@ -7,16 +7,19 @@
             [seesaw.bind :as b]
             [clevolution.app.widgets.border :refer [rounded-border titled-border]]
             [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
-                                           merge-view-elements make-mutation-atom]]
-            [clevolution.app.state.appstate :refer [app-state
-                                              set-imagesize! set-z! set-viewport! set-generator!
-                                              set-loaded-data!]]
+                                           merge-view-elements make-mutation-ref]]
+            [clevolution.app.state.appstate :refer [app-state]]
+            [clevolution.app.state.currentimagestate :refer
+             [current-image-state
+              set-imagesize! set-z! set-viewport! set-generator!
+              set-loaded-data!]]
             [clevolution.app.state.mutationsstate :refer [mutations-state]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.evolve :refer [replace-random-subtree]])
   (:import [java.awt Color Point]
            (javax.swing SpinnerListModel JSlider JEditorPane)
-           (java.awt.event MouseEvent)))
+           (java.awt.event MouseEvent)
+    #_[jmagick ImageInfo]))
 
 
 
@@ -41,7 +44,7 @@
                                                         (set-imagesize! value
                                                                         (str "Set Image Size " value))))])])]
     (b/bind
-      app-state
+      current-image-state
       (b/transform (fn [a] (doto imagesize-spinnermodel (.setValue (:image-size a)))))
       (b/property imagesize-spinner :model))
     imagesize-panel))
@@ -88,9 +91,9 @@
                                                      (let [z (value z-spinner)]
                                                        (set-z! z (str "Set Z " z))))])])]
 
-    ;; update z-spinner when :z in app-state changes:
+    ;; update z-spinner when :z in current-image-state changes:
     (b/bind
-      app-state
+      current-image-state
       (b/transform (fn [a] (doto z-spinnermodel (.setValue (:z a)))))
       (b/property z-spinner :model))
 
@@ -101,10 +104,27 @@
 
 ;; Z MOVIE
 
+#_
+    (defn kick-off-calc
+      [image-data-ref index]
+      ;; add change watcher on ref's image-status:
+      (add-watch image-data-ref :image-watch
+                 (fn [k r old-state new-state]
+                   (when (not= (:image-status old-state) (:image-status new-state))
+                     (replace-image-in-mutations-tab (image-from-status new-state) index image-data-ref))))
 
-(def z-movie-button
-  (button :text "Z Movie"
-          :listen [:action (fn [_] )]))
+      ;; kick off image calc on ref:
+      (future (do-calc @image-data-ref (partial set-image-in-image-data! ref))))
+#_
+    (def z-movie-button
+      (button :text "Z Movie"
+              :listen [:action
+                       (fn [_]
+                         (let [current-image-data @current-image-state]
+                           (doseq [z (* .05 (range 100))]
+                             (let [image-data-ref (ref (merge current-image-data {:z z
+                                                                                  :image-status :dirty}))]
+                               ))))]))
 
 
 
@@ -130,7 +150,7 @@
                                 :listen [:action
                                          (fn [_] (let [^double factor (value zoom-spinner)]
                                                    (set-viewport! (zoom-viewport (/ 1 factor)
-                                                                                 (:viewport @app-state))
+                                                                                 (:viewport @current-image-state))
                                                                   (str "Zoom In " factor))))])
                         "Factor:"
                         zoom-spinner
@@ -138,7 +158,7 @@
                                 :listen [:action
                                          (fn [_] (let [factor (value zoom-spinner)]
                                                    (set-viewport! (zoom-viewport factor
-                                                                                 (:viewport @app-state))
+                                                                                 (:viewport @current-image-state))
                                                                   (str "Zoom Out " factor))))])])
               ""])))
 
@@ -165,7 +185,7 @@
         translate-action (fn [direction]
                            (fn [_] (let [amount (/ ^double (value translate-spinner) 100)]
                                      (set-viewport! (translate-viewport amount direction
-                                                                        (:viewport @app-state))
+                                                                        (:viewport @current-image-state))
                                                     (str direction " " amount)))))
         up-button (button :text "^"
                           :listen [:action (translate-action "Up")])
@@ -204,9 +224,9 @@
                                 "To:" "x" (spinner :id :bx :model (spinner-model 1.0 :by 0.5))
                                 "y" (spinner :id :by :model (spinner-model 1.0 :by 0.5))])]
 
-    ;; update viewport-grid when :viewport in app-state changes:
+    ;; update viewport-grid when :viewport in current-image-state changes:
     (b/bind
-      app-state
+      current-image-state
       (b/transform (fn [a] (let [[[ax ay] [bx by]] (:viewport a)]
                              {:ax ax :ay ay :bx bx :by by})))
       (b/tee
@@ -237,9 +257,10 @@
 
       (vertical-panel
         :border (titled-border "Viewport")
-        :items [viewport-buttons
-                (horizontal-panel
-                  :items [(make-zoom-panel)
+        :items [(horizontal-panel
+                  :items [(vertical-panel
+                            :items [viewport-buttons
+                                    (make-zoom-panel)])
                           (make-translate-grid)])
                 vp-set-values]))))
 
@@ -263,14 +284,24 @@
                                                    (let [^double value (value seamless-scale)]
                                                      (set-generator! (seamless-tile
                                                                        (/ value 100)
-                                                                       (merge-view-elements @app-state))
+                                                                       (merge-view-elements @current-image-state))
                                                                      (str "Seamless Tile " value "%"))))])]
     (vertical-panel
-      :size [CONTROL-PANEL-WIDTH :by 80]
       :border (titled-border "Seamless Tiling")
       :items [(horizontal-panel
                 :items [seamless-scale
                         seamless-button])])))
+
+
+(defn make-lighting-panel
+  []
+  (let [add-lighting (fn [generator]
+                       (str "(v* " generator " (light-value [-1 -1 1] (height-normal globe)))"))]
+    (button :text "Apply Lighting"
+            :listen [:action (fn [_]
+                               (let [new-expr (add-lighting (:generator @current-image-state))]
+                                 (set-generator! new-expr
+                                                 "Add Lighting")))])))
 
 
 
@@ -301,7 +332,7 @@
 
 (defn mutate!
   [depth]
-  (let [current-generator-form (read-string (:generator @app-state))
+  (let [current-generator-form (read-string (:generator @current-image-state))
         new-subform (read-string (random-clisk-string :depth depth))
         new-generator-form (replace-random-subtree
                              current-generator-form
@@ -314,18 +345,18 @@
 
 
 
-(defn make-mutation-atoms
+(defn make-mutation-refs
   [image-data depth]
-  (map (fn [_] (make-mutation-atom image-data depth))
+  (map (fn [_] (make-mutation-ref image-data depth))
        (range (:num-mutations @app-state))))
 
 
 (defn mutations!
   [image-data depth]
-  (let [mutations (make-mutation-atoms image-data depth)]
+  (let [mutations (make-mutation-refs image-data depth)]
     (swap! mutations-state assoc
            :source-image-data image-data
-           :mutation-atoms mutations)))
+           :mutation-refs mutations)))
 
 
 
@@ -356,10 +387,10 @@
       :items [(label :foreground Color/WHITE :text "Depth:")
               depth-spinner
               #_(button :text "Mutate"
-                      :tip "Replace a random subexpression with a new random subexpression"
-                      :listen [:action (fn [_] (mutate! (value depth-spinner)))])
+                        :tip "Replace a random subexpression with a new random subexpression"
+                        :listen [:action (fn [_] (mutate! (value depth-spinner)))])
               (button :text "Mutations"
-                      :listen [:action (fn [_] (mutations! @app-state (value depth-spinner)))])])))
+                      :listen [:action (fn [_] (mutations! @current-image-state (value depth-spinner)))])])))
 
 
 
@@ -376,7 +407,7 @@
                                    (let [point (Point. (.getX e) (.getY e))
                                          char-position (.viewToModel editor point)]
                                      (println "position=" char-position)))]
-    (b/bind app-state
+    (b/bind current-image-state
             (b/transform (fn [state]
                            (with-out-str (clojure.pprint/pprint (read-string (:generator state))))))
             (b/property editor :text))
@@ -436,6 +467,8 @@
                                                 :items [(make-imagesize-panel)
                                                         (make-z-panel)])
                                               (make-viewport-panel)])
-                                    (make-tiling-panel)
+                                    (horizontal-panel
+                                      :size [CONTROL-PANEL-WIDTH :by 80]
+                                      :items [(make-tiling-panel) (make-lighting-panel)])
                                     (make-expression-panel)])
             #_(make-history-panel)]))

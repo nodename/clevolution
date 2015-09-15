@@ -13,8 +13,6 @@
     (javax.swing JPanel)
     (mikera.gui JIcon)))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (defn make-current-image-component
   [image]

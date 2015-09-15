@@ -1,8 +1,6 @@
 (ns clevolution.cliskstring
   (:import (clojure.lang PersistentList)))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (defn make-with-arity
   [arity f]
@@ -306,7 +304,7 @@
 
 (def variadic-ops
   (map (partial make-with-arity #(+ 2 ^long (rand-int 3)))
-       ["average" "v+" "v*" "v-" "vdivide"]))
+       ["average" "v+" "v*" "v-" "vdivide" #_"vand" #_"vxor"]))
 
 (def globe
   {:function "globe"

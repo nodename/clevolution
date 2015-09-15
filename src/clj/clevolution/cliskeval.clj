@@ -1,13 +1,16 @@
 (ns clevolution.cliskeval
   (:require [clevolution.cliskenv]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (defn clisk-eval-form
   [form]
-  (binding [*ns* (the-ns 'clevolution.cliskenv)]
-    (eval form)))
+  (try
+    (binding [*ns* (the-ns 'clevolution.cliskenv)]
+      (eval form))
+    (catch Exception e
+      (println "clisk-eval-form failed:")
+      (println "form=" form)
+      (throw e))))
 
 
 

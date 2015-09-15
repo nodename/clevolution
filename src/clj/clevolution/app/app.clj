@@ -1,17 +1,23 @@
 (ns clevolution.app.app
   (:require [seesaw.core :as seesaw]
-            [clevolution.app.state.apptimetravel :as timetravel :refer [forget-everything! app-history]]
-            [clevolution.app.state.appstate :as appstate :refer [app-state]]
-            [clevolution.app.state.mutationsstate :refer [mutations-state]]
-            [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
-            [clevolution.app.currentimagetab :refer [make-current-image-component replace-image]]
-            [clevolution.app.mutationstab :refer [make-mutations-component]]
-            [clevolution.app.controlpanel :refer [make-control-panel]]
-            [clevolution.app.widgets.imagestatus :refer [make-image-status-panel]]
-            [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]]
             [clevolution.imagedata :refer [merge-view-elements do-calc]]
             [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]]
-            [clevolution.app.state.mutationstimetravel :as m-timetravel])
+
+            [clevolution.app.state.appstate :as appstate :refer [app-state]]
+            [clevolution.app.state.currentimagestate :as currentimagestate :refer [current-image-state]]
+            [clevolution.app.state.mutationsstate :refer [mutations-state]]
+            [clevolution.app.state.currentimagetimetravel :as image-timetravel]
+            [clevolution.app.state.mutationstimetravel :as m-timetravel]
+
+            [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
+
+            [clevolution.app.currentimagetab :refer [make-current-image-component replace-image]]
+            [clevolution.app.controlpanel :refer [make-control-panel]]
+            [clevolution.app.mutationstab :refer [make-mutations-component]]
+
+            [clevolution.app.widgets.imagestatus :refer [make-image-status-panel]]
+            [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]])
+
   (:import (java.awt FileDialog Color Container)
            (javax.swing JFrame JMenu JMenuBar JPanel JMenuItem JTabbedPane)
            (java.awt.event WindowListener)))
@@ -66,7 +72,7 @@
       (let [file-path (str (.getDirectory file-dialog) file-name)
             generator (get-generator file-path)]
         (.setTitle frame file-path)
-        (appstate/set-loaded-data! generator "Load File")))))
+        (currentimagestate/set-loaded-data! generator "Load File")))))
 
 
 (defn save-file-dialog
@@ -77,9 +83,9 @@
                       (.setFile "*.png")
                       (.setVisible true))]
     (when-let [file-name (.getFile file-dialog)]
-      (write-image-to-file (:image @app-state)
-                           (make-generator-metadata (merge-view-elements @app-state)
-                                                    (:context @app-state))
+      (write-image-to-file (:image @current-image-state)
+                           (make-generator-metadata (merge-view-elements @current-image-state)
+                                                    (:context @current-image-state))
                            (str (.getDirectory file-dialog) file-name)))))
 
 
@@ -91,7 +97,7 @@
                       (.setFile "frame")
                       (.setVisible true))]
     (when-let [file-name (.getFile file-dialog)]
-      (doseq [[index state] (map-indexed vector @app-history)]
+      (doseq [[index state] (map-indexed vector @image-timetravel/app-history)]
         (write-image-to-file (:image state)
                              (make-generator-metadata (merge-view-elements state)
                                                       (:context state))
@@ -105,10 +111,10 @@
       :background Color/LIGHT_GRAY
       :items [(make-current-image-component image)
               (make-image-status-panel)
-              (make-nav-buttons timetravel/do-rewind
-                                timetravel/do-undo
-                                timetravel/do-redo
-                                timetravel/do-end)])
+              (make-nav-buttons image-timetravel/do-rewind
+                                image-timetravel/do-undo
+                                image-timetravel/do-redo
+                                image-timetravel/do-end)])
     (make-control-panel)
     :divider-location 1/2
     :background Color/LIGHT_GRAY))
@@ -120,7 +126,7 @@
   (seesaw/border-panel
     :id :mutations-tab
     :center (make-mutations-component (:source-image-data mutations-state)
-                                      (:mutation-atoms mutations-state)
+                                      (:mutation-refs mutations-state)
                                       (make-nav-buttons m-timetravel/do-rewind
                                                         m-timetravel/do-undo
                                                         m-timetravel/do-redo
@@ -140,7 +146,7 @@
 
 (defn create-app-frame
   [image generator context title]
-  (forget-everything!)
+  (image-timetravel/forget-everything!)
   (m-timetravel/forget-everything!)
 
   (let [^JFrame frame (create-frame title)
@@ -150,7 +156,8 @@
 
 
     (.add frame content-panel)
-    (appstate/initialize-state! generator image context content-panel)
+    (appstate/initialize-state! content-panel)
+    (currentimagestate/initialize-state! generator image context)
 
     (let [^JMenuItem load-menuitem (seesaw/menu-item
                                      :text "Load..."
@@ -227,15 +234,18 @@
 (defn start-main-image-calc
   [state]
   (future
-    (do-calc state appstate/set-image!)))
+    (dosync
+      (do-calc state currentimagestate/set-image!))))
 
 
 
-(add-watch app-state :generator-watch (fn [k r old-state new-state]
-                                        (if (= :dirty (:image-status new-state))
-                                          (do
-                                            (cancel-current-main-image-calc)
-                                            (reset! current-main-image-calc
-                                                    (start-main-image-calc new-state)))
-                                          (display-image (:image new-state)))))
+(add-watch current-image-state
+           :generator-watch
+           (fn [k r old-state new-state]
+             (if (= :dirty (:image-status new-state))
+               (do
+                 (cancel-current-main-image-calc)
+                 (reset! current-main-image-calc
+                         (start-main-image-calc new-state)))
+               (display-image (:image new-state)))))
 

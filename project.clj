@@ -8,6 +8,7 @@
                  [net.mikera/imagez "0.6.0"]
                  [net.mikera/mikera-gui "0.3.1"]
                  [instaparse "1.4.1"]
+                 #_[jmagick/jmagick "6.6.9"]
                  [seesaw "1.4.5" :exclusions [org.clojure/clojure]]
                  #_[com.miglayout/miglayout "3.7.4"]
                  #_[com.jgoodies/forms "1.2.1"]

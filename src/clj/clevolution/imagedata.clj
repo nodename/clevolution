@@ -1,24 +1,24 @@
 (ns clevolution.imagedata
   (:require [clisk.core :as clisk]
-            [clevolution.app.imagefunctions :refer [ERROR-IMAGE]]
+            [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
             [clevolution.file-input :refer [read-image-from-file]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.evolve :refer [replace-random-subtree]]
             [clevolution.cliskeval :refer [clisk-eval]])
-  (:import [clevolution ClassPatch]))
+  (:import [clevolution ClassPatch]
+           (clojure.lang Var)))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 (defonce DEFAULT-VIEWPORT [[0.0 0.0] [1.0 1.0]])
 (defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
-
 
 (defonce ERROR-NODE (clisk.node/node ERROR-IMAGE))
 
 
 ;; The image is a function of z, viewport, and generator.
 ;; When we display the image or save the file we call merge-view-elements:
+
+;; TODO save the viewport separately in its own PNG header field
 
 (defn merge-z
   [^double z generator]
@@ -42,17 +42,28 @@
 
 
 
-(defonce class-loader-undefined? (atom true))
+(defn image-from-status
+  [image-data]
+  (condp = (:image-status image-data)
+    :ok (:image image-data)
+    :dirty PENDING-IMAGE
+    :failed ERROR-IMAGE))
 
-;; When clisk/image is called from the AWT EventQueue thread,
+
+
+;; When clisk/image is called from a future,
 ;; the Compiler's LOADER is unbound.
 ;; So we set it before calling clisk/image:
 (defn clisk-image
   [node size]
-  (if @class-loader-undefined?
-    (ClassPatch/pushClassLoader)
-    (reset! class-loader-undefined? false))
-  (clisk/image node :size size))
+  (try
+    (when (not-any? #{clojure.lang.DynamicClassLoader}
+                    (map class (vals (Var/getThreadBindings))))
+      (ClassPatch/pushClassLoader))
+    (clisk/image node :size size)
+    (catch Exception e
+      (println "clisk-image failed")
+      (throw e))))
 
 
 
@@ -65,9 +76,9 @@
 
 
 (defn set-image-in-image-data!
-  "Update the :image, :status, and :error-message in the atom"
-  [image-data-atom image image-data status error-message]
-  (reset! image-data-atom
+  "Update the :image, :status, and :error-message in the ref"
+  [image-data-ref image image-data status error-message]
+  (ref-set image-data-ref
           (set-image-in-image-data image image-data status error-message)))
 
 
@@ -118,17 +129,17 @@
 
 
 
-(defn make-image-data-atom
-  "Create an image-data atom from the given generator"
+(defn make-image-data-ref
+  "Create an image-data ref from the given generator"
   [generator image-size context]
-  (atom {:image-size          image-size
-         :command             nil
-         :generator           generator
-         :image               nil
-         :image-status        :dirty
-         :context             context
-         :viewport            ORIGIN-VIEWPORT
-         :z                   0.0}))
+  (ref {:image-size          image-size
+        :command             nil
+        :generator           generator
+        :image               nil
+        :image-status        :dirty
+        :context             context
+        :viewport            ORIGIN-VIEWPORT
+        :z                   0.0}))
 
 
 (defn mutate-generator-string
@@ -141,11 +152,11 @@
         new-subform))))
 
 
-(defn make-mutation-atom
-  "Returns a new image-data atom representing a mutation of the input image-data"
+(defn make-mutation-ref
+  "Returns a new image-data ref representing a mutation of the input image-data"
   [source-image-data depth]
   (let [new-generator-string (mutate-generator-string (:generator source-image-data) depth)]
-    (make-image-data-atom new-generator-string
+    (make-image-data-ref new-generator-string
                           (:image-size source-image-data)
                           (:context source-image-data))))
 

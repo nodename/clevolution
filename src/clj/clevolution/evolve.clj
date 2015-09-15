@@ -1,8 +1,6 @@
 (ns clevolution.evolve
   (:require [clojure.pprint :refer [pprint]]))
 
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* :warn-on-boxed)
 
 ;; based upon https://raw.githubusercontent.com/lspector/gp/master/src/gp/evolvefn.clj
 
