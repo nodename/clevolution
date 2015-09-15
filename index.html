@@ -30,30 +30,34 @@
 
 <h3>Clevolution</h3>
 
-	<p>This project is an attempt to implement some of the work described in Karl Sims' 1991 SIGGRAPH paper <a href="http://www.karlsims.com/papers/siggraph91.html">Artificial Evolution for Computer Graphics</a>. It is also my vehicle for learning Clojure. The code evolves along with my understanding of functional programming.</p>
+<p>This project is an attempt to implement some of the work described in Karl Sims' 1991 SIGGRAPH paper
+<a href="http://www.karlsims.com/papers/siggraph91.html">Artificial Evolution for Computer Graphics</a>.</p>
+	
+<p>There exists a <a href="http://nodename.github.com/Evolution.html">previous version</a> in the haXe language, with its own simple parser and interpreter for Lisp s-expressions.
 
-	<p>Sample usage code is in a comment at the bottom of <a href="https://github.com/nodename/clevolution/blob/master/src/clevolution/core.clj">core.clj</a>.</p>
+<p>As of 1 Jan 2013 Clevolution has taken a great leap forward onto the shoulders of <a href="https://github.com/mikera/clisk">Clisk</a>, the Clojure Image Synthesis Kit by Mike Anderson, taking advantage of its wide variety of image-processing operations and fast image generation.</p>
 
-	<p>There exists a <a href="http://nodename.github.com/Evolution.html">previous version</a> in the haXe language, with its own simple parser and interpreter for Lisp s-expressions.
+<p>The process consists of generating random s-expressions from a set of image-processing primitives,
+    such as those provided in the Clisk DSL, and evaluating them to produce images.
+    As usual in genetic programming, a fitness function is applied to judge the results;
+    in this context the function is "Do I like the image?"</p>
 
-	<p>As of 1 Jan 2013 Clevolution has taken a great leap forward onto the shoulders of <a href="https://github.com/mikera/clisk">Clisk</a>, the Clojure Image Synthesis Kit by Mike Anderson, taking advantage of its wide variety of image-processing operations and fast image generation.</p>
+<p>Sometimes a generated image will suggest expansion of its canvas via clisk's <strong>scale</strong> operator to achieve coolness:</p>
+<p><img src="images/test1.jpg" alt="generated image" title="generated image"></p>
+<p><img src="images/zoomed.jpg" alt="zoomed image" title="zoomed image"></p>
+<p><img src="images/bigtest.jpg" alt="zoomed again" title="zoomed again"></p>
 
-    <p>The process consists of generating random s-expressions from a set of image-processing primitives, such as those provided in the clisk DSL, and evaluating them to produce images. As usual in genetic programming, a fitness function is applied to judge the results; in this context the function is "Do I like the image?"</p>
+<p>This and other exploratory functions, as well as basic support for generating and reviewing images,
+are available in the Clevolution GUI application. Please click "View on GitHub" for more information.</p>
 
-    <p>The particular set of primitives available and the allowable depth of generated expressions have a strong influence on the fraction of usable results. Currently I generate several thousand image files and eliminate over 90% of them in a first pass with Adobe Bridge.</p>
-
-	<p>Sometimes a generated image will suggest expansion of its canvas via clisk's <strong>scale</strong> operator to achieve coolness:</p>
-        <p><img src="images/test1.jpg" alt="generated image" title="generated image"></p>
-        <p><img src="images/zoomed.jpg" alt="zoomed image" title="zoomed image"></p>
-        <p><img src="images/bigtest.jpg" alt="zoomed again" title="zoomed again"></p>
-
-	<p>Related work by others:<br />
+<p>Related work by others:<br />
+<a href="https://github.com/rogerallen/tweegeemee">tweegeemee, Twitter Genetic Algorithm imagery</a><br />
 <a href="https://github.com/probabilityZero/fungp">fungp, a genetic programming library for Clojure</a><br />
 <a href="https://github.com/lspector/clojinc">clojinc, an introduction to Clojure with genetic programming</a>
 </p>
 
 
-<p>Copyright &copy; 2012-2013 Alan Shaw</p>
+<p>Copyright &copy; 2012-2015 Alan Shaw</p>
 
 <p>Distributed under the Eclipse Public License, the same as Clojure.</p>
 
