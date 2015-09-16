@@ -8,7 +8,7 @@
   (:import (javax.swing JTabbedPane JPanel)))
 
 
-(def SOURCE-IMAGE-DISPLAY-SIZE 250)
+(def SOURCE-IMAGE-DISPLAY-SIZE 350)
 (def MUTATION-DISPLAY-SIZE 150)
 
 

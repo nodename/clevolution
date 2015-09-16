@@ -40,6 +40,7 @@
                           [imagesize-spinner
                            (button
                              :text "Apply"
+                             :tip "Images will be saved at this size (does not affect display size)"
                              :listen [:action (fn [_] (let [value (value imagesize-spinner)]
                                                         (set-imagesize! value
                                                                         (str "Set Image Size " value))))])])]
@@ -210,19 +211,21 @@
   []
   (let [viewport-buttons (horizontal-panel
                            :items [(button :text "Default"
+                                           :tip "[0, 0] to [1, 1]"
                                            :listen [:action (fn [_]
                                                               (set-viewport! DEFAULT-VIEWPORT
                                                                              "Set Default Viewport"))])
                                    (button :text "Center at Origin"
+                                           :tip "[-1, -1] to [1, 1]"
                                            :listen [:action (fn [_]
                                                               (set-viewport! ORIGIN-VIEWPORT
                                                                              "Set Origin Viewport"))])])
         viewport-grid (grid-panel
-                        :columns 5
-                        :items ["From:" "x" (spinner :id :ax :model (spinner-model 0.0 :by 0.5))
-                                "y" (spinner :id :ay :model (spinner-model 0.0 :by 0.5))
-                                "To:" "x" (spinner :id :bx :model (spinner-model 1.0 :by 0.5))
-                                "y" (spinner :id :by :model (spinner-model 1.0 :by 0.5))])]
+                        :columns 6
+                        :items ["┏   :" "[ x" (spinner :id :ax :model (spinner-model 0.0 :by 0.5))
+                                "    y" (spinner :id :ay :model (spinner-model 0.0 :by 0.5)) " ]"
+                                "   ┛:" "[ x" (spinner :id :bx :model (spinner-model 1.0 :by 0.5))
+                                "    y" (spinner :id :by :model (spinner-model 1.0 :by 0.5)) " ]"])]
 
     ;; update viewport-grid when :viewport in current-image-state changes:
     (b/bind
@@ -359,6 +362,12 @@
            :mutation-refs mutations)))
 
 
+(defn make-evaluate-button
+  [editor]
+  (button :text "Evaluate"
+          :tip "Evaluate the current expression"
+          :listen [:action (fn [_] (evaluate! (text editor)))]))
+
 
 (defn make-generate-and-evaluate-panel
   []
@@ -370,7 +379,7 @@
       :items [(label :foreground Color/WHITE :text "Depth:")
               depth-spinner
               (button :text "Fresh"
-                      :tip "Generate a new expression and evaluate it"
+                      :tip "Generate a new random expression and evaluate it"
                       :listen [:action (fn [_] (generate-and-evaluate!
                                                  (value depth-spinner)))])])))
 
@@ -390,8 +399,8 @@
                         :tip "Replace a random subexpression with a new random subexpression"
                         :listen [:action (fn [_] (mutate! (value depth-spinner)))])
               (button :text "Mutations"
+                      :tip "Generate and display random mutations of the current expression"
                       :listen [:action (fn [_] (mutations! @current-image-state (value depth-spinner)))])])))
-
 
 
 (defn make-expression-panel
@@ -427,11 +436,9 @@
               (horizontal-panel
                 :size [CONTROL-PANEL-WIDTH :by 50]
                 :background Color/BLACK
-                :items [(make-generate-and-evaluate-panel)
-                        (make-mutate-panel)
-                        (button :text "Evaluate"
-                                :tip "Evaluate the current text"
-                                :listen [:action (fn [_] (evaluate! (text editor)))])])])))
+                :items [(make-evaluate-button editor)
+                        (make-generate-and-evaluate-panel)
+                        (make-mutate-panel)])])))
 
 
 ;; HISTORY
