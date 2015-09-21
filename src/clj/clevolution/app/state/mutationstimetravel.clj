@@ -76,7 +76,6 @@
                 (when-not (@ignore :time-machine)
                   (println "NEW MUTATION STATE")
                   (kick-off-mutation-calcs! (:mutation-refs new-state))
-                  (reset! app-future [])
                   (push-onto-undo-stack new-state))
 
                 (swap! ignore assoc :time-machine false)))

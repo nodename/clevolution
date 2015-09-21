@@ -55,12 +55,13 @@ and displays the generator found in the PNG header. (Any difference from the ima
 is a BUG which arises from concurrency interference with setting noise seed values.
 This will be fixed sometime.)
 
+
+Both the Current Image tab and the Mutations tab keep a full history; you can navigate through it
+using the Rewind, Back, Forward, and End buttons at the lower left.
+The only caveat is that if you go back in time and then add a new state, it will be inserted
+not at the end of the history but right after whatever state was showing.
+
 (to be continued)
-
-
-## GUI Application
-
-% lein run
 
 
 

@@ -78,7 +78,6 @@
                         (not= (:z old-state) (:z new-state)))
                     (do
                       (println "NEW IMAGE STATE")
-                      (reset! app-future [])
                       (push-onto-undo-stack new-state))
 
 
