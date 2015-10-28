@@ -30,7 +30,7 @@
 
 (defn make-imagesize-panel
   []
-  (let [imagesize-spinnermodel (SpinnerListModel. [128 256 512 1024 2048])
+  (let [imagesize-spinnermodel (SpinnerListModel. [128 256 512 1024 2048 4096 8192])
         imagesize-spinner (spinner
                             :model (doto imagesize-spinnermodel
                                      (.setValue 512)))
