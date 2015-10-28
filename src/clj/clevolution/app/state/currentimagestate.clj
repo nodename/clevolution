@@ -15,16 +15,31 @@
                                     :z                   0.0}))
 
 
+(defn separate-viewport
+  "Return
+  1) the viewport (either explicit or the default) from a generator string, and
+  2) the bare generator, together in a vector"
+  [generator & [default-viewport]]
+  (let [generator-form (read-string generator)]
+    (if (and (seq? generator-form)
+             (= (first generator-form) 'viewport))
+      [[(second generator-form) (nth generator-form 2)]
+       (pr-str (nth generator-form 3))]
+      [(or default-viewport DEFAULT-VIEWPORT)
+       generator])))
+
+
 (defn initialize-state!
   [generator image context]
-  (swap! current-image-state assoc
-         :command "Initial State"
-         :generator generator
-         :image image
-         :image-status :ok
-         :error-message nil
-         :context context
-         :viewport ORIGIN-VIEWPORT))
+  (let [[viewport generator] (separate-viewport generator ORIGIN-VIEWPORT)]
+    (swap! current-image-state assoc
+           :command "Initial State"
+           :generator generator
+           :image image
+           :image-status :ok
+           :error-message nil
+           :context context
+           :viewport viewport)))
 
 
 (defn set-imagesize!
@@ -67,15 +82,18 @@
              :image-status :dirty))))
 
 
+
+
 (defn set-loaded-data!
   [generator command]
   (println "set-loaded-data!")
-  (swap! current-image-state assoc
-         :generator generator
-         :viewport (if (= command "Load File") DEFAULT-VIEWPORT ORIGIN-VIEWPORT)
-         :z 0
-         :command command
-         :image-status :dirty))
+  (let [[viewport generator] (separate-viewport generator)]
+    (swap! current-image-state assoc
+           :generator generator
+           :viewport (if (= command "Load File") viewport ORIGIN-VIEWPORT)
+           :z 0
+           :command command
+           :image-status :dirty)))
 
 
 (defn set-image!
