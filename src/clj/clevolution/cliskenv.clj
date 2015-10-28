@@ -35,18 +35,16 @@
 ;; Make the corresponding Clisk functions repeatable
 ;; by explicitly setting the appropriate seed:
 
-(defmacro perlin-seed
+(defn perlin-seed
   [seed f & args]
-  `(dosync
-     (seed-perlin-noise! ~seed)
-     (apply ~f ~args)))
+  (seed-perlin-noise! seed)
+     (apply f args))
 
 
-(defmacro simplex-seed
+(defn simplex-seed
   [seed f & args]
-  `(dosync
-     (seed-simplex-noise! ~seed)
-     (apply ~f ~args)))
+  (seed-simplex-noise! seed)
+  (apply f args))
 
 ;;;;;;;
 
