@@ -9,10 +9,9 @@
             [clevolution.imagedata :refer [DEFAULT-VIEWPORT ORIGIN-VIEWPORT
                                            merge-view-elements make-mutation-ref]]
             [clevolution.app.state.appstate :refer [app-state]]
-            [clevolution.app.state.currentimagestate :refer
-             [current-image-state
-              set-imagesize! set-z! set-viewport! set-generator!
-              set-loaded-data!]]
+            [clevolution.app.state.currentimagestate :refer [current-image-state
+                                                             set-imagesize! set-z! set-viewport! set-generator!
+                                                             set-loaded-data!]]
             [clevolution.app.state.mutationsstate :refer [mutations-state]]
             [clevolution.cliskstring :refer [random-clisk-string]]
             [clevolution.evolve :refer [replace-random-subtree]])

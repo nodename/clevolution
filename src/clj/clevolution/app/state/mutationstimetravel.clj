@@ -1,6 +1,5 @@
 (ns clevolution.app.state.mutationstimetravel
-  (:require [clevolution.app.state.mutationsstate :refer [mutations-state]]
-            [clevolution.app.mutationstab :refer [display-mutations kick-off-mutation-calcs!]]))
+  (:require [clevolution.app.state.mutationsstate :refer [mutations-state]]))
 
 
 (def app-history (atom [@mutations-state]))
@@ -70,15 +69,3 @@
       (println (.getMessage e)))))
 
 
-(def watch-fn (fn [_ _ old-state new-state]
-                (display-mutations new-state)
-
-                (when-not (@ignore :time-machine)
-                  (println "NEW MUTATION STATE")
-                  (kick-off-mutation-calcs! (:mutation-refs new-state))
-                  (push-onto-undo-stack new-state))
-
-                (swap! ignore assoc :time-machine false)))
-
-
-(add-watch mutations-state :time-machine watch-fn)

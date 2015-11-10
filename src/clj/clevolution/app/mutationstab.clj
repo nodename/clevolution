@@ -4,7 +4,11 @@
             [clevolution.app.imagefunctions :refer [make-image-icon]]
             [clevolution.app.state.appstate :refer [app-state]]
             [clevolution.app.state.currentimagestate :refer [current-image-state]]
-            [clevolution.app.state.mutationsstate :refer [mutations-state]])
+
+            [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]]
+            [clevolution.app.state.mutationsstate :refer [mutations-state]]
+            [clevolution.app.state.mutationstimetravel :as m-timetravel :refer [ignore
+                                                                                push-onto-undo-stack]])
   (:import (javax.swing JTabbedPane JPanel)))
 
 
@@ -173,3 +177,30 @@
     (.revalidate content-panel)
     (.repaint content-panel)
     (.setSelectedComponent display-tabs mutations-tab)))
+
+
+(defn make-mutations-tab
+  [mutations-state]
+  (seesaw/border-panel
+    :id :mutations-tab
+    :center (make-mutations-component (:source-image-data mutations-state)
+                                      (:mutation-refs mutations-state)
+                                      (make-nav-buttons m-timetravel/do-rewind
+                                                        m-timetravel/do-undo
+                                                        m-timetravel/do-redo
+                                                        m-timetravel/do-end))))
+
+
+
+(def watch-fn (fn [_ _ old-state new-state]
+                (display-mutations new-state)
+
+                (when-not (@ignore :time-machine)
+                  (println "NEW MUTATION STATE")
+                  (kick-off-mutation-calcs! (:mutation-refs new-state))
+                  (push-onto-undo-stack new-state))
+
+                (swap! ignore assoc :time-machine false)))
+
+
+(add-watch mutations-state :time-machine watch-fn)

@@ -1,31 +1,20 @@
 (ns clevolution.app.app
-  (:require [seesaw.core :as seesaw
-             :refer [action return-from-dialog value to-frame alert
-                     custom-dialog label combobox slider flow-panel
-                     pack! show!]]
-            [seesaw.mig :refer [mig-panel]]
-            [seesaw.border :refer [line-border]]
-            [seesaw.font :refer [font default-font]]
-            [clevolution.imagedata :refer [merge-view-elements do-calc]]
-            [clevolution.file-output :refer [get-generator make-generator-metadata write-image-to-file]]
-
+  (:require [seesaw.core :as seesaw]
             [clevolution.app.state.appstate :as appstate :refer [app-state]]
             [clevolution.app.state.currentimagestate :as currentimagestate :refer [current-image-state]]
             [clevolution.app.state.mutationsstate :refer [mutations-state]]
-            [clevolution.app.state.currentimagetimetravel :as image-timetravel]
-            [clevolution.app.state.mutationstimetravel :as m-timetravel]
+            [clevolution.imagedata :refer [do-calc]]
 
             [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
 
-            [clevolution.app.currentimagetab :refer [make-current-image-component replace-image]]
-            [clevolution.app.controlpanel :refer [make-control-panel]]
-            [clevolution.app.mutationstab :refer [make-mutations-component]]
-
-            [clevolution.app.widgets.imagestatus :refer [make-image-status-panel]]
-            [clevolution.app.widgets.timetravelnav :refer [make-nav-buttons]])
+            [clevolution.app.currentimagetab :refer [make-current-image-tab replace-image]]
+            [clevolution.app.mutationstab :refer [make-mutations-tab]]
+            [clevolution.app.menus :refer [make-clevolution-menu make-file-menu]]
+            [clevolution.app.state.currentimagetimetravel :as image-timetravel]
+            [clevolution.app.state.mutationstimetravel :as m-timetravel])
 
   (:import (java.awt FileDialog Color Container)
-           (javax.swing JFrame JMenu JMenuBar JPanel JMenuItem JTabbedPane)
+           (javax.swing JFrame JMenuBar JPanel JMenuItem JTabbedPane)
            (java.awt.event WindowListener)))
 
 #_(set! *warn-on-reflection* true)
@@ -66,79 +55,6 @@
 
 
 
-
-(defn load-file-dialog
-  [^JFrame frame]
-  (let [file-dialog (doto (FileDialog. frame
-                                       "Load Image..."
-                                       FileDialog/LOAD)
-                      (.setFile "*.png")
-                      (.setVisible true))]
-    (when-let [file-name (.getFile file-dialog)]
-      (let [file-path (str (.getDirectory file-dialog) file-name)
-            generator (get-generator file-path)]
-        (.setTitle frame file-path)
-        (currentimagestate/set-loaded-data! generator "Load File")))))
-
-
-(defn save-file-dialog
-  [^JFrame frame]
-  (let [file-dialog (doto (FileDialog. frame
-                                       "Save Image As..."
-                                       FileDialog/SAVE)
-                      (.setFile "*.png")
-                      (.setVisible true))]
-    (when-let [file-name (.getFile file-dialog)]
-      (write-image-to-file (:image @current-image-state)
-                           (make-generator-metadata (merge-view-elements @current-image-state)
-                                                    (:context @current-image-state))
-                           (str (.getDirectory file-dialog) file-name)))))
-
-
-(defn save-history-dialog
-  [^JFrame frame]
-  (let [file-dialog (doto (FileDialog. frame
-                                       "Save History As..."
-                                       FileDialog/SAVE)
-                      (.setFile "frame")
-                      (.setVisible true))]
-    (when-let [file-name (.getFile file-dialog)]
-      (doseq [[index state] (map-indexed vector @image-timetravel/app-history)]
-        (write-image-to-file (:image state)
-                             (make-generator-metadata (merge-view-elements state)
-                                                      (:context state))
-                             (str (.getDirectory file-dialog) file-name index ".png"))))))
-
-
-(defn make-current-image-tab
-  [image]
-  (seesaw/left-right-split
-    (seesaw/vertical-panel
-      :background Color/LIGHT_GRAY
-      :items [(make-current-image-component image)
-              (make-image-status-panel)
-              (make-nav-buttons image-timetravel/do-rewind
-                                image-timetravel/do-undo
-                                image-timetravel/do-redo
-                                image-timetravel/do-end)])
-    (make-control-panel)
-    :divider-location 1/2
-    :background Color/LIGHT_GRAY))
-
-
-
-(defn make-mutations-tab
-  [mutations-state]
-  (seesaw/border-panel
-    :id :mutations-tab
-    :center (make-mutations-component (:source-image-data mutations-state)
-                                      (:mutation-refs mutations-state)
-                                      (make-nav-buttons m-timetravel/do-rewind
-                                                        m-timetravel/do-undo
-                                                        m-timetravel/do-redo
-                                                        m-timetravel/do-end))))
-
-
 (defn make-tabbed-panel
   [image]
   (seesaw/tabbed-panel
@@ -147,71 +63,6 @@
             :content (make-current-image-tab (or image PENDING-IMAGE))}
            {:title   "Mutations"
             :content (make-mutations-tab @mutations-state)}]))
-
-
-
-(defn open-preferences-dialog
-  []
-  (let [ok-act (action
-                 :name "Ok"
-                 :handler (fn [e] (return-from-dialog e (value (to-frame e)))))
-        cancel-act (action :name "Cancel"
-                           :handler (fn [e] (return-from-dialog e nil)))]
-    (-> (custom-dialog
-          :title  "Preferences"
-          :modal? true
-          :resizable? false
-          :content (mig-panel
-                     :border (line-border)
-                     :items [[(label :font (font :from (default-font "Label.font") :style :bold)
-                                     :text "Clevolution options")
-                              "gaptop 10, wrap"]
-
-                             [:separator "growx, wrap, gaptop 10, spanx 2"]
-
-                             ["Number of Mutations"]
-
-                             [(slider :id :num-mutations
-                                      :min 0 :max 20 :value (:num-mutations @app-state)
-                                      :minor-tick-spacing 1 :major-tick-spacing 10
-                                      :paint-labels? true)
-                              "wrap"]
-
-                             [(flow-panel :align :right :items [ok-act cancel-act])
-                              "spanx 2" "alignx right"]]))
-        pack!
-        show!)))
-
-
-(defn make-clevolution-menu
-  []
-  (let [preferences-menu-item (seesaw/menu-item
-                                :text "Preferences..."
-                                :listen [:action (fn [_]
-                                                   (let [value (open-preferences-dialog)]
-                                                     (swap! app-state
-                                                            merge value)))])]
-
-    (doto (JMenu. "Clevolution")
-      (.add preferences-menu-item))))
-
-
-(defn make-file-menu
-  [frame]
-  (let [^JMenuItem load-menuitem (seesaw/menu-item
-                                   :text "Load..."
-                                   :listen [:action (fn [_] (load-file-dialog frame))])
-        ^JMenuItem save-menuitem (seesaw/menu-item
-                                   :text "Save As..."
-                                   :listen [:action (fn [_] (save-file-dialog frame))])
-        ^JMenuItem save-history-menu-item (seesaw/menu-item
-                                            :text "Save History As..."
-                                            :listen [:action (fn [_] (save-history-dialog frame))])]
-
-    (doto (JMenu. "File")
-      (.add load-menuitem)
-      (.add save-menuitem)
-      (.add save-history-menu-item))))
 
 
 (defn create-app-frame
