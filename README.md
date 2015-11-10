@@ -64,6 +64,13 @@ not at the end of the history but right after whatever state was showing.
 (to be continued)
 
 
+## Building
+
+The movie export feature uses Mike Anderson's <a href="https://github.com/mikera/telegenic">telegenic</a>
+library, which in turn depends on the jcodec-javase library from <a href="http://jcodec.org">JCodec</a>,
+which is installed into a local repository within this project because it is not available
+from Maven Central. I installed it with the install-jcodec.sh script in this directory.
+
 
 ## Library API
 
