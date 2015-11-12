@@ -7,6 +7,8 @@
 
             [clevolution.app.imagefunctions :refer [PENDING-IMAGE ERROR-IMAGE]]
 
+            [clevolution.app.frames :refer [create-new-frame]]
+
             [clevolution.app.currentimagetab :refer [make-current-image-tab replace-image]]
             [clevolution.app.mutationstab :refer [make-mutations-tab]]
             [clevolution.app.menus :refer [make-clevolution-menu make-file-menu]]
@@ -19,31 +21,6 @@
 
 #_(set! *warn-on-reflection* true)
 #_(set! *unchecked-math* :warn-on-boxed)
-
-
-
-(def last-frame (atom nil))
-
-
-(defn create-new-frame
-  [^String title]
-  (let [frame (doto (JFrame. title)
-                (.setVisible true)
-                (.pack)
-                (.setDefaultCloseOperation 2))]
-    (reset! last-frame frame)
-    frame))
-
-
-(defn reuse-frame
-  [^JFrame frame title]
-  (.setTitle frame title)
-  (.removeAll ^Container (.getContentPane frame))
-  (if-not (.isVisible frame)
-    (.validate frame)
-    (.setVisible frame true))
-  (.repaint frame)
-  frame)
 
 
 (defn create-frame

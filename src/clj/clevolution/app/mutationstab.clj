@@ -1,5 +1,6 @@
 (ns clevolution.app.mutationstab
   (:require [seesaw.core :as seesaw]
+            [clevolution.app.frames :refer [create-new-frame]]
             [clevolution.imagedata :refer [do-calc set-image-in-image-data! image-from-status]]
             [clevolution.app.imagefunctions :refer [make-image-icon]]
             [clevolution.app.state.appstate :refer [app-state]]
@@ -9,7 +10,7 @@
             [clevolution.app.state.mutationsstate :refer [mutations-state]]
             [clevolution.app.state.mutationstimetravel :as m-timetravel :refer [ignore
                                                                                 push-onto-undo-stack]])
-  (:import (javax.swing JTabbedPane JPanel)))
+  (:import (javax.swing JTabbedPane JPanel JFrame)))
 
 
 (def SOURCE-IMAGE-DISPLAY-SIZE 350)
@@ -27,6 +28,19 @@
 (defn mutation-index
   [mutation-id]
   (read-string (.replace (name mutation-id) "mutation-" "")))
+
+
+(defn make-image-popup
+  [index image]
+  (let [title (str "Mutation " index)
+        size 600
+        ^JFrame frame (create-new-frame title)
+        ^JPanel content-panel (seesaw/border-panel
+                                :center (make-image-icon image size))]
+    (.add frame content-panel)
+    (doto frame
+      (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE)
+      (.pack))))
 
 
 
@@ -55,18 +69,23 @@
 
 
 (defn make-mutation-image-component
-  [image id size mutation-ref]
+  [image index size mutation-ref]
   ;; for some reason, calling image-from-status from this function
   ;; gives a crazy error "BufferedImage cannot be cast to Future",
   ;; so we pass the image and the mutation-ref in separately
   (let [icon (make-image-icon image size)]
     (seesaw/border-panel
-      :id id
+      :id (mutation-id index)
       :center icon
       ;; TODO popup should be on icon, not entire component
       :popup (seesaw/popup
                :items
                [(seesaw/menu-item
+                  :text "Expand"
+                  :listen [:action (fn [_]
+                                     (make-image-popup index image))])
+
+                (seesaw/menu-item
                   :text "Show Expression"
                   :listen [:action (fn [_]
                                      (println (:generator @mutation-ref)))])
@@ -95,7 +114,7 @@
     :items (mapv (fn [index mutation-ref]
                    (make-mutation-image-component
                      (image-from-status @mutation-ref)
-                     (mutation-id index)
+                     index
                      MUTATION-DISPLAY-SIZE
                      mutation-ref))
                  (range)
@@ -136,9 +155,8 @@
   [new-image index image-data-ref]
   (let [content-panel (:content-panel @app-state)
         mutations-grid-panel (seesaw/select content-panel [:#mutations-grid-panel])
-        component-id (mutation-id index)
         old-component (seesaw/select mutations-grid-panel [(mutation-search-id index)])
-        new-component (make-mutation-image-component new-image component-id MUTATION-DISPLAY-SIZE image-data-ref)]
+        new-component (make-mutation-image-component new-image index MUTATION-DISPLAY-SIZE image-data-ref)]
     (seesaw/replace! mutations-grid-panel old-component new-component)))
 
 
