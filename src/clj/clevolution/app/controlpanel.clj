@@ -20,10 +20,7 @@
            (java.awt.event MouseEvent)
     #_[jmagick ImageInfo]))
 
-
-
 (def CONTROL-PANEL-WIDTH 750)
-
 
 ;; IMAGE SIZE
 
@@ -49,9 +46,6 @@
       (b/property imagesize-spinner :model))
     imagesize-panel))
 
-
-
-
 ;; ANTIALIAS
 
 (def antialias-atom (atom 2))
@@ -71,10 +65,6 @@
     :items [antialias-control
             (button :text "Apply"
                     :listen [:action (fn [e] (println "GO!"))])]))
-
-
-
-
 
 ;; Z LEVEL
 
@@ -98,9 +88,6 @@
       (b/property z-spinner :model))
 
     z-panel))
-
-
-
 
 ;; Z MOVIE
 
@@ -126,10 +113,7 @@
                                                                                   :image-status :dirty}))]
                                ))))]))
 
-
-
 ;; ZOOM
-
 
 (defn make-zoom-panel
   []
@@ -162,9 +146,7 @@
                                                                   (str "Zoom Out " factor))))])])
               ""])))
 
-
 ;; TRANSLATE
-
 
 (defn translate-viewport
   [^double amount direction [[^double ax ^double ay] [^double bx ^double by]]]
@@ -177,7 +159,6 @@
         bx (if horizontal? (+ bx (* width amount)) bx)
         by (if horizontal? by (+ by (* height amount)))]
     [[ax ay] [bx by]]))
-
 
 (defn make-translate-grid
   []
@@ -202,7 +183,6 @@
       :items ["" up-button ""
               left-button (horizontal-panel :items [translate-spinner "%"]) right-button
               "" down-button ""])))
-
 
 ;; VIEWPORT
 
@@ -266,8 +246,6 @@
                           (make-translate-grid)])
                 vp-set-values]))))
 
-
-
 ;; TILING
 
 (defn make-tiling-panel
@@ -294,7 +272,6 @@
                 :items [seamless-scale
                         seamless-button])])))
 
-
 (defn make-lighting-panel
   []
   (let [add-lighting (fn [generator]
@@ -305,9 +282,6 @@
                                  (set-generator! new-expr
                                                  "Add Lighting")))])))
 
-
-
-
 ;; EXPRESSION EDITOR
 
 (def cut-action (action :name "Cut"))
@@ -317,10 +291,7 @@
 (def editor-popup (popup :border (rounded-border)
                          :items [cut-action copy-action paste-action]))
 
-
 (config! cut-action :handler (fn [e] (println "Cut: " e " " editor-pane)))
-
-
 
 (defn evaluate!
   [s]
@@ -344,14 +315,10 @@
       new-generator-string
       (str "Mutate " depth))))
 
-
-
-
 (defn make-mutation-refs
   [image-data depth]
   (map (fn [_] (make-mutation-ref image-data depth))
        (range (:num-mutations @app-state))))
-
 
 (defn mutations!
   [image-data depth]
@@ -360,13 +327,11 @@
            :source-image-data image-data
            :mutation-refs mutations)))
 
-
 (defn make-evaluate-button
   [editor]
   (button :text "Evaluate"
           :tip "Evaluate the current expression"
           :listen [:action (fn [_] (evaluate! (text editor)))]))
-
 
 (defn make-generate-and-evaluate-panel
   []
@@ -381,8 +346,6 @@
                       :tip "Generate a new random expression and evaluate it"
                       :listen [:action (fn [_] (generate-and-evaluate!
                                                  (value depth-spinner)))])])))
-
-
 
 (defn make-mutate-panel
   []
@@ -400,7 +363,6 @@
               (button :text "Mutations"
                       :tip "Generate and display random mutations of the current expression"
                       :listen [:action (fn [_] (mutations! @current-image-state (value depth-spinner)))])])))
-
 
 (defn make-expression-panel
   []
@@ -439,7 +401,6 @@
                         (make-generate-and-evaluate-panel)
                         (make-mutate-panel)])])))
 
-
 ;; HISTORY
 #_
     (defn make-history-panel
@@ -457,8 +418,6 @@
 
 
 ;; CONTROL PANEL
-
-
 
 (defn make-control-panel
   []

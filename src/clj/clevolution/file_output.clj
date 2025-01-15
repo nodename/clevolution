@@ -16,7 +16,6 @@
 (def context-chunk-name "ctXt")
 (def default-context-name "clisk")
 
-
 (defn ^ImageWriter get-png-imagewriter
   "Return an ImageWriter for PNG images"
   []
@@ -24,7 +23,6 @@
     (if-not (.hasNext iterator)
       (throw (Exception. "No image writer found for PNG")))
     (.next iterator)))
-
 
 (defn make-generator-metadata
   "Create a PNGMetadata containing generator and context"
@@ -35,7 +33,6 @@
     (.add (.unknownChunkType png-metadata) context-chunk-name)
     (.add (.unknownChunkData png-metadata) (.getBytes context-name))
     png-metadata))
-
 
 (defn write-image-to-file
   [^BufferedImage image ^PNGMetadata metadata ^String uri]
@@ -48,7 +45,6 @@
     (.close output)
     (.dispose imagewriter)))
 
-
 (defn get-png-metadata
   "Get the PNG metadata from a PNG file"
   [^String uri]
@@ -60,7 +56,6 @@
     (.close input-stream)
     (.dispose imagereader)
     input-metadata))
-
 
 (defmulti get-width class)
 (defmethod get-width PNGMetadata
@@ -79,8 +74,6 @@
   [uri]
   (let [png-metadata (get-png-metadata uri)]
     (get-height png-metadata)))
-
-
 
 (defmulti get-chunk-data (fn [source _] (class source)))
 
@@ -103,7 +96,6 @@
   [uri chunk-name]
   (let [png-metadata (get-png-metadata uri)]
     (get-chunk-data png-metadata chunk-name)))
-
 
 (defn get-generator
   [source]

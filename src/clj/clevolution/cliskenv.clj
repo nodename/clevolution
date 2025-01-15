@@ -2,7 +2,6 @@
   (:require [mikera.cljutils.namespace :as n]
             [clevolution.file-input :refer [read-image-from-file]]))
 
-
 (n/pull-all clisk.core)
 (n/pull-all clisk.node)
 (n/pull-all clisk.functions)
@@ -10,7 +9,6 @@
 (n/pull-all clisk.colours)
 (n/pull-all clisk.textures)
 (n/pull-all clisk.effects)
-
 
 ;; a and b are between 0 and 1
 (defn bit-op
@@ -31,7 +29,6 @@
 (def vxor
   (vectorize-op 'bxor))
 
-
 ;; Make the corresponding Clisk functions repeatable
 ;; by explicitly setting the appropriate seed:
 
@@ -47,7 +44,6 @@
   (apply f args))
 
 ;;;;;;;
-
 
 (defn ev-perlin-noise
   [seed]
@@ -96,11 +92,9 @@
   [seed]
   (simplex-seed seed vplasma))
 
-
 (defn ev-vsplasma
   [seed]
   (simplex-seed seed vsplasma))
-
 
 (defn ev-turbulate
   [seed factor func]
@@ -109,9 +103,6 @@
 (defn ev-psychedelic
   [seed src noise-scale noise-bands]
   (simplex-seed seed psychedelic src :noise-scale noise-scale :noise-bands noise-bands))
-
-
-
 
 (defn read-file
   [uri]

@@ -18,8 +18,6 @@
     (javax.swing JFrame JMenu JMenuBar JPanel JMenuItem JTabbedPane)
     (java.awt.event WindowListener)))
 
-
-
 (defn open-preferences-dialog
   []
   (let [ok-act (action
@@ -52,7 +50,6 @@
         pack!
         show!)))
 
-
 (defn make-clevolution-menu
   []
   (let [preferences-menu-item (seesaw/menu-item
@@ -64,12 +61,6 @@
 
     (doto (JMenu. "Clevolution")
       (.add preferences-menu-item))))
-
-
-
-
-
-
 
 (defn load-file-dialog
   [^JFrame frame]
@@ -84,7 +75,6 @@
         (.setTitle frame file-path)
         (currentimagestate/set-loaded-data! generator "Load File")))))
 
-
 (defn save-file-dialog
   [^JFrame frame]
   (let [file-dialog (doto (FileDialog. frame
@@ -97,7 +87,6 @@
                            (make-generator-metadata (merge-view-elements @current-image-state)
                                                     (:context @current-image-state))
                            (str (.getDirectory file-dialog) file-name)))))
-
 
 (defn save-history-dialog
   [^JFrame frame]
@@ -112,7 +101,6 @@
                              (make-generator-metadata (merge-view-elements state)
                                                       (:context state))
                              (str (.getDirectory file-dialog) file-name index ".png"))))))
-
 
 
 (defn make-file-menu

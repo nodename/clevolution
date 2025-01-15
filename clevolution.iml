@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="BuildSystem">
+    <option name="buildSystemId" value="LEININGEN" />
+    <option name="displayName" value="com.nodename/clevolution:0.1.1" />
+  </component>
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <output-test url="file://$MODULE_DIR$/target/classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/dev" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-resources" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/resources" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/clj" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Leiningen: clojure-complete:0.2.5" level="project" />
+    <orderEntry type="library" name="Leiningen: com.fifesoft/rsyntaxtextarea:2.5.6" level="project" />
+    <orderEntry type="library" name="Leiningen: com.jgoodies/forms:1.2.1" level="project" />
+    <orderEntry type="library" name="Leiningen: com.jhlabs/filters:2.0.235-1" level="project" />
+    <orderEntry type="library" name="Leiningen: com.miglayout/miglayout:3.7.4" level="project" />
+    <orderEntry type="library" name="Leiningen: instaparse:1.4.1" level="project" />
+    <orderEntry type="library" name="Leiningen: j18n:1.0.2" level="project" />
+    <orderEntry type="library" name="Leiningen: mate-clj:1.0.0" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/clisk:0.10.1" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/clojure-utils:0.6.2" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/core.matrix:0.36.1" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/imagez:0.6.0" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/mathz:0.3.0" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/mikera-gui:0.3.1" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/randomz:0.3.0" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/telegenic:0.0.1" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/vectorz-clj:0.31.0" level="project" />
+    <orderEntry type="library" name="Leiningen: net.mikera/vectorz:0.47.0" level="project" />
+    <orderEntry type="library" name="Leiningen: nrepl:0.6.0" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/clojure:1.8.0-alpha5" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/tools.macro:0.1.5" level="project" />
+    <orderEntry type="library" name="Leiningen: org.imgscalr/imgscalr-lib:4.2" level="project" />
+    <orderEntry type="library" name="Leiningen: org.jcodec/jcodec-javase:0.1.9" level="project" />
+    <orderEntry type="library" name="Leiningen: org.jcodec/jcodec:0.1.9" level="project" />
+    <orderEntry type="library" name="Leiningen: org.swinglabs.swingx/swingx-action:1.6.3" level="project" />
+    <orderEntry type="library" name="Leiningen: org.swinglabs.swingx/swingx-autocomplete:1.6.3" level="project" />
+    <orderEntry type="library" name="Leiningen: org.swinglabs.swingx/swingx-common:1.6.3" level="project" />
+    <orderEntry type="library" name="Leiningen: org.swinglabs.swingx/swingx-core:1.6.3" level="project" />
+    <orderEntry type="library" name="Leiningen: org.swinglabs.swingx/swingx-painters:1.6.3" level="project" />
+    <orderEntry type="library" name="Leiningen: org.swinglabs.swingx/swingx-plaf:1.6.3" level="project" />
+    <orderEntry type="library" name="Leiningen: seesaw:1.4.5" level="project" />
+    <orderEntry type="library" name="Leiningen: us.bpsm/edn-java:0.4.5" level="project" />
+  </component>
+</module>

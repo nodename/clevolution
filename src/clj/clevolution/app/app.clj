@@ -22,15 +22,12 @@
 #_(set! *warn-on-reflection* true)
 #_(set! *unchecked-math* :warn-on-boxed)
 
-
 (defn create-frame
   [title]
   (create-new-frame title)
   #_(if @last-frame
       (reuse-frame @last-frame title)
       (create-new-frame title)))
-
-
 
 (defn make-tabbed-panel
   [image]
@@ -41,7 +38,6 @@
            {:title   "Mutations"
             :content (make-mutations-tab @mutations-state)}]))
 
-
 (defn create-app-frame
   [image generator context title]
   (image-timetravel/forget-everything!)
@@ -51,8 +47,6 @@
 
         ^JPanel content-panel (seesaw/border-panel
                                 :center (make-tabbed-panel image))]
-
-
     (.add frame content-panel)
     (appstate/initialize-state! content-panel)
     (currentimagestate/initialize-state! generator image context)
@@ -68,8 +62,6 @@
         (.setJMenuBar menu-bar)
         (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE)
         (.pack)))))
-
-
 
 (defn show
   "Shows a component in a new frame"
@@ -91,9 +83,6 @@
                                 (windowOpened [e])
                                 (windowClosed [e])))))))
 
-
-
-
 (defn display-image
   "Replace the current image with image and switch to the current image tab"
   [image]
@@ -104,11 +93,6 @@
     (.revalidate content-panel)
     (.repaint content-panel)
     (.setSelectedIndex display-tabs 0)))
-
-
-
-
-
 
 (def current-main-image-calc (atom nil))
 
@@ -123,8 +107,6 @@
   (future
     (dosync
       (do-calc state currentimagestate/set-image!))))
-
-
 
 (add-watch current-image-state
            :generator-watch

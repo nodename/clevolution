@@ -1,7 +1,6 @@
 (ns clevolution.parser
   (:require [instaparse.core :as insta]))
 
-
 (def exp-parser
   (insta/parser
     "S = Sexp | term

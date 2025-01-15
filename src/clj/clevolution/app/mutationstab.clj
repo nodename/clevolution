@@ -12,10 +12,8 @@
                                                                                 push-onto-undo-stack]])
   (:import (javax.swing JTabbedPane JPanel JFrame)))
 
-
 (def SOURCE-IMAGE-DISPLAY-SIZE 350)
 (def MUTATION-DISPLAY-SIZE 150)
-
 
 (defn mutation-id
   [i]
@@ -29,7 +27,6 @@
   [mutation-id]
   (read-string (.replace (name mutation-id) "mutation-" "")))
 
-
 (defn make-image-popup
   [index image]
   (let [title (str "Mutation " index)
@@ -41,8 +38,6 @@
     (doto frame
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE)
       (.pack))))
-
-
 
 (defn make-source-image-component
   [image-data size]
@@ -58,7 +53,6 @@
                   :text "Show Expression"
                   :listen [:action (fn [_]
                                      (println (:generator image-data)))])
-
                 (seesaw/menu-item
                   :text "Set As Current Image"
                   :listen [:action (fn [_]
@@ -66,7 +60,6 @@
                                              (merge @current-image-state
                                                     image-data
                                                     {:command "Set As Current Image"})))])]))))
-
 
 (defn make-mutation-image-component
   [image index size mutation-ref]
@@ -105,7 +98,6 @@
                                    new-mutation-refs (remove (fn [m] (= m mutation-ref)) mutation-refs)]
                                (swap! mutations-state assoc :mutation-refs new-mutation-refs)))])]))))
 
-
 (defn make-mutations-grid-panel
   [mutation-refs]
   (seesaw/grid-panel
@@ -120,7 +112,6 @@
                  (range)
                  mutation-refs)))
 
-
 (defn make-inner-mutations-component
   [source-image-data mutation-refs timetravel-nav-buttons]
   (seesaw/border-panel
@@ -130,15 +121,11 @@
                     timetravel-nav-buttons])
     :center (make-mutations-grid-panel mutation-refs)))
 
-
 (defn make-mutations-component
   [source-image-data mutation-refs timetravel-nav-buttons]
   (seesaw/border-panel
     :id :mutations-component
     :center (make-inner-mutations-component source-image-data mutation-refs timetravel-nav-buttons)))
-
-
-
 
 (defn replace-mutations
   [^JPanel mutations-component source-image-data mutation-refs]
@@ -149,8 +136,6 @@
     (.removeAll mutations-component)
     (.add mutations-component inner-component)))
 
-
-
 (defn replace-image-in-mutations-tab
   [new-image index image-data-ref]
   (let [content-panel (:content-panel @app-state)
@@ -158,7 +143,6 @@
         old-component (seesaw/select mutations-grid-panel [(mutation-search-id index)])
         new-component (make-mutation-image-component new-image index MUTATION-DISPLAY-SIZE image-data-ref)]
     (seesaw/replace! mutations-grid-panel old-component new-component)))
-
 
 (defn kick-off-mutation-calc
   [image-data-ref index]
@@ -173,7 +157,6 @@
     (dosync
       (do-calc @image-data-ref (partial set-image-in-image-data! image-data-ref)))))
 
-
 (defn kick-off-mutation-calcs!
   [mutation-refs]
   (loop [mutation-refs mutation-refs
@@ -181,7 +164,6 @@
     (when-let [m-ref (first mutation-refs)]
       (kick-off-mutation-calc m-ref index)
       (recur (rest mutation-refs) (inc index)))))
-
 
 (defn display-mutations
   [new-state]
@@ -196,7 +178,6 @@
     (.repaint content-panel)
     (.setSelectedComponent display-tabs mutations-tab)))
 
-
 (defn make-mutations-tab
   [mutations-state]
   (seesaw/border-panel
@@ -208,8 +189,6 @@
                                                         m-timetravel/do-redo
                                                         m-timetravel/do-end))))
 
-
-
 (def watch-fn (fn [_ _ old-state new-state]
                 (display-mutations new-state)
 
@@ -219,6 +198,5 @@
                   (push-onto-undo-stack new-state))
 
                 (swap! ignore assoc :time-machine false)))
-
 
 (add-watch mutations-state :time-machine watch-fn)

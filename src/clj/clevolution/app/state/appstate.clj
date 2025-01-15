@@ -3,11 +3,9 @@
                                            merge-view-elements
                                            set-image-in-image-data]]))
 
-
 (defonce app-state (atom {:content-panel       nil
                           :image-display-size  600
                           :num-mutations       16}))
-
 
 (defn initialize-state!
   [panel]

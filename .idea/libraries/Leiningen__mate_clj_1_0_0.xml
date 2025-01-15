@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: mate-clj:1.0.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/mate-clj/mate-clj/1.0.0/mate-clj-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

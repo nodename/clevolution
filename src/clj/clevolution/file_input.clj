@@ -2,7 +2,6 @@
   (:import (java.io File)
            (javax.imageio ImageIO ImageReader)))
 
-
 (defn ^ImageReader get-imagereader
   [inputstream]
   (let [iterator (ImageIO/getImageReaders inputstream)]

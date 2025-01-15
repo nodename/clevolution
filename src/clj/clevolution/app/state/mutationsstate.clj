@@ -2,7 +2,6 @@
   (:require [clevolution.app.state.appstate :refer [app-state]]
             [clevolution.imagedata :refer [ORIGIN-VIEWPORT]]))
 
-
 (defonce DEFAULT-IMAGE-DATA
          {:command "Initial State"
           :generator "black"

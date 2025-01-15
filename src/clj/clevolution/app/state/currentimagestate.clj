@@ -3,7 +3,6 @@
                                            merge-view-elements
                                            set-image-in-image-data]]))
 
-
 (defonce current-image-state (atom {:image-size          512
                                     :command             nil
                                     :generator           nil
@@ -13,7 +12,6 @@
                                     :context             nil
                                     :viewport            nil
                                     :z                   0.0}))
-
 
 (defn separate-viewport
   "Return
@@ -28,7 +26,6 @@
       [(or default-viewport DEFAULT-VIEWPORT)
        generator])))
 
-
 (defn initialize-state!
   [generator image context]
   (let [[viewport generator] (separate-viewport generator ORIGIN-VIEWPORT)]
@@ -41,7 +38,6 @@
            :context context
            :viewport viewport)))
 
-
 (defn set-imagesize!
   [size command]
   (let [old-image-size (:image-size @current-image-state)]
@@ -50,7 +46,6 @@
              :command command
              :image-size size
              :image-status :dirty))))
-
 
 (defn set-viewport!
   [viewport command]
@@ -61,7 +56,6 @@
              :viewport viewport
              :image-status :dirty))))
 
-
 (defn set-generator!
   [generator command]
   (let [old-generator (:generator @current-image-state)]
@@ -71,7 +65,6 @@
              :generator generator
              :image-status :dirty))))
 
-
 (defn set-z!
   [z command]
   (let [old-z (:z @current-image-state)]
@@ -80,9 +73,6 @@
              :command command
              :z z
              :image-status :dirty))))
-
-
-
 
 (defn set-loaded-data!
   [generator command]
@@ -94,7 +84,6 @@
            :z 0
            :command command
            :image-status :dirty)))
-
 
 (defn set-image!
   "Update the :image in current-image-state, but not if current-image-state's image data has changed.

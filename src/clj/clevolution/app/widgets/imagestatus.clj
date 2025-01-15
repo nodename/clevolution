@@ -6,8 +6,6 @@
             [clevolution.app.state.currentimagestate :refer [current-image-state]])
   (:import (java.awt Color)))
 
-
-
 (defn make-status-line
   []
   (let [status-line (busy-label :text ""
@@ -38,7 +36,6 @@
 
     status-line))
 
-
 (defn make-menu-item
   []
   (let [m (menu-item :text "")]
@@ -47,8 +44,6 @@
             (b/property m :text))
 
     m))
-
-
 
 (defn make-image-status-panel
   []

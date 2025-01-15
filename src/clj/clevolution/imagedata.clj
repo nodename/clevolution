@@ -8,12 +8,10 @@
   (:import [clevolution ClassPatch]
            (clojure.lang Var)))
 
-
 (defonce DEFAULT-VIEWPORT [[0.0 0.0] [1.0 1.0]])
 (defonce ORIGIN-VIEWPORT [[-1.0 -1.0] [1.0 1.0]])
 
 (defonce ERROR-NODE (clisk.node/node ERROR-IMAGE))
-
 
 ;; The image is a function of z, viewport, and generator.
 ;; When we display the image or save the file we call merge-view-elements:
@@ -39,17 +37,12 @@
        (merge-z z)
        (merge-viewport viewport)))
 
-
-
-
 (defn image-from-status
   [image-data]
   (condp = (:image-status image-data)
     :ok (:image image-data)
     :dirty PENDING-IMAGE
     :failed ERROR-IMAGE))
-
-
 
 ;; When clisk/image is called from a future,
 ;; the Compiler's LOADER is unbound.
@@ -65,8 +58,6 @@
       (println "clisk-image failed")
       (throw e))))
 
-
-
 (defn set-image-in-image-data
   [image data status error-message]
   (assoc data
@@ -74,13 +65,11 @@
     :image-status status
     :error-message error-message))
 
-
 (defn set-image-in-image-data!
   "Update the :image, :status, and :error-message in the ref"
   [image-data-ref image image-data status error-message]
   (ref-set image-data-ref
           (set-image-in-image-data image image-data status error-message)))
-
 
 (defn set-image-from-node!
   [node image-data status error-message continuation]
@@ -93,11 +82,9 @@
       (println "set-image-from-node! failed")
       (throw e))))
 
-
 (defn set-failed-image!
   [image-data error-message continuation]
   (set-image-from-node! ERROR-NODE image-data :failed  error-message continuation))
-
 
 (defn node-from-image-data
   [data]
@@ -109,12 +96,10 @@
       (println "node-from-image-data failed")
       (throw e))))
 
-
 (defn calc-image!
   [image-data continuation]
   (let [node (node-from-image-data image-data)]
     (set-image-from-node! node image-data :ok nil continuation)))
-
 
 (defn do-calc
   "Calculate an image from the image-data.
@@ -126,8 +111,6 @@
       (println "calc-image! ERROR:" (.getMessage e))
       (println "generator:" (:generator image-data))
       (set-failed-image! image-data (.getMessage e) continuation))))
-
-
 
 (defn make-image-data-ref
   "Create an image-data ref from the given generator"
@@ -141,7 +124,6 @@
         :viewport            ORIGIN-VIEWPORT
         :z                   0.0}))
 
-
 (defn mutate-generator-string
   [generator depth]
   (let [current-generator-form (read-string generator)
@@ -150,7 +132,6 @@
       (replace-random-subtree
         current-generator-form
         new-subform))))
-
 
 (defn make-mutation-ref
   "Returns a new image-data ref representing a mutation of the input image-data"

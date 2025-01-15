@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: net.mikera/randomz:0.3.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/mikera/randomz/0.3.0/randomz-0.3.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,12 +1,10 @@
 (ns clevolution.cliskstring
   (:import (clojure.lang PersistentList)))
 
-
 (defn make-with-arity
   [arity f]
   {:function f
    :arity arity})
-
 
 (defn replace-%
   [expression child-expr]
@@ -14,19 +12,16 @@
                                  (with-out-str (print child-expr)))]
     (concat (list new-first) (rest expression))))
 
-
 (def named-colors
   (map (partial make-with-arity 0)
        ["sunset-map" "black" "blue" "cyan" "darkGray" "gray" "green" "lightGray"
         "magenta" "orange" "pink" "red" "white" "yellow" "purple" "brown"
         ]))
 
-
 (def random-scalar-color
   {:function #(let [color (rand 1.0)]
                (str "[" color " " color " " color "]"))
    :arity 0})
-
 
 (def random-vector-color
   {:function #(str "[" (rand 1.0) " " (rand 1.0) " " (rand 1.0) "]")
@@ -41,20 +36,16 @@
                                :arity 0})]
     (map input-image uris)))
 
-
 (def unary-v-operators
   "Operators that take one argument, either scalar or vector"
   (map (partial make-with-arity 1)
        ["vsin" "vcos" "vabs" "vround" "vfloor" "vfrac" "square"
         "vsqrt" "sigmoid" #_"tile" "max-component" "min-component" "length" "gradient"]))
 
-
-
 ; can't find mikera.util.Maths.java version that defines t(), needed for triangle-wave
 ;(defn random-vector-nullary-operation
 ;  []
 ;  'triangle-wave)
-
 
 (def make-multi-fractal
   {:function (fn []
@@ -65,10 +56,6 @@
                  (str "make-multi-fractal % :octaves " octaves " :lacunarity " lacunarity
                       " :gain " gain " :scale " scale)))
    :arity 1})
-
-
-
-
 
 ;; We do not call any of Clisk's noise, turbulence, or plasma functions directly
 ;; because their effects are not repeatable.
@@ -81,13 +68,11 @@
                  (str "(ev-perlin-noise " seed ")")))
    :arity 0})
 
-
 (def ev-perlin-snoise
   {:function (fn []
                (let [seed (.nextLong (mikera.util.Random.))]
                  (str "(ev-perlin-snoise " seed ")")))
    :arity 0})
-
 
 (def ev-simplex-noise
   {:function (fn []
@@ -164,9 +149,6 @@
                  (str "ev-turbulate " seed " " factor)))
    :arity 1})
 
-
-
-
 (def voronoi-points
   {:function (fn []
                (let [points (+ 3 ^long (rand-int 27))]
@@ -179,7 +161,6 @@
                  (str "(voronoi-blocks :points " points ")")))
    :arity 0})
 
-
 (def gridlines
   {:function (fn []
                (let [color [(rand 1.0) (rand 1.0) (rand 1.0) (rand 1.0)]
@@ -189,8 +170,6 @@
                  (str "(gridlines :colour " color " :background " background
                       " :width " width " :scale " scale ")")))
    :arity 0})
-
-
 
 (def nullary-operators-scalar
   "() -> Scalar"
@@ -334,8 +313,6 @@
      ev-plasma ev-splasma ev-turbulence ev-vturbulence ev-vplasma ev-vsplasma ev-turbulate
      matrix-transform affine-transform lerp]))
 
-
-
 (defn operation
   "(:function op) must be a string or a function that returns a string"
   [op]
@@ -353,7 +330,6 @@
       arity
       (arity))))
 
-
 (defn terminals [ops]
   (filter #(zero? ^long (arity %)) ops))
 
@@ -363,8 +339,6 @@
 (defn non-leaf-choices [ops]
   {:grow ops
    :full (nonterminals ops)})
-
-
 
 ;; The :full method always fills out the tree so all leaves are at the same depth;
 ;; the :grow method may choose a nullary op, creating a leaf node, before reaching the full depth
@@ -393,12 +367,9 @@
                                   (replace-% expression child-expr)))))]
         (reduce build-subexpr (list operation) (range arity))))))
 
-
-
 (def default-depth 3)
 (def default-method :full)
 (def default-input-files [])
-
 
 (defn random-clisk-string
   [& {:keys [depth method input-files]

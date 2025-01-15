@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: net.mikera/mikera-gui:0.3.1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/mikera/mikera-gui/0.3.1/mikera-gui-0.3.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

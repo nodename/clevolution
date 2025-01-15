@@ -1,19 +1,15 @@
 (ns clevolution.app.state.currentimagetimetravel
   (:require [clevolution.app.state.currentimagestate :refer [current-image-state]]))
 
-
-
 (def app-history (atom [@current-image-state]))
 (def app-future (atom []))
 
 (def ignore (atom {:time-machine false}))
 
-
 (defn forget-everything!
   []
   (reset! app-future [])
   (reset! app-history []))
-
 
 (defn undo-is-possible
   []
@@ -22,7 +18,6 @@
 (defn redo-is-possible
   []
   (> (count @app-future) 0))
-
 
 (defn push-onto-undo-stack
   [new-state]
@@ -67,7 +62,6 @@
   []
   (while (do-redo)))
 
-
 (def watch-fn (fn [_ _ old-state new-state]
                 (if (@ignore :time-machine)
                   (println "no new state")
@@ -91,7 +85,6 @@
                     :else
                     (println "no image change")))
                 (swap! ignore assoc :time-machine false)))
-
 
 (add-watch current-image-state :time-machine watch-fn)
 

@@ -1,7 +1,6 @@
 (ns clevolution.cliskeval
   (:require [clevolution.cliskenv]))
 
-
 (defn clisk-eval-form
   [form]
   (try
@@ -11,8 +10,6 @@
       (println "clisk-eval-form failed:")
       (println "form=" form)
       (throw e))))
-
-
 
 (defmulti clisk-eval class)
 

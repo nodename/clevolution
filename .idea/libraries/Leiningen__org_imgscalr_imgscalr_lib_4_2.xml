@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: org.imgscalr/imgscalr-lib:4.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/imgscalr/imgscalr-lib/4.2/imgscalr-lib-4.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

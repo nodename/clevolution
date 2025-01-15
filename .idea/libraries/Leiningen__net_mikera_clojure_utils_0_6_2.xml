@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: net.mikera/clojure-utils:0.6.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/mikera/clojure-utils/0.6.2/clojure-utils-0.6.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

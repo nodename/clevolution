@@ -18,7 +18,6 @@
     (javax.swing JPanel)
     (mikera.gui JIcon)))
 
-
 (defn make-current-image-component
   [image]
   (let [icon (make-image-icon image
@@ -33,7 +32,6 @@
                                      (:image-display-size @appstate/app-state))]
     (.removeAll current-image-component)
     (.add current-image-component icon)))
-
 
 (defn make-current-image-tab
   [image]

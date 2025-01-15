@@ -1,15 +1,14 @@
 (ns clevolution.evolve
   (:require [clojure.pprint :refer [pprint]]))
 
-
 ;; based upon https://raw.githubusercontent.com/lspector/gp/master/src/gp/evolvefn.clj
-
 
 ;; To help write mutation and crossover functions we'll write a utility
 ;; function that returns a random subtree from an expression and another that
 ;; replaces a random subtree of an expression.
 
-(defn codesize [c]
+(defn codesize
+  [c]
   (if (list? c) ;; we regard a vector as a primitive
     (count (flatten c))
     1))
@@ -27,8 +26,6 @@
 
 ;(random-subtree '(+ (* x (+ y z)) w))
 
-
-
 (defn replace-random-subtree
   [tree replacement]
   (if (zero? ^long (rand-int (codesize tree)))
@@ -37,14 +34,10 @@
                            (map #(repeat (codesize %1) %2)
                                 (rest tree)
                                 (iterate inc 1)))
-
           node-at (fn [position] (get (vec tree) position))
-
           ;; Don't replace a keyword:
           may-replace? (fn [position] (not (keyword? (node-at position))))
-
           may-replace-tree? (fn [] (some may-replace? positions))]
-
       (if-not (may-replace-tree?)
         tree
         (let [replace (fn [position-to-change]

@@ -2,7 +2,6 @@
   (:gen-class)
   [:require [clevolution.core :refer :all]])
 
-
 (defn -main
   []
   (show-clisk-image "black"))

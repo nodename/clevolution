@@ -7,12 +7,10 @@
 
 (def ignore (atom {:time-machine false}))
 
-
 (defn forget-everything!
   []
   (reset! app-future [])
   (reset! app-history []))
-
 
 (defn undo-is-possible
   []
@@ -22,13 +20,11 @@
   []
   (> (count @app-future) 0))
 
-
 (defn push-onto-undo-stack
   [new-state]
   (let [old-watchable-mutations-state (last @app-history)]
     (when-not (= old-watchable-mutations-state new-state)
       (swap! app-history conj new-state))))
-
 
 ;; Undo and redo cause state changes that we want our watch-fn to ignore,
 ;; hence the ignore atom. (This technique copied from Om's :tx-listen implementation)

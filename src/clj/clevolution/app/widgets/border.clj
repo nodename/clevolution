@@ -3,7 +3,6 @@
   (:import (java.awt Color Graphics)
            (javax.swing.border TitledBorder)))
 
-
 (defn rounded-border
   [& [color]]
   (let [^Color color (or color Color/BLACK)]

@@ -2,7 +2,6 @@
   (:require [seesaw.core :refer [horizontal-panel button]])
   (:import [java.awt Color]))
 
-
 (defn make-nav-buttons
   [rewind undo redo end]
   (horizontal-panel

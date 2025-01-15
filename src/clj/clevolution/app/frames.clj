@@ -4,7 +4,6 @@
 
 (def last-frame (atom nil))
 
-
 (defn create-new-frame
   [^String title]
   (let [frame (doto (JFrame. title)
@@ -13,7 +12,6 @@
                 (.setDefaultCloseOperation 2))]
     (reset! last-frame frame)
     frame))
-
 
 (defn reuse-frame
   [^JFrame frame title]
